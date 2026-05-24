@@ -6,77 +6,89 @@
 <title>Bazaar — Faltantes</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#fdf8f4;color:#1a1a1a;min-height:100vh;overscroll-behavior:none}
+:root{
+  --bg:#fdf8f4;--bg2:#fff;--bg3:#fdf2f3;
+  --border:#ede0d4;--border2:#f5c4c4;
+  --text:#1a1a1a;--text2:#888;--text3:#b08070;--text4:#c4a898;
+  --red:#7a0b1e;--red-light:#fdf2f3;
+}
+body.dark{
+  --bg:#111;--bg2:#1a1a1a;--bg3:#1f0a0e;
+  --border:#2a2a2a;--border2:#4a1a1e;
+  --text:#f0f0f0;--text2:#888;--text3:#c4a898;--text4:#555;
+  --red:#c0392b;--red-light:#1f0a0e;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overscroll-behavior:none;transition:background 0.3s,color 0.3s}
 /* Header */
-.header{position:fixed;top:0;left:0;right:0;z-index:100;background:#fdf8f4;border-bottom:0.5px solid #ede0d4}
+.header{position:fixed;top:0;left:0;right:0;z-index:100;background:var(--bg);border-bottom:0.5px solid var(--border)}
 .header-top{padding:12px 16px 8px;display:flex;align-items:center;justify-content:space-between}
 .logo{font-size:16px;font-weight:600;color:#7a0b1e;letter-spacing:2px}
 .header-meta{font-size:11px;color:#b08070;background:#fff;border:0.5px solid #ede0d4;border-radius:14px;padding:3px 10px}
 .search-wrap{padding:0 12px 8px;position:relative}
-.search-input{width:100%;background:#fff;border:0.5px solid #ede0d4;border-radius:20px;padding:8px 14px 8px 36px;font-size:13px;color:#1a1a1a;outline:none;font-family:inherit}
+.search-input{width:100%;background:var(--bg2);border:0.5px solid var(--border);border-radius:20px;padding:8px 14px 8px 36px;font-size:13px;color:var(--text);outline:none;font-family:inherit}
 .search-input::placeholder{color:#c4a898}
 .search-icon{position:absolute;left:22px;top:50%;transform:translateY(-50%);color:#c4a898;font-size:14px;pointer-events:none}
 .filter-row{padding:0 12px 10px;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
 .filter-row::-webkit-scrollbar{display:none}
-.chip{background:#fff;border:0.5px solid #ede0d4;border-radius:16px;padding:4px 12px;font-size:11px;color:#7a0b1e;white-space:nowrap;cursor:pointer;transition:all 0.15s;font-family:inherit;font-weight:500}
-.chip.active{background:#7a0b1e;border-color:#7a0b1e;color:#fff}
+.chip{background:var(--bg2);border:0.5px solid var(--border);border-radius:16px;padding:4px 12px;font-size:11px;color:var(--red);white-space:nowrap;cursor:pointer;transition:all 0.15s;font-family:inherit;font-weight:500}
+.chip.active{background:var(--red);border-color:var(--red);color:#fff}
 /* Contador */
-.count-bar{padding:6px 16px;font-size:11px;color:#b08070;background:#fdf8f4;border-bottom:0.5px solid #ede0d4;display:flex;justify-content:space-between;align-items:center}
+.count-bar{padding:6px 16px;font-size:11px;color:var(--text3);background:var(--bg);border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center}
 .count-bar strong{color:#7a0b1e}
 /* Grid */
 .grid-wrap{padding:8px}
 .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
 /* Card */
-.card{background:#fff;border-radius:14px;overflow:hidden;border:0.5px solid #ede0d4}
-.card-img{aspect-ratio:1;background:#f5ede8;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.card{background:var(--bg2);border-radius:14px;overflow:hidden;border:0.5px solid var(--border)}
+.card-img{aspect-ratio:1;background:var(--bg3);position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden}
 .card-img img{width:100%;height:100%;object-fit:cover}
-.card-abbrev{font-size:22px;font-weight:600;color:#d4b8a8;pointer-events:none}
+.card-abbrev{font-size:22px;font-weight:600;color:var(--text4);pointer-events:none}
 .btn-nok{position:absolute;bottom:6px;right:6px;width:22px;height:22px;border-radius:50%;background:rgba(122,11,30,0.85);border:none;color:#fff;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .btn-comment{position:absolute;top:6px;left:6px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,0.25);border:none;color:#fff;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .card-body{padding:8px 10px 10px}
-.card-brand{font-size:9px;color:#7a0b1e;font-weight:600;letter-spacing:0.8px;margin-bottom:2px;text-transform:uppercase}
-.card-name{font-size:11px;font-weight:500;color:#1a1a1a;line-height:1.35;margin-bottom:6px;cursor:pointer}
+.card-brand{font-size:9px;color:var(--red);font-weight:600;letter-spacing:0.8px;margin-bottom:2px;text-transform:uppercase}
+.card-name{font-size:11px;font-weight:500;color:var(--text);line-height:1.35;margin-bottom:6px;cursor:pointer}
 .card-name:hover{color:#7a0b1e}
 .card-footer{display:flex;justify-content:space-between;align-items:center}
-.card-val{font-size:11px;color:#888}
+.card-val{font-size:11px;color:var(--text2)}
 /* Modal */
 .modal-bg{display:none;position:fixed;inset:0;z-index:200;background:rgba(50,20,10,0.4);backdrop-filter:blur(3px)}
 .modal-bg.open{display:flex;align-items:flex-end}
-.modal{background:#fff;border-radius:24px 24px 0 0;width:100%;max-height:85vh;overflow-y:auto;padding:20px 20px 40px}
-.modal-handle{width:36px;height:4px;background:#ede0d4;border-radius:2px;margin:0 auto 16px}
+.modal{background:var(--bg);border-radius:24px 24px 0 0;width:100%;max-height:85vh;overflow-y:auto;padding:20px 20px 40px}
+.modal-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px}
 .modal-img{width:100%;aspect-ratio:1;border-radius:14px;background:#f5ede8;object-fit:cover;margin-bottom:14px;display:flex;align-items:center;justify-content:center;font-size:48px;font-weight:600;color:#d4b8a8}
 .modal-brand{font-size:11px;color:#7a0b1e;font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px}
-.modal-name{font-size:17px;font-weight:600;color:#1a1a1a;margin-bottom:4px;line-height:1.3}
-.modal-val{font-size:14px;color:#888;margin-bottom:16px}
-.modal-section{font-size:11px;font-weight:600;color:#b08070;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.modal-name{font-size:17px;font-weight:600;color:var(--text);margin-bottom:4px;line-height:1.3}
+.modal-val{font-size:14px;color:var(--text2);margin-bottom:16px}
+.modal-section{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
 /* Comments */
-.comment-item{background:#fdf8f4;border-radius:10px;padding:10px 12px;margin-bottom:6px}
+.comment-item{padding:8px 0;margin-bottom:0;border-bottom:0.5px solid #f0e8e4}
 .comment-who{font-size:10px;color:#7a0b1e;font-weight:600;margin-bottom:3px}
 .comment-text{font-size:12px;color:#444;line-height:1.5}
 .comment-time{font-size:9px;color:#ccc;margin-top:4px}
 .comment-input-wrap{display:flex;gap:8px;margin-top:12px}
-.comment-input{flex:1;border:0.5px solid #ede0d4;border-radius:20px;padding:9px 14px;font-size:13px;font-family:inherit;outline:none;background:#fdf8f4}
+.comment-input{flex:1;border:0.5px solid var(--border);border-radius:20px;padding:9px 14px;font-size:13px;font-family:inherit;outline:none;background:var(--bg);color:var(--text)}
 .comment-send{background:#7a0b1e;border:none;border-radius:50%;width:36px;height:36px;color:#fff;font-size:16px;cursor:pointer;flex-shrink:0}
 .modal-actions{display:flex;gap:8px;margin-top:16px}
 .btn-primary{flex:1;background:#7a0b1e;border:none;border-radius:12px;color:#fff;font-size:13px;font-weight:600;padding:12px;cursor:pointer;font-family:inherit}
 .btn-secondary{flex:1;background:#fdf2f3;border:0.5px solid #f5c4c4;border-radius:12px;color:#7a0b1e;font-size:13px;font-weight:600;padding:12px;cursor:pointer;font-family:inherit}
 .btn-edit{background:#fdf8f4;border:0.5px solid #ede0d4;border-radius:12px;color:#888;font-size:13px;font-weight:500;padding:10px 16px;cursor:pointer;font-family:inherit;margin-bottom:12px;width:100%}
 /* Tab bar */
-.tab-bar{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:0.5px solid #ede0d4;display:flex;padding-bottom:env(safe-area-inset-bottom,0);z-index:100}
+.tab-bar{position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:0.5px solid var(--border);display:flex;padding-bottom:env(safe-area-inset-bottom,0);z-index:100}
 .tab-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0 10px;background:none;border:none;cursor:pointer;font-family:inherit;position:relative}
 .tab-icon{font-size:18px}
 .tab-label{font-size:9px;font-weight:600;color:#c4a898}
 .tab-btn.active .tab-label{color:#7a0b1e}
 .tab-badge{position:absolute;top:4px;right:calc(50% - 18px);background:#7a0b1e;color:#fff;font-size:8px;font-weight:700;min-width:14px;height:14px;border-radius:7px;display:none;align-items:center;justify-content:center;padding:0 3px}
 /* Chat page */
-.page{display:none;position:fixed;inset:0;background:#fdf8f4;overflow-y:auto;padding-top:60px;padding-bottom:70px}
+.page{display:none;position:fixed;inset:0;background:var(--bg);overflow-y:auto;padding-top:60px;padding-bottom:70px}
 .page.active{display:block}
-.chat-header{position:fixed;top:0;left:0;right:0;z-index:100;background:#fdf8f4;border-bottom:0.5px solid #ede0d4;padding:14px 16px}
-.chat-title{font-size:16px;font-weight:600;color:#1a1a1a}
+.chat-header{position:fixed;top:0;left:0;right:0;z-index:100;background:var(--bg);border-bottom:0.5px solid var(--border);padding:14px 16px}
+.chat-title{font-size:16px;font-weight:600;color:var(--text)}
 .chat-sub{font-size:11px;color:#b08070;margin-top:2px}
-.chat-item{background:#fff;border-left:3px solid #ede0d4;border-radius:0 12px 12px 0;margin:0 12px 8px;padding:10px 12px;cursor:pointer}
+.chat-item{background:var(--bg2);border-left:3px solid var(--border);border-radius:0 12px 12px 0;margin:0 12px 8px;padding:10px 12px;cursor:pointer}
 .chat-item.has-new{border-left-color:#7a0b1e}
-.chat-item-name{font-size:12px;font-weight:600;color:#1a1a1a;margin-bottom:4px}
+.chat-item-name{font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px}
 .chat-item-last{font-size:11px;color:#888;line-height:1.4}
 .chat-item-meta{font-size:9px;color:#c4a898;margin-top:4px;display:flex;justify-content:space-between}
 .chat-badge{background:#7a0b1e;color:#fff;font-size:8px;font-weight:700;padding:1px 5px;border-radius:6px}
@@ -91,8 +103,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .name-cancel-btn{background:#fdf2f3;border:0.5px solid #f5c4c4;border-radius:8px;color:#7a0b1e;font-size:10px;padding:5px 8px;cursor:pointer}
 /* Upload section */
 .upload-page{padding:80px 16px 100px}
-.upload-card{background:#fff;border:0.5px solid #ede0d4;border-radius:16px;padding:20px;margin-bottom:12px}
-.upload-title{font-size:14px;font-weight:600;color:#1a1a1a;margin-bottom:6px}
+.upload-card{background:var(--bg2);border:0.5px solid var(--border);border-radius:16px;padding:20px;margin-bottom:12px}
+.upload-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:6px}
 .upload-sub{font-size:12px;color:#b08070;margin-bottom:14px;line-height:1.5}
 .upload-btn{width:100%;padding:12px;border-radius:12px;background:#fdf2f3;border:0.5px dashed #f5c4c4;color:#7a0b1e;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;text-align:center}
 .progress-bar{height:4px;background:#ede0d4;border-radius:2px;margin-top:10px;overflow:hidden;display:none}
@@ -133,7 +145,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <img id="user-avatar" src="" style="width:24px;height:24px;border-radius:50%;border:1px solid rgba(255,255,255,0.3)" onerror="this.style.display='none'">
     <span id="user-name" style="font-size:11px;color:rgba(255,255,255,0.9);font-weight:600"></span>
   </div>
-  <button onclick="logoutGoogle()" style="background:rgba(255,255,255,0.15);border:none;border-radius:8px;color:#fff;font-size:10px;padding:4px 10px;cursor:pointer">Sair</button>
+  <div style="display:flex;align-items:center;gap:8px">
+    <div id="online-users" style="display:flex;align-items:center;gap:4px"></div>
+    <button onclick="logoutGoogle()" style="background:rgba(255,255,255,0.15);border:none;border-radius:8px;color:#fff;font-size:10px;padding:4px 10px;cursor:pointer">Sair</button>
+  </div>
 </div>
 
 <div class="header" id="cat-header">
@@ -142,7 +157,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <span class="logo">BAZAAR</span>
       <div id="subtitulo" onclick="editarSubtitulo()" style="font-size:10px;color:#b08070;margin-top:1px;cursor:pointer;letter-spacing:0.5px" title="Clique para editar">Faltantes — Junho 2026</div>
     </div>
-    <span class="header-meta" id="header-meta">231 itens · R$ 48.959,50</span>
+    <div style="display:flex;align-items:center;gap:8px">
+      <button onclick="toggleDark()" id="btn-dark" style="background:var(--bg2);border:0.5px solid var(--border);border-radius:10px;padding:4px 8px;cursor:pointer;font-size:14px;color:var(--red)" title="Modo escuro">🌙</button>
+      <button onclick="toggleGrid()" id="btn-grid" style="background:#fff;border:0.5px solid #ede0d4;border-radius:10px;padding:4px 8px;cursor:pointer;font-size:14px;color:#7a0b1e" title="Mudar visualização">⊞</button>
+      <span class="header-meta" id="header-meta">231 itens · R$ 48.959,50</span>
+    </div>
   </div>
   <div class="search-wrap">
     <span class="search-icon">🔍</span>
@@ -158,6 +177,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       oninput="filtrarMarcaChips(this.value)">
     <span style="position:absolute;left:20px;top:50%;transform:translateY(-50%);font-size:11px;color:#c4a898;pointer-events:none">🔍</span>
   </div>
+  <div style="padding:0 12px 8px">
+    <button onclick="toggleSort()" id="btn-sort" style="width:100%;font-size:10px;font-weight:600;color:#7a0b1e;background:#fdf2f3;border:0.5px solid #f5c4c4;border-radius:10px;padding:6px 12px;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px">
+      <span id="sort-icon">↑</span><span id="sort-label">Marca A→Z · Produto A→Z</span>
+    </button>
+  </div>
   <div class="filter-row" id="marca-row">
     <button class="chip active" id="chip-all-marca" onclick="setMarca('',this)">Todas marcas</button>
     <button class="chip" onclick="setMarca('32 DEGREES',this)">32 DEGREES</button><button class="chip" onclick="setMarca('ADIDAS',this)">ADIDAS</button><button class="chip" onclick="setMarca('AERIE',this)">AERIE</button><button class="chip" onclick="setMarca('BABE LASH',this)">BABE LASH</button><button class="chip" onclick="setMarca('BALANCE',this)">BALANCE</button><button class="chip" onclick="setMarca('BANANA REPUBLIC',this)">BANANA REPUBLIC</button><button class="chip" onclick="setMarca('BB',this)">BB</button><button class="chip" onclick="setMarca('BBW',this)">BBW</button><button class="chip" onclick="setMarca('BENADRYL',this)">BENADRYL</button><button class="chip" onclick="setMarca('BI-FLEX',this)">BI-FLEX</button><button class="chip" onclick="setMarca('BIOPURE',this)">BIOPURE</button><button class="chip" onclick="setMarca('BLUE LOVE',this)">BLUE LOVE</button><button class="chip" onclick="setMarca('BOMBAY',this)">BOMBAY</button><button class="chip" onclick="setMarca('BOOGIE',this)">BOOGIE</button><button class="chip" onclick="setMarca('CALVIN KLEIN',this)">CALVIN KLEIN</button><button class="chip" onclick="setMarca('CARTERS',this)">CARTERS</button><button class="chip" onclick="setMarca('CENTELLA',this)">CENTELLA</button><button class="chip" onclick="setMarca('CHARLOTTE',this)">CHARLOTTE</button><button class="chip" onclick="setMarca('COLUMBIA',this)">COLUMBIA</button><button class="chip" onclick="setMarca('CONVERSE',this)">CONVERSE</button><button class="chip" onclick="setMarca('CORE KITCHEN',this)">CORE KITCHEN</button><button class="chip" onclick="setMarca('DERMASIL',this)">DERMASIL</button><button class="chip" onclick="setMarca('EGG TIMER',this)">EGG TIMER</button><button class="chip" onclick="setMarca('EPIELLE',this)">EPIELLE</button><button class="chip" onclick="setMarca('FASHION NOVA',this)">FASHION NOVA</button><button class="chip" onclick="setMarca('GAP',this)">GAP</button><button class="chip" onclick="setMarca('GLORIA VANDERBILT',this)">GLORIA VANDERBILT</button><button class="chip" onclick="setMarca('GREAT VALUE',this)">GREAT VALUE</button><button class="chip" onclick="setMarca('JESSICA SIMPSON',this)">JESSICA SIMPSON</button><button class="chip" onclick="setMarca('JOURNEE',this)">JOURNEE</button><button class="chip" onclick="setMarca('JUICY COUTURE',this)">JUICY COUTURE</button><button class="chip" onclick="setMarca('K18',this)">K18</button><button class="chip" onclick="setMarca('KEITH HARING',this)">KEITH HARING</button><button class="chip" onclick="setMarca('KITCHENAID',this)">KITCHENAID</button><button class="chip" onclick="setMarca('LA COLORS',this)">LA COLORS</button><button class="chip" onclick="setMarca('LAURA ASHLEY',this)">LAURA ASHLEY</button><button class="chip" onclick="setMarca('LOREAL',this)">LOREAL</button><button class="chip" onclick="setMarca('MARIE CLAIRE PARIS',this)">MARIE CLAIRE PARIS</button><button class="chip" onclick="setMarca('MARIO BADESCU',this)">MARIO BADESCU</button><button class="chip" onclick="setMarca('MELISSA E DOUG',this)">MELISSA E DOUG</button><button class="chip" onclick="setMarca('MONDAY',this)">MONDAY</button><button class="chip" onclick="setMarca('MONDETTA',this)">MONDETTA</button><button class="chip" onclick="setMarca('MR BUBBLE',this)">MR BUBBLE</button><button class="chip" onclick="setMarca('NATROL',this)">NATROL</button><button class="chip" onclick="setMarca('OLD NAVY',this)">OLD NAVY</button><button class="chip" onclick="setMarca('OLD NAVY X GAP',this)">OLD NAVY X GAP</button><button class="chip" onclick="setMarca('PARK LIFE',this)">PARK LIFE</button><button class="chip" onclick="setMarca('RALPH LAUREN',this)">RALPH LAUREN</button><button class="chip" onclick="setMarca('RUSSEL STOVER',this)">RUSSEL STOVER</button><button class="chip" onclick="setMarca('SINOPANT',this)">SINOPANT</button><button class="chip" onclick="setMarca('SKECHERS',this)">SKECHERS</button><button class="chip" onclick="setMarca('SMART CARE',this)">SMART CARE</button><button class="chip" onclick="setMarca('SNUGGLE',this)">SNUGGLE</button><button class="chip" onclick="setMarca('STEVE MADDEN',this)">STEVE MADDEN</button><button class="chip" onclick="setMarca('TOMMY',this)">TOMMY</button><button class="chip" onclick="setMarca('VASELINE',this)">VASELINE</button><button class="chip" onclick="setMarca('VICTORIA'S SECRET',this)">VICTORIA'S SECRET</button><button class="chip" onclick="setMarca('VOLCOM',this)">VOLCOM</button><button class="chip" onclick="setMarca('WALYFREI',this)">WALYFREI</button><button class="chip" onclick="setMarca('WET',this)">WET</button>
@@ -167,7 +191,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 <!-- CONTADOR -->
 <div class="count-bar main-content" id="count-bar" style="padding-top:170px">
   <span>Mostrando <strong id="count-num">231</strong> faltantes</span>
-  <span id="count-val" style="font-size:11px;color:#b08070"></span>
+  <span id="count-val"></span>
 </div>
 
 <!-- GRID -->
@@ -206,6 +230,31 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
         <input type="file" accept=".csv" style="display:none" onchange="handleFotos(this)">
       </label>
       <div id="foto-status" style="font-size:11px;color:#b08070;margin-top:8px"></div>
+    </div>
+    <div class="upload-card">
+      <div class="upload-title">📄 Gerar PDF</div>
+      <div class="upload-sub">Gere uma lista de faltantes filtrada por marca e vendedora.</div>
+      <div style="margin-bottom:10px">
+        <div style="font-size:10px;font-weight:600;color:#b08070;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:5px">Vendedora</div>
+        <select id="pdf-vend" style="width:100%;background:#fdf8f4;border:0.5px solid #ede0d4;border-radius:10px;padding:9px 12px;font-size:13px;font-family:inherit;outline:none;color:#1a1a1a">
+          <option value="">Todas</option>
+        </select>
+      </div>
+      <div style="margin-bottom:14px">
+        <div style="font-size:10px;font-weight:600;color:#b08070;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px">Marca</div>
+        <div style="position:relative;margin-bottom:6px">
+          <input id="pdf-marca-search" type="text" placeholder="Buscar marca..." autocomplete="off"
+            oninput="filtrarPdfMarcas(this.value)"
+            style="width:100%;background:#fdf8f4;border:0.5px solid #ede0d4;border-radius:10px;padding:7px 12px 7px 28px;font-size:12px;font-family:inherit;outline:none;color:#1a1a1a">
+          <span style="position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:11px;color:#c4a898;pointer-events:none">🔍</span>
+        </div>
+        <div style="display:flex;gap:6px;margin-bottom:6px">
+          <button onclick="selecionarTodasMarcasPDF()" style="font-size:9px;font-weight:600;color:#7a0b1e;background:#fdf2f3;border:0.5px solid #f5c4c4;border-radius:8px;padding:3px 10px;cursor:pointer;font-family:inherit">Todas</button>
+          <button onclick="limparMarcasPDF()" style="font-size:9px;font-weight:600;color:#888;background:#fff;border:0.5px solid #ede0d4;border-radius:8px;padding:3px 10px;cursor:pointer;font-family:inherit">Limpar</button>
+        </div>
+        <div id="pdf-marcas-chips" style="display:flex;flex-wrap:wrap;gap:5px;max-height:120px;overflow-y:auto"></div>
+      </div>
+      <button onclick="gerarPDF()" style="width:100%;padding:12px;border-radius:12px;background:#7a0b1e;border:none;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">↓ Gerar PDF</button>
     </div>
     <div id="ultima-atualizacao" style="font-size:11px;color:#c4a898;text-align:center;margin-top:8px"></div>
   </div>
@@ -434,6 +483,30 @@ function salvarNovoItem() {
   fbSave(newId);
 }
 
+let _isDark = localStorage.getItem('dark_mode') === '1';
+function toggleDark() {
+  _isDark = !_isDark;
+  document.body.classList.toggle('dark', _isDark);
+  document.getElementById('btn-dark').textContent = _isDark ? '☀️' : '🌙';
+  localStorage.setItem('dark_mode', _isDark ? '1' : '0');
+}
+
+let _gridCols = 2;
+let _sortDir = 'asc';
+function toggleSort() {
+  _sortDir = _sortDir === 'asc' ? 'desc' : 'asc';
+  document.getElementById('sort-icon').textContent = _sortDir === 'asc' ? '↑' : '↓';
+  document.getElementById('sort-label').textContent = _sortDir === 'asc' ? 'Marca A→Z · Produto A→Z' : 'Marca Z→A · Produto Z→A';
+  renderGrid();
+}
+function toggleGrid() {
+  const cols = [2, 3, 1];
+  const icons = ['⊞', '⊟', '▤'];
+  _gridCols = cols[(cols.indexOf(_gridCols) + 1) % cols.length];
+  document.getElementById('btn-grid').textContent = icons[cols.indexOf(_gridCols)];
+  document.getElementById('grid').style.gridTemplateColumns = `repeat(${_gridCols}, 1fr)`;
+}
+
 function abbrev(n) {
   const w = n.split(' ').filter(x => x.length > 2 && !/^(de|da|do|em|com|para|a|e|o|as|os)$/i.test(x));
   return (w[0]?.[0]||'') + (w[1]?.[0]||'');
@@ -455,7 +528,13 @@ function getFiltered() {
 
 function renderGrid() {
   fSearch = document.getElementById('search-input').value;
-  const prods = getFiltered();
+  let prods = getFiltered();
+  prods.sort((a,b) => {
+    const dir = _sortDir === 'asc' ? 1 : -1;
+    const mc = (a.m||'').localeCompare(b.m||'','pt-BR');
+    if (mc !== 0) return mc * dir;
+    return a.n.localeCompare(b.n,'pt-BR') * dir;
+  });
   const grid = document.getElementById('grid');
   const empty = document.getElementById('empty');
   document.getElementById('count-num').textContent = prods.length;
@@ -463,7 +542,7 @@ function renderGrid() {
     const val = parseFloat(p.vt||p.v)||0;
     return a + val * (p.qty||p.q||0);
   }, 0);
-  document.getElementById('count-val').textContent = fmtVal(tv);
+  const cvEl = document.getElementById('count-val'); if (cvEl) cvEl.textContent = fmtVal(tv);
 
   if (!prods.length) { grid.innerHTML=''; empty.style.display=''; return; }
   empty.style.display = 'none';
@@ -478,9 +557,9 @@ function renderGrid() {
     return `<div class="card" id="card-${p._id}" style="${p.nok?'border-color:#f5c4c4;':'' }">
       <div class="card-img" onclick="openModal(${p._id})">
         ${img}
-        ${p.nok ? '<div class="nok-overlay show"><span class="nok-label">✕ NOK</span></div>' : ''}
+        ${p.nok ? '<div class="nok-overlay show"><div style="text-align:center"><div class="nok-label">✕ NOK</div>' + (p.nokWho ? '<div style="font-size:9px;color:rgba(255,255,255,0.7);margin-top:2px">'+p.nokWho+'</div>' : '') + '</div></div>' : ''}
         <button class="btn-nok" onclick="event.stopPropagation();confirmNok(${p._id})">✕</button>
-        <button class="btn-comment" onclick="event.stopPropagation();openModal(${p._id},true)" style="background:${unread>0?'rgba(122,11,30,0.85)':'rgba(0,0,0,0.25)'}">💬${unread>0?' '+unread:''}</button>
+        ${unread>0 ? '<div style="position:absolute;top:6px;left:6px;background:rgba(122,11,30,0.85);border-radius:10px;padding:1px 6px;font-size:9px;font-weight:700;color:#fff">'+unread+'</div>' : ''}
       </div>
       <div class="card-body">
         <div class="card-brand">${p.m||''}</div>
@@ -501,6 +580,14 @@ function confirmNok(id) {
   const p = PRODUTOS[id];
   if (!p) return;
   p.nok = !p.nok;
+  p.nokWho = p.nok ? (localStorage.getItem('chat_nome') || 'Anônimo') : '';
+  if (p.nok) {
+    p.nokHistory = p.nokHistory || [];
+    p.nokHistory.push({
+      who: localStorage.getItem('chat_nome') || 'Anônimo',
+      time: new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})
+    });
+  }
   fbSave(id);
   renderGrid();
   updateNokBadge();
@@ -585,6 +672,54 @@ function goTab(tab) {
   if (tab==='upload') {
     const ua = localStorage.getItem('ultima_atualizacao');
     document.getElementById('ultima-atualizacao').textContent = ua ? 'Última atualização: ' + ua : '';
+    // Populate PDF selects
+    const vendas = [...new Set(PRODUTOS.flatMap(p=>p.vs||[]).filter(Boolean))].sort();
+    const marcas = [...new Set(PRODUTOS.map(p=>(p.m||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+    const pdfVend = document.getElementById('pdf-vend');
+    const pdfMarca = document.getElementById('pdf-marca');
+    if (pdfVend) pdfVend.innerHTML = '<option value="">Todas</option>' + vendas.map(v=>`<option value="${v}">${v}</option>`).join('');
+    // Populate PDF marca chips
+    const pdfChips = document.getElementById('pdf-marcas-chips');
+    if (pdfChips) {
+      // ── Online Presence ──────────────────────────
+let _presenceRef = null;
+function iniciarPresenca(nome, avatar) {
+  if (!window._db) return;
+  const ref = window._db.collection('presenca').doc(nome.replace(/\s+/g,'_'));
+  _presenceRef = ref;
+  ref.set({ nome, avatar: avatar||'', at: new Date().toISOString() });
+  // Update every 30s
+  setInterval(() => ref.set({ nome, avatar: avatar||'', at: new Date().toISOString() }), 30000);
+  // Listen to all online users (active in last 2min)
+  window._db.collection('presenca').onSnapshot(snap => {
+    const agora = Date.now();
+    const online = [];
+    snap.forEach(doc => {
+      const d = doc.data();
+      const diff = agora - new Date(d.at).getTime();
+      if (diff < 120000) online.push(d); // 2 min
+    });
+    const el = document.getElementById('online-users');
+    if (!el) return;
+    el.innerHTML = online.map(u =>
+      u.avatar
+        ? `<img src="${u.avatar}" title="${u.nome}" style="width:20px;height:20px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.5)" onerror="this.style.display='none'">`
+        : `<div title="${u.nome}" style="width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,0.3);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff">${u.nome.charAt(0).toUpperCase()}</div>`
+    ).join('');
+  });
+}
+
+function encerrarPresenca() {
+  if (_presenceRef) _presenceRef.delete().catch(()=>{});
+}
+window.addEventListener('beforeunload', encerrarPresenca);
+
+window._pdfMarcasSel = new Set();
+      pdfChips.innerHTML = marcas.map(m =>
+        `<button class="pdf-marca-chip" data-m="${m}" onclick="togglePdfMarca(this,'${m.replace(/'/g,"\\'")}')"`+
+        ` style="font-size:10px;padding:3px 10px;border-radius:12px;border:0.5px solid #ede0d4;background:#fff;color:#888;cursor:pointer;font-family:inherit">${m}</button>`
+      ).join('');
+    }
   }
 }
 
@@ -637,6 +772,14 @@ function toggleNok() {
   if (modalId === null) return;
   const p = PRODUTOS[modalId];
   p.nok = !p.nok;
+  p.nokWho = p.nok ? (localStorage.getItem('chat_nome') || 'Anônimo') : '';
+  if (p.nok) {
+    p.nokHistory = p.nokHistory || [];
+    p.nokHistory.push({
+      who: localStorage.getItem('chat_nome') || 'Anônimo',
+      time: new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})
+    });
+  }
   fbSave(modalId);
   closeModalBtn();
 }
@@ -650,12 +793,51 @@ function renderModalComments(p) {
   el.innerHTML = p.comments.map((c,i) => {
     const id = p._id+'_'+i;
     SEEN.add(id);
-    return `<div class="comment-item">
+    return `<div class="comment-item" style="position:relative">
       <div class="comment-who">${c.who||'Anônimo'}</div>
-      <div class="comment-text">${c.text||c.msg||''}</div>
+      <div class="comment-text" style="padding-right:20px">${c.text||c.msg||''}</div>
       <div class="comment-time">${c.time||''}</div>
+      <button onclick="deletarComentario(${p._id},${i})" style="position:absolute;top:6px;right:6px;background:none;border:none;color:#f5c4c4;font-size:13px;cursor:pointer;padding:0;line-height:1">✕</button>
     </div>`;
   }).join('');
+  updateChatBadge();
+}
+
+// ── Push Notifications ──────────────────────────
+function pedirPermissaoNotificacao() {
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
+}
+
+function notificarComentario(produto, quem, texto) {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  const meuNome = localStorage.getItem('chat_nome') || '';
+  if (quem === meuNome) return; // não notifica a si mesmo
+  new Notification('💬 ' + quem, {
+    body: produto.substring(0,40) + ': ' + texto.substring(0,60),
+    icon: '',
+    tag: 'comment-' + Date.now()
+  });
+}
+
+// Pede permissão quando firebase listener detecta novo comentário de outro usuário
+function notificarSeNovo(prodId, prevLen) {
+  const p = PRODUTOS[prodId];
+  if (!p || !p.comments) return;
+  const meuNome = localStorage.getItem('chat_nome') || '';
+  const novos = p.comments.slice(prevLen);
+  novos.forEach(c => {
+    if (c.who !== meuNome) notificarComentario(p.n, c.who, c.text||c.msg||'');
+  });
+}
+
+function deletarComentario(prodId, idx) {
+  const p = PRODUTOS[prodId];
+  if (!p) return;
+  p.comments.splice(idx, 1);
+  fbSave(prodId);
+  renderModalComments(p);
   updateChatBadge();
 }
 
@@ -676,6 +858,8 @@ function sendComment() {
   inp.value = '';
   fbSave(modalId);
   renderModalComments(p);
+  // Notify others
+  notificarComentario(p.n, who, text);
 }
 
 // Chat tab
@@ -697,12 +881,15 @@ function renderNok() {
       <div style="flex:1;min-width:0">
         <div style="font-size:9px;color:#7a0b1e;font-weight:600;letter-spacing:0.5px;margin-bottom:2px">${p.m||''}</div>
         <div style="font-size:12px;font-weight:600;color:#1a1a1a;line-height:1.3;margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.n}</div>
-        <div style="font-size:11px;color:#c4a898">${(p.vs||[]).map(v=>v.charAt(0)+v.slice(1).toLowerCase()).join(', ')}</div>
+        <div style="font-size:11px;color:#c4a898">${(p.vs||[]).map(v=>v.charAt(0)+v.slice(1).toLowerCase()).join(', ')}${p.nokWho ? ' · <span style="color:#f5c4c4">NOK: '+p.nokWho+'</span>' : ''}</div>
       </div>
-      <button onclick="event.stopPropagation();PRODUTOS[${p._id}].nok=false;fbSave(${p._id});renderNok();updateNokBadge();"
-        style="background:#fdf2f3;border:0.5px solid #f5c4c4;border-radius:8px;color:#7a0b1e;font-size:10px;font-weight:600;padding:5px 10px;cursor:pointer;flex-shrink:0">
-        Desfazer
-      </button>
+<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
+        ${(p.nokHistory||[]).slice(-1).map(h=>`<div style="font-size:9px;color:rgba(122,11,30,0.6)">${h.who} · ${h.time}</div>`).join('')}
+        <button onclick="event.stopPropagation();PRODUTOS[${p._id}].nok=false;PRODUTOS[${p._id}].nokWho='';fbSave(${p._id});renderNok();updateNokBadge();"
+          style="background:#fdf2f3;border:0.5px solid #f5c4c4;border-radius:8px;color:#7a0b1e;font-size:10px;font-weight:600;padding:5px 10px;cursor:pointer">
+          Desfazer
+        </button>
+      </div>
     </div>`;
   }).join('');
 }
@@ -752,7 +939,7 @@ function fbSave(id) {
   const p = PRODUTOS[id];
   _pendingSaves.add(id);
   window._db.collection('faltantes').doc(String(id)).set({
-    nok: p.nok, comments: p.comments||[], qty: p.qty||p.q, updatedAt: new Date().toISOString()
+    nok: p.nok, nokWho: p.nokWho||'', nokHistory: p.nokHistory||[], comments: p.comments||[], qty: p.qty||p.q, updatedAt: new Date().toISOString()
   }).then(() => {
     _pendingSaves.delete(id);
   }).catch(e => {
@@ -768,9 +955,13 @@ function fbListen() {
       const id = parseInt(doc.id);
       if (!isNaN(id) && PRODUTOS[id] && !_pendingSaves.has(id)) {
         const data = doc.data();
-        PRODUTOS[id].nok      = data.nok      || false;
+        const prevLen = (PRODUTOS[id].comments||[]).length;
+        PRODUTOS[id].nok        = data.nok        || false;
+        PRODUTOS[id].nokWho    = data.nokWho     || '';
+        PRODUTOS[id].nokHistory = data.nokHistory || [];
         PRODUTOS[id].comments = data.comments || [];
         if (data.qty !== undefined) PRODUTOS[id].qty = data.qty;
+        if ((data.comments||[]).length > prevLen) notificarSeNovo(id, prevLen);
       }
     });
     renderGrid();
@@ -781,6 +972,112 @@ function fbListen() {
 }
 
 // CSV import
+window._pdfMarcasSel = new Set();
+
+function togglePdfMarca(btn, m) {
+  if (window._pdfMarcasSel.has(m)) {
+    window._pdfMarcasSel.delete(m);
+    btn.style.background = '#fff';
+    btn.style.color = '#888';
+    btn.style.borderColor = '#ede0d4';
+  } else {
+    window._pdfMarcasSel.add(m);
+    btn.style.background = '#fdf2f3';
+    btn.style.color = '#7a0b1e';
+    btn.style.borderColor = '#f5c4c4';
+  }
+}
+
+function selecionarTodasMarcasPDF() {
+  window._pdfMarcasSel = new Set();
+  document.querySelectorAll('.pdf-marca-chip').forEach(btn => {
+    if (btn.style.display !== 'none') {
+      const m = btn.dataset.m;
+      window._pdfMarcasSel.add(m);
+      btn.style.background = '#fdf2f3';
+      btn.style.color = '#7a0b1e';
+      btn.style.borderColor = '#f5c4c4';
+    }
+  });
+}
+
+function limparMarcasPDF() {
+  window._pdfMarcasSel = new Set();
+  document.querySelectorAll('.pdf-marca-chip').forEach(btn => {
+    btn.style.background = '#fff';
+    btn.style.color = '#888';
+    btn.style.borderColor = '#ede0d4';
+  });
+}
+
+function filtrarPdfMarcas(q) {
+  const ql = q.toLowerCase().trim();
+  document.querySelectorAll('.pdf-marca-chip').forEach(btn => {
+    btn.style.display = (!ql || btn.dataset.m.toLowerCase().includes(ql)) ? '' : 'none';
+  });
+}
+
+function gerarPDF() {
+  const vendFiltro  = document.getElementById('pdf-vend')?.value || '';
+  const marcaFiltro = document.getElementById('pdf-marca')?.value || '';
+
+  let prods = PRODUTOS.filter(p => !p.nok);
+  if (vendFiltro) prods = prods.filter(p => (p.vs||[]).some(v => v === vendFiltro));
+  if (window._pdfMarcasSel && window._pdfMarcasSel.size > 0) {
+    prods = prods.filter(p => window._pdfMarcasSel.has((p.m||'').trim()));
+  }
+
+  prods.sort((a,b) => {
+    const mc = (a.m||'').localeCompare(b.m||'','pt-BR');
+    return mc !== 0 ? mc : a.n.localeCompare(b.n,'pt-BR');
+  });
+
+  const fmt = v => 'R$ ' + parseFloat(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const now = new Date().toLocaleDateString('pt-BR');
+  const titulo = document.getElementById('subtitulo')?.textContent || 'Faltantes';
+  const marcaFiltroLabel = window._pdfMarcasSel && window._pdfMarcasSel.size > 0 ? [...window._pdfMarcasSel].join(', ') : '';
+  const subtit = [vendFiltro, marcaFiltroLabel].filter(Boolean).join(' · ') || 'Todos';
+  const totalUn  = prods.reduce((a,p)=>a+(p.qty||p.q||0),0);
+  const totalVal = prods.reduce((a,p)=>a+(parseFloat(p.vt||p.v)||0)*(p.qty||p.q||0),0);
+
+  // Group by marca
+  const byMarca = {};
+  prods.forEach(p => {
+    const m = (p.m||'Sem marca').trim();
+    if (!byMarca[m]) byMarca[m] = [];
+    byMarca[m].push(p);
+  });
+
+  const rows = Object.entries(byMarca).map(([m, items]) => `
+    <tr><td colspan="3" style="background:#fdf2f3;color:#7a0b1e;font-size:11px;font-weight:700;padding:8px 10px;text-transform:uppercase;letter-spacing:0.5px">${m}</td></tr>
+    ${items.map(p => `<tr>
+      <td style="padding:7px 10px;font-size:12px;color:#1a1a1a;border-bottom:0.5px solid #f5ede8">${p.n}</td>
+      <td style="padding:7px 10px;font-size:12px;color:#888;border-bottom:0.5px solid #f5ede8;text-align:center">${p.qty||p.q} un</td>
+      <td style="padding:7px 10px;font-size:12px;font-weight:600;color:#7a0b1e;border-bottom:0.5px solid #f5ede8;text-align:right">${fmt(p.vt||p.v)}</td>
+    </tr>`).join('')}
+  `).join('');
+
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${titulo}</title>
+  <style>
+    body{font-family:-apple-system,sans-serif;background:#fff;color:#1a1a1a;padding:32px;max-width:600px;margin:0 auto}
+    table{width:100%;border-collapse:collapse;margin-top:16px}
+  </style></head><body>
+    <div style="border-bottom:2px solid #7a0b1e;padding-bottom:12px;margin-bottom:16px">
+      <div style="font-size:22px;font-weight:700;color:#7a0b1e;letter-spacing:2px">BAZAAR</div>
+      <div style="font-size:13px;color:#888;margin-top:2px">${titulo} · ${subtit}</div>
+      <div style="font-size:11px;color:#bbb;margin-top:2px">${now} · ${prods.length} produtos · ${totalUn} unidades · ${fmt(totalVal)}</div>
+    </div>
+    <table>${rows}</table>
+    <div style="margin-top:24px;font-size:11px;color:#bbb;text-align:center">Total: ${prods.length} produtos · ${totalUn} unidades · ${fmt(totalVal)}</div>
+  </body></html>`;
+
+  const blob = new Blob([html], {type:'text/html'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.target = '_blank'; a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+}
+
 function handleCSV(input) {
   const file = input.files[0];
   if (!file) return;
@@ -901,6 +1198,7 @@ function logoutGoogle() {
 }
 
 if (typeof firebase !== 'undefined' && firebase.apps.length) {
+  firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL).then(() => {});
   firebase.auth().onAuthStateChanged(user => {
     const overlay = document.getElementById('login-overlay');
     const userBar = document.getElementById('user-bar');
@@ -910,11 +1208,11 @@ if (typeof firebase !== 'undefined' && firebase.apps.length) {
       userBar.style.display = 'flex';
       document.getElementById('user-name').textContent = user.displayName || user.email;
       document.getElementById('user-avatar').src = user.photoURL || '';
-      // Adjust header top padding for user bar
       catHeader.style.top = '36px';
       document.querySelector('.main-content').style.paddingTop = '210px';
-      // Store name for comments
       localStorage.setItem('chat_nome', user.displayName || user.email);
+      pedirPermissaoNotificacao();
+      iniciarPresenca(user.displayName || user.email, user.photoURL || '');
     } else {
       overlay.style.display = 'flex';
       userBar.style.display = 'none';
@@ -926,6 +1224,12 @@ if (typeof firebase !== 'undefined' && firebase.apps.length) {
 document.addEventListener('DOMContentLoaded', () => {
   const ua = localStorage.getItem('ultima_atualizacao');
   if (ua) document.getElementById('header-meta').title = 'Atualizado ' + ua;
+  // Apply saved dark mode
+  if (localStorage.getItem('dark_mode') === '1') {
+    document.body.classList.add('dark');
+    const btn = document.getElementById('btn-dark');
+    if (btn) btn.textContent = '☀️';
+  }
   const savedSub = localStorage.getItem('app_subtitulo');
   if (savedSub) document.getElementById('subtitulo').textContent = savedSub;
   renderGrid();
