@@ -26,7 +26,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .header-meta{font-size:11px;color:#b08070;background:#fff;border:0.5px solid #ede0d4;border-radius:14px;padding:3px 10px}
 .search-wrap{padding:0 12px 8px;position:relative}
 .search-input{width:100%;background:var(--bg2);border:0.5px solid var(--border);border-radius:20px;padding:8px 14px 8px 36px;font-size:13px;color:var(--text);outline:none;font-family:inherit}
-.search-input::placeholder{color:#c4a898}
+.search-input::placeholder{color:var(--text4)}
 .search-icon{position:absolute;left:22px;top:50%;transform:translateY(-50%);color:var(--text4);font-size:14px;pointer-events:none}
 .filter-row{padding:0 12px 10px;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
 .filter-row::-webkit-scrollbar{display:none}
@@ -35,11 +35,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 /* Contador */
 .count-bar{padding:6px 16px;font-size:11px;color:var(--text3);background:var(--bg);border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center}
 .count-bar strong{color:var(--red)}
+.count-bar{color:var(--text3)}
 /* Grid */
 .grid-wrap{padding:8px;background:var(--bg)}
 .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
 /* Card */
-.card{background:var(--bg2);border-radius:14px;overflow:hidden;border:0.5px solid var(--border)}
+.card{background:var(--bg2);border-radius:14px;overflow:hidden;border:0.5px solid var(--border);transition:box-shadow 0.2s}
+.card:active{box-shadow:0 4px 20px rgba(122,11,30,0.12)}
 .card-img{aspect-ratio:1;background:var(--bg3);position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden}
 .card-img img{width:100%;height:100%;object-fit:cover}
 .card-abbrev{font-size:22px;font-weight:600;color:var(--text4);pointer-events:none}
@@ -52,9 +54,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .card-footer{display:flex;justify-content:space-between;align-items:center}
 .card-val{font-size:11px;color:var(--text2)}
 /* Modal */
-.modal-bg{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.5);backdrop-filter:blur(3px)}
+.modal-bg{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px)}
 .modal-bg.open{display:flex;align-items:flex-end}
-.modal{background:var(--bg);border-radius:24px 24px 0 0;width:100%;max-height:85vh;overflow-y:auto;padding:20px 20px 40px}
+.modal{background:var(--bg);border-radius:24px 24px 0 0;box-shadow:0 -8px 40px rgba(0,0,0,0.15);width:100%;max-height:85vh;overflow-y:auto;padding:20px 20px 40px}
 .modal-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px}
 .modal-img{width:100%;aspect-ratio:1;border-radius:14px;background:var(--bg3);object-fit:cover;margin-bottom:14px;display:flex;align-items:center;justify-content:center;font-size:48px;font-weight:600;color:#d4b8a8}
 .modal-brand{font-size:11px;color:var(--red);font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px}
@@ -67,7 +69,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .comment-text{font-size:12px;color:var(--text);line-height:1.5}
 .comment-time{font-size:9px;color:var(--text4);margin-top:4px}
 .comment-input-wrap{display:flex;gap:8px;margin-top:12px}
-.comment-input{flex:1;border:0.5px solid var(--border);border-radius:20px;padding:9px 14px;font-size:13px;font-family:inherit;outline:none;background:var(--bg);color:var(--text)}
+.comment-input{flex:1;border:0.5px solid var(--border);border-radius:20px;padding:9px 14px;font-size:13px;font-family:inherit;outline:none;background:var(--bg2);color:var(--text)}
 .comment-send{background:#7a0b1e;border:none;border-radius:50%;width:36px;height:36px;color:#fff;font-size:16px;cursor:pointer;flex-shrink:0}
 .modal-actions{display:flex;gap:8px;margin-top:16px}
 .btn-primary{flex:1;background:#7a0b1e;border:none;border-radius:12px;color:#fff;font-size:13px;font-weight:600;padding:12px;cursor:pointer;font-family:inherit}
@@ -76,9 +78,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 /* Tab bar */
 .tab-bar{position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:0.5px solid var(--border);display:flex;padding-bottom:env(safe-area-inset-bottom,0);z-index:100}
 .tab-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0 10px;background:none;border:none;cursor:pointer;font-family:inherit;position:relative}
-.tab-icon{font-size:18px}
+.tab-icon{font-size:18px;color:var(--text3)}
 .tab-label{font-size:9px;font-weight:600;color:var(--text4)}
 .tab-btn.active .tab-label{color:var(--red)}
+.tab-btn.active .tab-icon{color:var(--red)}
 .tab-badge{position:absolute;top:4px;right:calc(50% - 18px);background:#7a0b1e;color:#fff;font-size:8px;font-weight:700;min-width:14px;height:14px;border-radius:7px;display:none;align-items:center;justify-content:center;padding:0 3px}
 /* Chat page */
 .page{display:none;position:fixed;inset:0;background:var(--bg);overflow-y:auto;padding-top:60px;padding-bottom:70px}
@@ -87,13 +90,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .chat-title{font-size:16px;font-weight:600;color:var(--text)}
 .chat-sub{font-size:11px;color:var(--text3);margin-top:2px}
 .chat-item{background:var(--bg2);border-left:3px solid var(--border);border-radius:0 12px 12px 0;margin:0 12px 8px;padding:10px 12px;cursor:pointer}
-.chat-item.has-new{border-left-color:#7a0b1e}
+.chat-item.has-new{border-left-color:var(--red)}
 .chat-item-name{font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px}
 .chat-item-last{font-size:11px;color:var(--text2);line-height:1.4}
 .chat-item-meta{font-size:9px;color:#c4a898;margin-top:4px;display:flex;justify-content:space-between}
 .chat-badge{background:#7a0b1e;color:#fff;font-size:8px;font-weight:700;padding:1px 5px;border-radius:6px}
 /* NOK overlay */
-.nok-overlay{position:absolute;inset:0;background:rgba(122,11,30,0.75);display:none;align-items:center;justify-content:center;border-radius:0;backdrop-filter:blur(1px)}
+.nok-overlay{position:absolute;inset:0;background:rgba(90,5,15,0.82);display:none;align-items:center;justify-content:center;border-radius:0;backdrop-filter:blur(2px)}
 .nok-overlay.show{display:flex}
 .nok-label{color:#fff;font-size:11px;font-weight:700;letter-spacing:1px}
 /* Edit name inline */
@@ -106,7 +109,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .upload-card{background:var(--bg2);border:0.5px solid var(--border);border-radius:16px;padding:20px;margin-bottom:12px}
 .upload-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:6px}
 .upload-sub{font-size:12px;color:var(--text3);margin-bottom:14px;line-height:1.5}
-.upload-btn{width:100%;padding:12px;border-radius:12px;background:var(--red-light);border:0.5px dashed var(--border2);color:var(--red);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;text-align:center}
+.upload-btn{width:100%;padding:12px;border-radius:12px;background:var(--red-light);border:0.5px dashed var(--border2);color:var(--red);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;text-align:center}
 .progress-bar{height:4px;background:#ede0d4;border-radius:2px;margin-top:10px;overflow:hidden;display:none}
 .progress-fill{height:100%;background:#7a0b1e;border-radius:2px;transition:width 0.3s;width:0%}
 /* Firebase sync */
@@ -183,10 +186,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       oninput="filtrarMarcaChips(this.value)">
     <span style="position:absolute;left:20px;top:50%;transform:translateY(-50%);font-size:11px;color:#c4a898;pointer-events:none">🔍</span>
   </div>
-  <div style="padding:0 12px 8px">
-    <button onclick="toggleSort()" id="btn-sort" style="width:100%;font-size:10px;font-weight:600;color:#7a0b1e;background:#fdf2f3;border:0.5px solid #f5c4c4;border-radius:10px;padding:6px 12px;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px">
-      <span id="sort-icon">↑</span><span id="sort-label">Marca A→Z · Produto A→Z</span>
+  <div style="padding:0 12px 6px;display:flex;align-items:center;gap:6px">
+    <button onclick="toggleSort()" id="btn-sort" style="flex:1;font-size:10px;font-weight:600;color:var(--red);background:var(--red-light);border:0.5px solid var(--border2);border-radius:10px;padding:6px 10px;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px">
+      <span id="sort-icon">↑</span><span id="sort-label">Marca A→Z</span>
     </button>
+    <div style="display:flex;align-items:center;gap:4px;background:var(--bg2);border:0.5px solid var(--border);border-radius:10px;padding:4px 8px">
+      <span style="font-size:9px;color:var(--text3);white-space:nowrap">≥</span>
+      <input type="number" id="filter-qty" min="1" value="" placeholder="un" oninput="renderGrid()"
+        style="width:32px;background:transparent;border:none;outline:none;font-size:11px;font-family:inherit;color:var(--text);text-align:center">
+    </div>
   </div>
   <div class="filter-row" id="marca-row">
     <button class="chip active" id="chip-all-marca" onclick="setMarca('',this)">Todas marcas</button>
@@ -379,10 +387,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <input class="comment-input" id="comment-input" placeholder="Escrever comentário..." type="text" onkeydown="if(event.key==='Enter')sendComment()">
       <button class="comment-send" onclick="sendComment()">➤</button>
     </div>
-    <div class="modal-actions" style="margin-top:16px">
-      <button class="btn-secondary" onclick="toggleNok()">✕ Marcar NOK</button>
-      <button class="btn-primary" onclick="closeModalBtn()">Fechar</button>
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button class="btn-secondary" onclick="toggleNok()" style="flex:1">✕ NOK</button>
+      <button onclick="compartilharWhatsApp()" style="flex:1;padding:12px;border-radius:12px;background:#25d366;border:none;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">WhatsApp</button>
+      <button onclick="baixarPdfProduto()" style="flex:1;padding:12px;border-radius:12px;background:var(--red);border:none;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">↓ PDF</button>
     </div>
+    <button class="btn-primary" onclick="closeModalBtn()" style="width:100%;margin-top:8px">Fechar</button>
   </div>
 </div>
 
@@ -526,10 +536,13 @@ function fmtVal(v) {
 
 function getFiltered() {
   const q = fSearch.toLowerCase();
+  const minQty = parseInt(document.getElementById('filter-qty')?.value) || 0;
   return PRODUTOS.filter(p => {
+    if (p.nok) return false;
     if (!fVends.has('TODAS') && !(p.vs||[]).some(v => fVends.has(v.toUpperCase()))) return false;
     if (fMarcas.size > 0 && !fMarcas.has((p.m||'').trim())) return false;
     if (q && !p.n.toLowerCase().includes(q) && !(p.m||'').toLowerCase().includes(q)) return false;
+    if (minQty > 0 && (p.qty||p.q||0) < minQty) return false;
     return true;
   });
 }
@@ -809,6 +822,69 @@ function closeModalBtn() {
 
 
 
+
+function baixarPdfProduto() {
+  if (modalId === null) return;
+  const p = PRODUTOS[modalId];
+  if (!p) return;
+  const fmt = v => 'R$ ' + parseFloat(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const now = new Date().toLocaleDateString('pt-BR');
+  const titulo = document.getElementById('subtitulo')?.textContent || 'Faltantes';
+
+  const tamsHtml = p.tams && Object.keys(p.tams).length > 0 && !(Object.keys(p.tams).length===1 && Object.keys(p.tams)[0]==='Único')
+    ? '<div style="margin-top:12px"><div style="font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Tamanhos</div>' +
+      '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">' +
+      Object.entries(p.tams).map(([t,q]) => {
+        const isNok = p.nokTams?.[t];
+        const isUndef = t === '??? (a definir)';
+        return '<div style="border:0.5px solid ' + (isUndef?'#f5d4a4':'#ede0d4') + ';border-radius:8px;padding:6px 4px;text-align:center;background:' + (isNok?'#fff0f0':isUndef?'#fff8e8':'#fff') + '">' +
+          '<div style="font-size:12px;font-weight:700;color:' + (isNok?'#c0392b':isUndef?'#8a5000':'#7a0b1e') + ';' + (isNok?'text-decoration:line-through':'') + '">' + (isUndef?'???':t) + '</div>' +
+          '<div style="font-size:10px;color:#888">' + (isNok?'NOK':q+' un') + '</div>' +
+        '</div>';
+      }).join('') + '</div></div>'
+    : '<div style="margin-top:8px;font-size:13px;color:#888">' + (p.qty||p.q) + ' unidade(s)</div>';
+
+  const html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>' + p.n + '</title>' +
+    '<style>body{font-family:-apple-system,sans-serif;background:#fff;color:#1a1a1a;padding:32px;max-width:480px;margin:0 auto}</style></head><body>' +
+    '<div style="border-bottom:2px solid #7a0b1e;padding-bottom:12px;margin-bottom:20px">' +
+      '<div style="font-size:18px;font-weight:700;color:#7a0b1e;letter-spacing:2px">BAZAAR</div>' +
+      '<div style="font-size:11px;color:#888;margin-top:2px">' + titulo + ' · ' + now + '</div>' +
+    '</div>' +
+    '<div style="font-size:11px;font-weight:600;color:#7a0b1e;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">' + (p.m||'') + '</div>' +
+    '<div style="font-size:18px;font-weight:700;color:#1a1a1a;margin-bottom:4px">' + p.n + '</div>' +
+    '<div style="font-size:14px;color:#888;margin-bottom:4px">' + fmt(p.vt||p.v) + '</div>' +
+    '<div style="font-size:12px;color:#b08070">' + (p.vs||[]).map(v=>v.charAt(0)+v.slice(1).toLowerCase()).join(', ') + '</div>' +
+    tamsHtml +
+    '</body></html>';
+
+  const blob = new Blob([html], {type:'text/html'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.target = '_blank'; a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+}
+
+function compartilharWhatsApp() {
+  if (modalId === null) return;
+  const p = PRODUTOS[modalId];
+  if (!p) return;
+  const fmt = v => 'R$ ' + parseFloat(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  let lines = [];
+  lines.push('*' + p.n + '*');
+  if (p.m) lines.push('Marca: ' + p.m);
+  lines.push('Valor: ' + fmt(p.vt||p.v));
+  if (p.tams && Object.keys(p.tams).length > 0 && !(Object.keys(p.tams).length===1 && Object.keys(p.tams)[0]==='Único')) {
+    lines.push('Tamanhos:');
+    Object.entries(p.tams).forEach(([t,q]) => {
+      if (!p.nokTams?.[t]) lines.push('  ' + (t==='??? (a definir)'?'???':t) + ' — ' + q + ' un');
+    });
+  } else {
+    lines.push('Qtd: ' + (p.qty||p.q) + ' un');
+  }
+  if ((p.vs||[]).length) lines.push('Vendedora: ' + p.vs.map(v=>v.charAt(0)+v.slice(1).toLowerCase()).join(', '));
+  const text = encodeURIComponent(lines.join(String.fromCharCode(10)));
+  window.open('https://wa.me/?text=' + text, '_blank');
+}
 
 function toggleTamNok(prodId, tam) {
   const p = PRODUTOS[prodId];
@@ -1216,7 +1292,15 @@ function handleCSV(input) {
 
       PRODUTOS = newData.map((p,i) => {
         const existing = PRODUTOS.find(x=>x.n.toLowerCase()===p.n.toLowerCase());
-        return {...p, _id:i, nok:existing?.nok||false, comments:existing?.comments||[], qty:p.q};
+        return {
+          ...p, _id:i,
+          nok:      existing?.nok      || false,
+          nokWho:   existing?.nokWho   || '',
+          nokHistory: existing?.nokHistory || [],
+          nokTams:  existing?.nokTams  || {},
+          comments: existing?.comments || [],
+          qty:      p.q
+        };
       });
 
       document.getElementById('csv-fill').style.width = '100%';
