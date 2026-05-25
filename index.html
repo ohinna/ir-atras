@@ -433,6 +433,11 @@ function editarSubtitulo() {
     const val = inp.value.trim() || 'Faltantes — Junho 2026';
     el.textContent = val;
     localStorage.setItem('app_subtitulo', val);
+    // Sync to Firebase
+    if (window._db) {
+      window._db.collection('config').doc('app').set({subtitulo: val}, {merge: true})
+        .catch(e => console.log('sync subtitulo error:', e));
+    }
   };
   inp.onblur = save;
   inp.onkeydown = e => { if (e.key === 'Enter') inp.blur(); if (e.key === 'Escape') { el.textContent = atual; } };
@@ -583,7 +588,10 @@ function renderGrid() {
         ${unread>0 ? '<div style="position:absolute;top:6px;left:6px;background:rgba(122,11,30,0.85);border-radius:10px;padding:1px 6px;font-size:9px;font-weight:700;color:#fff">'+unread+'</div>' : ''}
       </div>
       <div class="card-body">
-        <div class="card-brand">${p.m||''}</div>
+        <div style="display:flex;align-items:center;gap:5px;margin-bottom:2px">
+          <div class="card-brand">${p.m||''}</div>
+          ${p.c ? '<div style="font-size:8px;color:var(--text4);font-weight:400">· '+p.c+'</div>' : ''}
+        </div>
         <div class="card-name" onclick="openModal(${p._id})">${p.n}</div>
         <div class="card-footer">
           <span class="card-val">${fmtVal(p.vt||p.v)}</span>
@@ -771,7 +779,8 @@ function openModal(id, focusComment=false) {
     imgEl.textContent = ab;
     imgEl.style.padding = '';
   }
-  document.getElementById('modal-brand').textContent = p.m || '';
+  const brandEl = document.getElementById('modal-brand');
+  brandEl.innerHTML = (p.m||'') + (p.c ? ' <span style="font-size:10px;font-weight:400;color:var(--text2)">· ' + p.c + '</span>' : '');
   document.getElementById('modal-name').textContent = p.n;
   document.getElementById('modal-name').style.display = '';
   document.getElementById('modal-val').textContent = fmtVal(p.vt||p.v) + ' · ' + (p.qty||p.q) + ' un';
@@ -845,12 +854,13 @@ function baixarPdfProduto() {
       }).join('') + '</div>'
     : '<div style="font-size:13px;color:#888;margin-top:6px">' + (p.qty||p.q) + ' unidade(s)</div>';
 
-  const fotoHtml = p.f
-    ? '<img src="' + p.f + '" style="width:100%;max-height:280px;object-fit:contain;border-radius:12px;background:#f5ede8;display:block;margin-bottom:16px">'
-    : '<div style="width:100%;height:160px;border-radius:12px;background:#f5ede8;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:700;color:#d4b8a8;margin-bottom:16px">' +
-      (p.n.split(' ').filter(x=>x.length>2).slice(0,2).map(x=>x[0]).join('')) + '</div>';
+  function gerarHtmlComFoto(fotoB64) {
+    const fotoHtml = fotoB64
+      ? '<img src="' + fotoB64 + '" style="width:100%;max-height:280px;object-fit:contain;border-radius:12px;background:#f5ede8;display:block;margin-bottom:16px">'
+      : '<div style="width:100%;height:160px;border-radius:12px;background:#f5ede8;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:700;color:#d4b8a8;margin-bottom:16px">' +
+        (p.n.split(' ').filter(x=>x.length>2).slice(0,2).map(x=>x[0]).join('')) + '</div>';
 
-  const html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>' + p.n + '</title>' +
+    const html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>' + p.n + '</title>' +
     '<style>body{font-family:-apple-system,sans-serif;background:#fff;color:#1a1a1a;padding:28px;max-width:420px;margin:0 auto}</style></head><body>' +
     '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">' +
       '<div style="font-size:16px;font-weight:700;color:#7a0b1e;letter-spacing:2px">BAZAAR</div>' +
@@ -876,11 +886,25 @@ function baixarPdfProduto() {
     tamsHtml +
     '</body></html>';
 
-  const blob = new Blob([html], {type:'text/html'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.target = '_blank'; a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 5000);
+    blob_placeholder = new Blob([html], {type:'text/html'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.target = '_blank'; a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+  }
+
+  if (p.f) {
+    fetch(p.f)
+      .then(r => r.blob())
+      .then(blob => {
+        const reader = new FileReader();
+        reader.onload = () => gerarHtmlComFoto(reader.result);
+        reader.readAsDataURL(blob);
+      })
+      .catch(() => gerarHtmlComFoto(null));
+  } else {
+    gerarHtmlComFoto(null);
+  }
 }
 
 function compartilharWhatsApp() {
@@ -1115,6 +1139,19 @@ function fbSave(id) {
 
 function fbListen() {
   if (!window._db) return;
+  // Listen to app config (subtitulo)
+  window._db.collection('config').doc('app').onSnapshot(doc => {
+    if (doc.exists) {
+      const data = doc.data();
+      if (data.subtitulo) {
+        const el = document.getElementById('subtitulo');
+        if (el && !el.querySelector('input')) {
+          el.textContent = data.subtitulo;
+          localStorage.setItem('app_subtitulo', data.subtitulo);
+        }
+      }
+    }
+  });
   fbUnsub = window._db.collection('faltantes').onSnapshot(snap => {
     snap.forEach(doc => {
       const id = parseInt(doc.id);
