@@ -251,6 +251,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       </label>
       <div class="progress-bar" id="csv-progress"><div class="progress-fill" id="csv-fill"></div></div>
       <div id="csv-status" style="font-size:11px;color:#b08070;margin-top:8px"></div>
+      <div id="csv-versao-wrap" style="display:none;margin-top:10px">
+        <div style="font-size:10px;font-weight:600;color:#b08070;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:5px">Nome desta versão</div>
+        <div style="display:flex;gap:8px">
+          <input id="csv-versao-nome" type="text" placeholder="Ex: Faltantes — Julho 2026"
+            style="flex:1;border:0.5px solid #ede0d4;border-radius:10px;padding:8px 12px;font-size:13px;font-family:inherit;outline:none;background:#fdf8f4;color:#1a1a1a">
+          <button onclick="salvarVersao()" style="padding:8px 14px;border-radius:10px;background:#7a0b1e;border:none;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">Salvar versão</button>
+        </div>
+      </div>
     </div>
     <div class="upload-card">
       <div class="upload-title">🖼 Atualizar fotos</div>
@@ -1684,6 +1692,12 @@ function handleCSV(input) {
       const now = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
       localStorage.setItem('ultima_atualizacao', now);
       document.getElementById('csv-status').textContent = '✅ ' + PRODUTOS.length + ' produtos importados · ' + now;
+      const versaoWrap = document.getElementById('csv-versao-wrap');
+      if (versaoWrap) {
+        versaoWrap.style.display = '';
+        const inp = document.getElementById('csv-versao-nome');
+        if (inp) inp.focus();
+      }
       setTimeout(() => { document.getElementById('csv-progress').style.display='none'; }, 1500);
       renderGrid();
       if (fbUnsub) { fbUnsub(); fbUnsub=null; }
@@ -1693,6 +1707,35 @@ function handleCSV(input) {
     }
   };
   reader.readAsText(file, 'utf-8');
+}
+
+function salvarVersao() {
+  const inp = document.getElementById('csv-versao-nome');
+  const val = inp ? inp.value.trim() : '';
+  if (!val) { if (inp) inp.focus(); return; }
+
+  // Update subtitle
+  const subtEl = document.getElementById('subtitulo');
+  if (subtEl) subtEl.textContent = val;
+  localStorage.setItem('app_subtitulo', val);
+
+  // Sync to Firebase
+  if (window._db) {
+    const now = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+    const who = localStorage.getItem('chat_nome') || 'Anônimo';
+    window._db.collection('config').doc('app').set({subtitulo: val}, {merge: true});
+    window._db.collection('config').doc('versoes').get().then(doc => {
+      const hist = doc.exists ? (doc.data().lista || []) : [];
+      hist.unshift({titulo: val, who, time: now});
+      window._db.collection('config').doc('versoes').set({lista: hist.slice(0,20)});
+    });
+  }
+
+  // Hide wrap and show confirmation
+  const wrap = document.getElementById('csv-versao-wrap');
+  if (wrap) wrap.style.display = 'none';
+  const status = document.getElementById('csv-status');
+  if (status) status.textContent = '✅ Versão "' + val + '" salva e sincronizada!';
 }
 
 function handleFotos(input) {
