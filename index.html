@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
 <title>Bazaar — Faltantes</title>
+<meta name="theme-color" content="#7a0b1e">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Bazaar">
+<link rel="manifest" href="manifest.json">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
@@ -42,6 +48,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 /* Card */
 .card{background:var(--bg2);border-radius:14px;overflow:hidden;border:0.5px solid var(--border);transition:box-shadow 0.2s}
 .card:active{box-shadow:0 4px 20px rgba(122,11,30,0.12)}
+.card.is-nok{outline:2px solid #ff3c3c;outline-offset:-2px}
+.card.is-nok .card-img img,.card.is-nok .card-abbrev{filter:brightness(0.4) saturate(0.3)}
 .card-img{aspect-ratio:1;background:var(--bg3);position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden}
 .card-img img{width:100%;height:100%;object-fit:cover}
 .card-abbrev{font-size:22px;font-weight:600;color:var(--text4);pointer-events:none}
@@ -70,9 +78,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .comment-time{font-size:9px;color:var(--text4);margin-top:4px}
 .comment-input-wrap{display:flex;gap:8px;margin-top:12px}
 .comment-input{flex:1;border:0.5px solid var(--border);border-radius:20px;padding:9px 14px;font-size:13px;font-family:inherit;outline:none;background:var(--bg2);color:var(--text)}
-.comment-send{background:#7a0b1e;border:none;border-radius:50%;width:36px;height:36px;color:#fff;font-size:16px;cursor:pointer;flex-shrink:0}
+.comment-send{background:var(--red);border:none;border-radius:50%;width:36px;height:36px;color:#fff;font-size:16px;cursor:pointer;flex-shrink:0}
 .modal-actions{display:flex;gap:8px;margin-top:16px}
-.btn-primary{flex:1;background:#7a0b1e;border:none;border-radius:12px;color:#fff;font-size:13px;font-weight:600;padding:12px;cursor:pointer;font-family:inherit}
+.btn-primary{flex:1;background:var(--red);border:none;border-radius:12px;color:#fff;font-size:13px;font-weight:600;padding:12px;cursor:pointer;font-family:inherit}
 .btn-secondary{flex:1;background:var(--red-light);border:0.5px solid var(--border2);border-radius:12px;color:var(--red);font-size:13px;font-weight:600;padding:12px;cursor:pointer;font-family:inherit}
 .btn-edit{background:var(--bg);border:0.5px solid var(--border);border-radius:12px;color:var(--text2);font-size:13px;font-weight:500;padding:10px 16px;cursor:pointer;font-family:inherit;margin-bottom:12px;width:100%}
 /* Tab bar */
@@ -94,10 +102,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .chat-item-name{font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px}
 .chat-item-last{font-size:11px;color:var(--text2);line-height:1.4}
 .chat-item-meta{font-size:9px;color:#c4a898;margin-top:4px;display:flex;justify-content:space-between}
-.chat-badge{background:#7a0b1e;color:#fff;font-size:8px;font-weight:700;padding:1px 5px;border-radius:6px}
+.chat-badge{background:var(--red);color:#fff;font-size:8px;font-weight:700;padding:1px 5px;border-radius:6px}
 /* NOK overlay */
-.nok-overlay{position:absolute;inset:0;background:rgba(90,5,15,0.82);display:none;align-items:center;justify-content:center;border-radius:0;backdrop-filter:blur(2px)}
-.nok-overlay.show{display:flex}
+.nok-overlay{position:absolute;inset:0;display:none;align-items:center;justify-content:center;border-radius:0}
+.nok-overlay.show{display:flex;animation:nokPop 0.25s ease}
+@keyframes nokPop{0%{opacity:0}100%{opacity:1}}
+.nok-overlay .nok-bg{position:absolute;inset:0;background:linear-gradient(to top,rgba(180,0,0,0.75) 0%,rgba(120,0,0,0.35) 60%,rgba(60,0,0,0.15) 100%)}
+.nok-overlay .nok-content{position:relative;z-index:1;text-align:center}
 .nok-label{color:#fff;font-size:11px;font-weight:700;letter-spacing:1px}
 /* Edit name inline */
 .name-edit-row{display:flex;gap:6px;margin-bottom:6px}
@@ -105,7 +116,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .name-save-btn{background:#7a0b1e;border:none;border-radius:8px;color:#fff;font-size:10px;font-weight:600;padding:5px 10px;cursor:pointer}
 .name-cancel-btn{background:#fdf2f3;border:0.5px solid #f5c4c4;border-radius:8px;color:#7a0b1e;font-size:10px;padding:5px 8px;cursor:pointer}
 /* Upload section */
-.upload-page{padding:80px 16px 100px}
+.upload-page{padding:80px 16px 100px;background:var(--bg);min-height:100vh}
 .upload-card{background:var(--bg2);border:0.5px solid var(--border);border-radius:16px;padding:20px;margin-bottom:12px}
 .upload-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:6px}
 .upload-sub{font-size:12px;color:var(--text3);margin-bottom:14px;line-height:1.5}
@@ -169,7 +180,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <div style="display:flex;align-items:center;gap:8px">
       <button onclick="toggleDark()" id="btn-dark" style="background:var(--bg2);border:0.5px solid var(--border);border-radius:10px;padding:4px 8px;cursor:pointer;font-size:14px;color:var(--red)" title="Modo escuro">🌙</button>
       <button onclick="toggleGrid()" id="btn-grid" style="background:#fff;border:0.5px solid #ede0d4;border-radius:10px;padding:4px 8px;cursor:pointer;font-size:14px;color:#7a0b1e" title="Mudar visualização">⊞</button>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:1px">
       <span class="header-meta" id="header-meta">231 itens · R$ 48.959,50</span>
+      <span id="header-total" style="font-size:9px;color:var(--text4)"></span>
+    </div>
     </div>
   </div>
   <div class="search-wrap">
@@ -186,19 +200,21 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       oninput="filtrarMarcaChips(this.value)">
     <span style="position:absolute;left:20px;top:50%;transform:translateY(-50%);font-size:11px;color:#c4a898;pointer-events:none">🔍</span>
   </div>
+  <div style="padding:0 12px 4px">
+    <div style="font-size:9px;font-weight:600;color:var(--text4);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:4px">Categoria</div>
+    <div style="display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px" id="cat-row">
+      <button class="chip active" id="chip-all-cat" onclick="setCat('',this)">Todas</button>
+    </div>
+  </div>
   <div style="padding:0 12px 6px;display:flex;align-items:center;gap:6px">
     <button onclick="toggleSort()" id="btn-sort" style="flex:1;font-size:10px;font-weight:600;color:var(--red);background:var(--red-light);border:0.5px solid var(--border2);border-radius:10px;padding:6px 10px;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px">
       <span id="sort-icon">↑</span><span id="sort-label">Marca A→Z</span>
     </button>
-    <div style="display:flex;align-items:center;gap:4px;background:var(--bg2);border:0.5px solid var(--border);border-radius:10px;padding:4px 8px">
-      <span style="font-size:9px;color:var(--text3);white-space:nowrap">≥</span>
-      <input type="number" id="filter-qty" min="1" value="" placeholder="un" oninput="renderGrid()"
-        style="width:32px;background:transparent;border:none;outline:none;font-size:11px;font-family:inherit;color:var(--text);text-align:center">
-    </div>
+
   </div>
   <div class="filter-row" id="marca-row">
     <button class="chip active" id="chip-all-marca" onclick="setMarca('',this)">Todas marcas</button>
-    <button class="chip" onclick="setMarca('32 DEGREES',this)">32 DEGREES</button><button class="chip" onclick="setMarca('ADIDAS',this)">ADIDAS</button><button class="chip" onclick="setMarca('AERIE',this)">AERIE</button><button class="chip" onclick="setMarca('BABE LASH',this)">BABE LASH</button><button class="chip" onclick="setMarca('BALANCE',this)">BALANCE</button><button class="chip" onclick="setMarca('BANANA REPUBLIC',this)">BANANA REPUBLIC</button><button class="chip" onclick="setMarca('BB',this)">BB</button><button class="chip" onclick="setMarca('BBW',this)">BBW</button><button class="chip" onclick="setMarca('BENADRYL',this)">BENADRYL</button><button class="chip" onclick="setMarca('BI-FLEX',this)">BI-FLEX</button><button class="chip" onclick="setMarca('BIOPURE',this)">BIOPURE</button><button class="chip" onclick="setMarca('BLUE LOVE',this)">BLUE LOVE</button><button class="chip" onclick="setMarca('BOMBAY',this)">BOMBAY</button><button class="chip" onclick="setMarca('BOOGIE',this)">BOOGIE</button><button class="chip" onclick="setMarca('CALVIN KLEIN',this)">CALVIN KLEIN</button><button class="chip" onclick="setMarca('CARTERS',this)">CARTERS</button><button class="chip" onclick="setMarca('CENTELLA',this)">CENTELLA</button><button class="chip" onclick="setMarca('CHARLOTTE',this)">CHARLOTTE</button><button class="chip" onclick="setMarca('COLUMBIA',this)">COLUMBIA</button><button class="chip" onclick="setMarca('CONVERSE',this)">CONVERSE</button><button class="chip" onclick="setMarca('CORE KITCHEN',this)">CORE KITCHEN</button><button class="chip" onclick="setMarca('DERMASIL',this)">DERMASIL</button><button class="chip" onclick="setMarca('EGG TIMER',this)">EGG TIMER</button><button class="chip" onclick="setMarca('EPIELLE',this)">EPIELLE</button><button class="chip" onclick="setMarca('FASHION NOVA',this)">FASHION NOVA</button><button class="chip" onclick="setMarca('GAP',this)">GAP</button><button class="chip" onclick="setMarca('GLORIA VANDERBILT',this)">GLORIA VANDERBILT</button><button class="chip" onclick="setMarca('GREAT VALUE',this)">GREAT VALUE</button><button class="chip" onclick="setMarca('JESSICA SIMPSON',this)">JESSICA SIMPSON</button><button class="chip" onclick="setMarca('JOURNEE',this)">JOURNEE</button><button class="chip" onclick="setMarca('JUICY COUTURE',this)">JUICY COUTURE</button><button class="chip" onclick="setMarca('K18',this)">K18</button><button class="chip" onclick="setMarca('KEITH HARING',this)">KEITH HARING</button><button class="chip" onclick="setMarca('KITCHENAID',this)">KITCHENAID</button><button class="chip" onclick="setMarca('LA COLORS',this)">LA COLORS</button><button class="chip" onclick="setMarca('LAURA ASHLEY',this)">LAURA ASHLEY</button><button class="chip" onclick="setMarca('LOREAL',this)">LOREAL</button><button class="chip" onclick="setMarca('MARIE CLAIRE PARIS',this)">MARIE CLAIRE PARIS</button><button class="chip" onclick="setMarca('MARIO BADESCU',this)">MARIO BADESCU</button><button class="chip" onclick="setMarca('MELISSA E DOUG',this)">MELISSA E DOUG</button><button class="chip" onclick="setMarca('MONDAY',this)">MONDAY</button><button class="chip" onclick="setMarca('MONDETTA',this)">MONDETTA</button><button class="chip" onclick="setMarca('MR BUBBLE',this)">MR BUBBLE</button><button class="chip" onclick="setMarca('NATROL',this)">NATROL</button><button class="chip" onclick="setMarca('OLD NAVY',this)">OLD NAVY</button><button class="chip" onclick="setMarca('OLD NAVY X GAP',this)">OLD NAVY X GAP</button><button class="chip" onclick="setMarca('PARK LIFE',this)">PARK LIFE</button><button class="chip" onclick="setMarca('RALPH LAUREN',this)">RALPH LAUREN</button><button class="chip" onclick="setMarca('RUSSEL STOVER',this)">RUSSEL STOVER</button><button class="chip" onclick="setMarca('SINOPANT',this)">SINOPANT</button><button class="chip" onclick="setMarca('SKECHERS',this)">SKECHERS</button><button class="chip" onclick="setMarca('SMART CARE',this)">SMART CARE</button><button class="chip" onclick="setMarca('SNUGGLE',this)">SNUGGLE</button><button class="chip" onclick="setMarca('STEVE MADDEN',this)">STEVE MADDEN</button><button class="chip" onclick="setMarca('TOMMY',this)">TOMMY</button><button class="chip" onclick="setMarca('VASELINE',this)">VASELINE</button><button class="chip" onclick="setMarca('VICTORIA'S SECRET',this)">VICTORIA'S SECRET</button><button class="chip" onclick="setMarca('VOLCOM',this)">VOLCOM</button><button class="chip" onclick="setMarca('WALYFREI',this)">WALYFREI</button><button class="chip" onclick="setMarca('WET',this)">WET</button>
+    <button class="chip" onclick="setMarca('32 DEGREES',this)">32 DEGREES</button><button class="chip" onclick="setMarca('ADIDAS',this)">ADIDAS</button><button class="chip" onclick="setMarca('AERIE',this)">AERIE</button><button class="chip" onclick="setMarca('BABE LASH',this)">BABE LASH</button><button class="chip" onclick="setMarca('BALANCE',this)">BALANCE</button><button class="chip" onclick="setMarca('BANANA REPUBLIC',this)">BANANA REPUBLIC</button><button class="chip" onclick="setMarca('BB',this)">BB</button><button class="chip" onclick="setMarca('BBW',this)">BBW</button><button class="chip" onclick="setMarca('BENADRYL',this)">BENADRYL</button><button class="chip" onclick="setMarca('BI-FLEX',this)">BI-FLEX</button><button class="chip" onclick="setMarca('BIOPURE',this)">BIOPURE</button><button class="chip" onclick="setMarca('BLUE LOVE',this)">BLUE LOVE</button><button class="chip" onclick="setMarca('BOMBAY',this)">BOMBAY</button><button class="chip" onclick="setMarca('BOOGIE',this)">BOOGIE</button><button class="chip" onclick="setMarca('CALVIN KLEIN',this)">CALVIN KLEIN</button><button class="chip" onclick="setMarca('CARTERS',this)">CARTERS</button><button class="chip" onclick="setMarca('CENTELLA',this)">CENTELLA</button><button class="chip" onclick="setMarca('CHARLOTTE',this)">CHARLOTTE</button><button class="chip" onclick="setMarca('COLUMBIA',this)">COLUMBIA</button><button class="chip" onclick="setMarca('CONVERSE',this)">CONVERSE</button><button class="chip" onclick="setMarca('CORE KITCHEN',this)">CORE KITCHEN</button><button class="chip" onclick="setMarca('DERMASIL',this)">DERMASIL</button><button class="chip" onclick="setMarca('EGG TIMER',this)">EGG TIMER</button><button class="chip" onclick="setMarca('EPIELLE',this)">EPIELLE</button><button class="chip" onclick="setMarca('FASHION NOVA',this)">FASHION NOVA</button><button class="chip" onclick="setMarca('GAP',this)">GAP</button><button class="chip" onclick="setMarca('GLORIA VANDERBILT',this)">GLORIA VANDERBILT</button><button class="chip" onclick="setMarca('GREAT VALUE',this)">GREAT VALUE</button><button class="chip" onclick="setMarca('JESSICA SIMPSON',this)">JESSICA SIMPSON</button><button class="chip" onclick="setMarca('JOURNEE',this)">JOURNEE</button><button class="chip" onclick="setMarca('JUICY COUTURE',this)">JUICY COUTURE</button><button class="chip" onclick="setMarca('K18',this)">K18</button><button class="chip" onclick="setMarca('KEITH HARING',this)">KEITH HARING</button><button class="chip" onclick="setMarca('KITCHENAID',this)">KITCHENAID</button><button class="chip" onclick="setMarca('LA COLORS',this)">LA COLORS</button><button class="chip" onclick="setMarca('LAURA ASHLEY',this)">LAURA ASHLEY</button><button class="chip" onclick="setMarca('LOREAL',this)">LOREAL</button><button class="chip" onclick="setMarca('MARIE CLAIRE PARIS',this)">MARIE CLAIRE PARIS</button><button class="chip" onclick="setMarca('MARIO BADESCU',this)">MARIO BADESCU</button><button class="chip" onclick="setMarca('MELISSA E DOUG',this)">MELISSA E DOUG</button><button class="chip" onclick="setMarca('MONDAY',this)">MONDAY</button><button class="chip" onclick="setMarca('MONDETTA',this)">MONDETTA</button><button class="chip" onclick="setMarca('MR BUBBLE',this)">MR BUBBLE</button><button class="chip" onclick="setMarca('NATROL',this)">NATROL</button><button class="chip" onclick="setMarca('OLD NAVY',this)">OLD NAVY</button><button class="chip" onclick="setMarca('OLD NAVY X GAP',this)">OLD NAVY X GAP</button><button class="chip" onclick="setMarca('PARK LIFE',this)">PARK LIFE</button><button class="chip" onclick="setMarca('RALPH LAUREN',this)">RALPH LAUREN</button><button class="chip" onclick="setMarca('RUSSEL STOVER',this)">RUSSEL STOVER</button><button class="chip" onclick="setMarca('SINOPANT',this)">SINOPANT</button><button class="chip" onclick="setMarca('SKECHERS',this)">SKECHERS</button><button class="chip" onclick="setMarca('SMART CARE',this)">SMART CARE</button><button class="chip" onclick="setMarca('SNUGGLE',this)">SNUGGLE</button><button class="chip" onclick="setMarca('STEVE MADDEN',this)">STEVE MADDEN</button><button class="chip" onclick="setMarca('TOMMY',this)">TOMMY</button><button class="chip" onclick="setMarca('VASELINE',this)">VASELINE</button><button class="chip" onclick="setMarca(&quot;VICTORIA'S SECRET&quot;,this)">VICTORIA'S SECRET</button><button class="chip" onclick="setMarca('VOLCOM',this)">VOLCOM</button><button class="chip" onclick="setMarca('WALYFREI',this)">WALYFREI</button><button class="chip" onclick="setMarca('WET',this)">WET</button>
   </div>
 </div>
 
@@ -271,6 +287,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <button onclick="gerarPDF()" style="width:100%;padding:12px;border-radius:12px;background:#7a0b1e;border:none;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">↓ Gerar PDF</button>
     </div>
     <div id="ultima-atualizacao" style="font-size:11px;color:#c4a898;text-align:center;margin-top:8px"></div>
+    <div class="upload-card" style="margin-top:12px">
+      <div class="upload-title">📋 Histórico de versões</div>
+      <div id="version-list" style="margin-top:8px"></div>
+    </div>
   </div>
 </div>
 
@@ -287,20 +307,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <input id="add-nome" type="text" placeholder="Ex: Jaqueta Columbia azul" autocomplete="off"
         style="width:100%;border:0.5px solid #ede0d4;border-radius:12px;padding:10px 14px;font-size:13px;font-family:inherit;outline:none;background:#fdf8f4;color:#1a1a1a">
     </div>
-    <div style="display:flex;gap:10px;margin-bottom:16px">
-      <div style="flex:1">
-        <div style="font-size:10px;font-weight:600;color:#b08070;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:5px">Marca</div>
-        <input id="add-marca" type="text" placeholder="Ex: Columbia" autocomplete="off"
-          style="width:100%;border:0.5px solid #ede0d4;border-radius:12px;padding:10px 14px;font-size:13px;font-family:inherit;outline:none;background:#fdf8f4">
-      </div>
-      <div style="flex:1">
-        <div style="font-size:10px;font-weight:600;color:#b08070;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:5px">Quantidade</div>
-        <div style="display:flex;align-items:center;gap:8px;border:0.5px solid #ede0d4;border-radius:12px;padding:8px 14px;background:#fdf8f4">
-          <button onclick="addQtyChange(-1)" style="background:none;border:none;color:#7a0b1e;font-size:18px;cursor:pointer;font-weight:500;padding:0">−</button>
-          <span id="add-qty" style="flex:1;text-align:center;font-size:15px;font-weight:600;color:#7a0b1e">1</span>
-          <button onclick="addQtyChange(1)" style="background:none;border:none;color:#7a0b1e;font-size:18px;cursor:pointer;font-weight:500;padding:0">+</button>
-        </div>
-      </div>
+    <div style="margin-bottom:12px">
+      <div style="font-size:10px;font-weight:600;color:#b08070;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:5px">Marca</div>
+      <input id="add-marca" type="text" placeholder="Ex: Columbia" autocomplete="off"
+        style="width:100%;border:0.5px solid #ede0d4;border-radius:12px;padding:10px 14px;font-size:13px;font-family:inherit;outline:none;background:#fdf8f4">
+    </div>
+    <div style="margin-bottom:12px">
+      <div style="font-size:10px;font-weight:600;color:#b08070;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px">Tamanhos</div>
+      <div id="add-tams-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:6px"></div>
+      <button onclick="adicionarTamanho()" style="width:100%;padding:8px;border-radius:10px;background:#fdf8f4;border:0.5px dashed #ede0d4;color:#b08070;font-size:12px;cursor:pointer;font-family:inherit">+ Adicionar tamanho</button>
     </div>
     <div style="margin-bottom:16px">
       <div style="font-size:10px;font-weight:600;color:#b08070;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:5px">Valor (opcional)</div>
@@ -367,13 +382,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <div class="modal-val" id="modal-val"></div>
 
     <div style="background:var(--red-light);border:0.5px solid var(--border2);border-radius:12px;padding:14px 16px;margin-bottom:10px">
-      <div style="font-size:9px;color:#c4a898;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px">Pra comprar</div>
+      <div style="font-size:9px;color:var(--text4);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px">Pra comprar</div>
       <div id="modal-tams-inline" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px"></div>
       <div id="modal-qty" style="font-size:13px;font-weight:700;color:var(--red)"></div>
     </div>
     <div style="display:flex;gap:8px;margin-bottom:16px">
       <div style="flex:1;background:var(--bg2);border:0.5px solid var(--border);border-radius:12px;padding:10px 14px;text-align:center">
-        <div style="font-size:9px;color:#c4a898;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:3px">Vendedora</div>
+        <div style="font-size:9px;color:var(--text4);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:3px">Vendedora</div>
         <div id="modal-vend" style="font-size:12px;font-weight:600;color:var(--red);line-height:1.3"></div>
       </div>
       <div style="flex:1;background:var(--bg2);border:0.5px solid var(--border);border-radius:12px;padding:10px 14px;text-align:center">
@@ -411,10 +426,10 @@ const _fbConfig = {
 if (typeof firebase !== 'undefined' && !firebase.apps.length) firebase.initializeApp(_fbConfig);
 window._db = typeof firebase !== 'undefined' ? firebase.firestore() : null;
 
-const RAW_DATA = [{"n":"Band Aid Barbie","m":"","c":"INFANTIL","vs":["JÉSSICA"],"v":29.0,"q":2,"f":"","vt":29.0,"tams_str":"Único(2)","tams":{"Único":2}},{"n":"Band Aid Looney Tunes","m":"","c":"INFANTIL","vs":["JÉSSICA"],"v":29.0,"q":2,"f":"","vt":29.0,"tams_str":"Único(2)","tams":{"Único":2}},{"n":"Conjunto térmico fem cinza","m":"","c":"FEMININO","vs":["THAIS"],"v":199.0,"q":5,"f":"","vt":199.0,"tams_str":"G · M(2) · GG · GGG","tams":{"G":1,"M":2,"GG":1,"GGG":1}},{"n":"Conjunto térmico fem preto","m":"","c":"FEMININO","vs":["THAIS"],"v":199.0,"q":6,"f":"","vt":238.8,"tams_str":"M · G(3) · P(2)","tams":{"M":1,"G":3,"P":2}},{"n":"Conjunto térmico masc preto","m":"","c":"FEMININO","vs":["THAIS"],"v":269.0,"q":3,"f":"","vt":269.0,"tams_str":"GG · G · M","tams":{"GG":1,"G":1,"M":1}},{"n":"Pack com 10 mini pincéis de maquiagem","m":"","c":"COSMÉTICOS","vs":["SABRINA"],"v":79.0,"q":37,"f":"https://drive.google.com/thumbnail?id=1HaKUnKGu-1FS6DiLHoiDmmGJc6qvn1V_&sz=w400","vt":79.0,"tams_str":"Único(37)","tams":{"Único":37}},{"n":"Pack com 10 mini pincéis de maquiagem 2x","m":"","c":"COSMÉTICOS","vs":["SABRINA"],"v":158.0,"q":2,"f":"https://drive.google.com/thumbnail?id=1HaKUnKGu-1FS6DiLHoiDmmGJc6qvn1V_&sz=w400","vt":158.0,"tams_str":"Único(2)","tams":{"Único":2}},{"n":"Par de meias Disney Stitch marinho","m":"","c":"FEMININO","vs":["THAIS"],"v":29.0,"q":1,"f":"https://drive.google.com/thumbnail?id=1HtfdWKxUaTpQ4JU1vyHWlE83V6a81YmA&sz=w400","vt":29.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Par de meias Pringles vermelha","m":"","c":"FEMININO","vs":["THAIS"],"v":29.0,"q":4,"f":"https://drive.google.com/thumbnail?id=1CyR819vHouzwEC_fGwvI7nMacucbM3ZB&sz=w400","vt":29.0,"tams_str":"Único(4)","tams":{"Único":4}},{"n":"Set escova de dentes + pasta Hotwells","m":"","c":"INFANTIL","vs":["JÉSSICA"],"v":49.0,"q":2,"f":"","vt":49.0,"tams_str":"Único(2)","tams":{"Único":2}},{"n":"Camiseta masc 32 Degrees cinza escuro mescla","m":"32 DEGREES","c":"MASCULINO","vs":["SABRINA"],"v":99.0,"q":1,"f":"https://drive.google.com/thumbnail?id=1HMylr01GVBkNHZz9K_30gs4_URDLFASA&sz=w400","vt":99.0,"tams_str":"M","tams":{"M":1}},{"n":"Conjunto térmico fem 32 Degrees cinza","m":"32 DEGREES","c":"FEMININO","vs":["FABIANA"],"v":199.0,"q":10,"f":"https://drive.google.com/thumbnail?id=1j3xLOYJYIXdvsV7JZ2AbWMmlgppJOKn2&sz=w400","vt":243.78,"tams_str":"??? (a definir) · G(3) · M(3) · P(3)","tams":{"??? (a definir)":1,"G":3,"M":3,"P":3}},{"n":"Pack com 5 pares de meias cano alto masc 32 Degrees marrom","m":"32 DEGREES","c":"FEMININO","vs":["SABRINA"],"v":159.0,"q":1,"f":"","vt":159.0,"tams_str":"G","tams":{"G":1}},{"n":"Pack com 6 pares de meias infantil Adidas marrom","m":"ADIDAS","c":"ROUPA INFANTIL","vs":["JÉSSICA"],"v":149.0,"q":1,"f":"","vt":149.0,"tams_str":"??? (a definir)","tams":{"??? (a definir)":1}},{"n":"Tênis barreda fem Adidas branco","m":"ADIDAS","c":"CALÇADO FEMININO","vs":["FABIANA"],"v":269.6,"q":3,"f":"","vt":292.07,"tams_str":"10 USA / ? BR · 8 USA · 6.5 USA / 35.5 BR","tams":{"10 USA / ? BR":1,"8 USA":1,"6.5 USA / 35.5 BR":1}},{"n":"Legging extra alta fem Aerie azul claro M - regular","m":"AERIE","c":"FEMININO","vs":["THAIS"],"v":369.0,"q":1,"f":"https://drive.google.com/thumbnail?id=1uxgRm2FpAn64HFLaKp9Yavb03Vk13Nl8&sz=w400","vt":369.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Legging extra alta fem Aerie verde escuro M - regular","m":"AERIE","c":"FEMININO","vs":["THAIS"],"v":369.0,"q":1,"f":"https://drive.google.com/thumbnail?id=1UrrA2WotXfeMtvBuNxaMGGl3HFeb9ihh&sz=w400","vt":369.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Suéter Après fem Aerie creme","m":"AERIE","c":"FEMININO","vs":["THAIS"],"v":269.0,"q":2,"f":"https://drive.google.com/thumbnail?id=1IlKgYDAucVlRdDR6AGlyfqcWlcsgxicS&sz=w400","vt":269.0,"tams_str":"G · GG","tams":{"G":1,"GG":1}},{"n":"Serum de cílios Babe Lash  - 3 meses","m":"BABE LASH","c":"COSMÉTICOS","vs":["FABIANA"],"v":489.0,"q":1,"f":"","vt":489.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Pack com 3 pares de meias de pilates fem Balance branca","m":"BALANCE","c":"FEMININO","vs":["FABIANA"],"v":189.0,"q":2,"f":"https://drive.google.com/thumbnail?id=1aY1F5pPV8aVasCySlFEOLb5Li4NvyVL3&sz=w400","vt":189.0,"tams_str":"Único(2)","tams":{"Único":2}},{"n":"Pack com 3 pares de meias de pilates fem Balance rosa","m":"BALANCE","c":"FEMININO","vs":["FABIANA"],"v":189.0,"q":1,"f":"https://drive.google.com/thumbnail?id=1KAuYuwtW3L40RvYWX9SVO_OPxteq-Y7h&sz=w400","vt":189.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Pack com 3 pares de meias fem Balance preto","m":"BALANCE","c":"FEMININO","vs":["FABIANA"],"v":189.0,"q":1,"f":"https://drive.google.com/thumbnail?id=1KLkdFoJXOuI2ZEBqyDbs6LWD7smY_mcO&sz=w400","vt":189.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Calça fem Banana Republic bege","m":"BANANA REPUBLIC","c":"FEMININO","vs":["FABIANA"],"v":199.0,"q":2,"f":"https://drive.google.com/thumbnail?id=1pdh3KXXOv6wd1zJJzbj6u2oRz01sQGaj&sz=w400","vt":199.0,"tams_str":"G(2)","tams":{"G":2}},{"n":"Fio dental individual BB 80un","m":"BB","c":"FARMÁCIA","vs":["FABIANA"],"v":39.0,"q":1,"f":"","vt":39.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Fio dental individual BB 80un 2x","m":"BB","c":"FARMÁCIA","vs":["FABIANA"],"v":78.0,"q":1,"f":"","vt":78.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Body cream BBW Always Fleur","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":149.9,"q":1,"f":"","vt":149.9,"tams_str":"Único","tams":{"Único":1}},{"n":"Body cream travel size BBW Champagne Toast 2x","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":126.0,"q":1,"f":"","vt":126.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Body cream travel size BBW Gingham","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":64.5,"q":1,"f":"","vt":64.5,"tams_str":"Único","tams":{"Único":1}},{"n":"Body cream travel size BBW Ocean","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":64.5,"q":3,"f":"","vt":64.5,"tams_str":"Único(3)","tams":{"Único":3}},{"n":"Body cream travel size BBW Strawberry Pound Cake","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":64.5,"q":1,"f":"","vt":64.5,"tams_str":"Único","tams":{"Único":1}},{"n":"Body cream travel size BBW Waikiki","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":63.0,"q":1,"f":"","vt":63.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Body lotion travel size BBW A Thousand Wishes","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":63.0,"q":2,"f":"","vt":63.0,"tams_str":"Único(2)","tams":{"Único":2}},{"n":"Body lotion travel size BBW Champagne Toast","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":63.0,"q":1,"f":"","vt":63.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Body lotion travel size BBW Into The Night","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":63.0,"q":1,"f":"","vt":63.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Body lotion travel size BBW Waikiki 2x","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":63.0,"q":1,"f":"","vt":63.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Body mist BBW Infinite Radiance","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":169.9,"q":1,"f":"","vt":169.9,"tams_str":"Único","tams":{"Único":1}},{"n":"Body mist BBW Pink Obsessed","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":169.0,"q":6,"f":"","vt":169.0,"tams_str":"Único(6)","tams":{"Único":6}},{"n":"Body mist BBW Salted Shorelines","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":169.9,"q":1,"f":"","vt":169.9,"tams_str":"Único","tams":{"Único":1}},{"n":"Body mist travel size BBW A Thousand Wishes","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":63.0,"q":1,"f":"","vt":63.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Body mist travel size BBW Bela","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":69.0,"q":1,"f":"","vt":69.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Body mist travel size BBW Champagne Toast","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":69.0,"q":1,"f":"","vt":69.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Body mist travel size BBW Champagne Toast 2x","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":126.0,"q":1,"f":"","vt":126.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Body mist travel size BBW Covered In Roses","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":69.9,"q":9,"f":"","vt":66.3,"tams_str":"Único(9)","tams":{"Único":9}},{"n":"Body mist travel size BBW Gingham","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":64.5,"q":2,"f":"","vt":66.75,"tams_str":"Único(2)","tams":{"Único":2}},{"n":"Body mist travel size BBW Gingham Fresh","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":69.0,"q":1,"f":"","vt":69.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Body mist travel size BBW Into The Night","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":63.0,"q":3,"f":"","vt":63.0,"tams_str":"Único(3)","tams":{"Único":3}},{"n":"Body mist travel size BBW Into Waikiki","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":63.0,"q":1,"f":"","vt":63.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Body mist travel size BBW Ocean","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":64.5,"q":2,"f":"","vt":64.5,"tams_str":"Único(2)","tams":{"Único":2}},{"n":"Body mist travel size BBW Strawberry Pound Cake","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":64.5,"q":1,"f":"","vt":64.5,"tams_str":"Único","tams":{"Único":1}},{"n":"Gel de banho travel size BBW A Thousand Wishes","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":63.0,"q":6,"f":"","vt":63.0,"tams_str":"Único(6)","tams":{"Único":6}},{"n":"Gel de banho travel size BBW Champagne Toast","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":63.0,"q":2,"f":"","vt":63.75,"tams_str":"Único(2)","tams":{"Único":2}},{"n":"Gel de banho travel size BBW Champagne Toast 2x","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":63.0,"q":1,"f":"","vt":63.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Gel de banho travel size BBW Covered In Roses","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":64.5,"q":2,"f":"","vt":64.5,"tams_str":"Único(2)","tams":{"Único":2}},{"n":"Gel de banho travel size BBW Into The Night","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":63.0,"q":1,"f":"","vt":63.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Gel de banho travel size BBW Ocean","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":64.5,"q":1,"f":"","vt":64.5,"tams_str":"Único","tams":{"Único":1}},{"n":"Gel de banho travel size BBW Waikiki","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":63.0,"q":1,"f":"","vt":63.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Refil de tomada BBW Breakfast In Bed","m":"BBW","c":"CASA","vs":["FABIANA"],"v":60.0,"q":1,"f":"","vt":60.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Refil de tomada BBW Flowers for Mom","m":"BBW","c":"CASA","vs":["FABIANA"],"v":79.9,"q":7,"f":"","vt":77.1,"tams_str":"Único(7)","tams":{"Único":7}},{"n":"Refil de tomada BBW Flowers for Mom 2x","m":"BBW","c":"CASA","vs":["FABIANA"],"v":159.8,"q":2,"f":"","vt":139.9,"tams_str":"Único(2)","tams":{"Único":2}},{"n":"Refil de tomada BBW Gingham","m":"BBW","c":"CASA","vs":["FABIANA"],"v":85.0,"q":1,"f":"","vt":85.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Refil de tomada BBW Laudry Day","m":"BBW","c":"CASA","vs":["FABIANA"],"v":85.0,"q":1,"f":"","vt":85.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Refil de tomada BBW Spa Day For Mom","m":"BBW","c":"CASA","vs":["FABIANA"],"v":60.0,"q":8,"f":"","vt":74.35,"tams_str":"Único(8)","tams":{"Único":8}},{"n":"Refil de tomada BBW Whipped Honey & Vanilla","m":"BBW","c":"CASA","vs":["FABIANA"],"v":85.0,"q":1,"f":"","vt":85.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Shower Steamers BBW lavender + vanilla","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":159.9,"q":1,"f":"","vt":159.9,"tams_str":"Único","tams":{"Único":1}},{"n":"Spray para travesseiro e corpo BBW Sleep Lavender + Vanilla","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":149.9,"q":1,"f":"","vt":149.9,"tams_str":"Único","tams":{"Único":1}},{"n":"Tomada básica BBW branca","m":"BBW","c":"CASA","vs":["FABIANA"],"v":78.0,"q":3,"f":"","vt":78.0,"tams_str":"Único(3)","tams":{"Único":3}},{"n":"Tomada básica BBW preta","m":"BBW","c":"CASA","vs":["FABIANA"],"v":78.0,"q":1,"f":"","vt":78.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Tomada com regulagem e luz BBW trabalhada","m":"BBW","c":"CASA","vs":["FABIANA"],"v":139.9,"q":1,"f":"https://drive.google.com/thumbnail?id=1nNf2Q0ar8tgHAqM-t74ozj6lLo4Z0Q5x&sz=w400","vt":139.9,"tams_str":"Único","tams":{"Único":1}},{"n":"Álcool em gel BBW Japanese Cherry Blossom","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":0.0,"q":1,"f":"","vt":0.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Stick para picada Benadryl","m":"BENADRYL","c":"FARMÁCIA","vs":["SABRINA"],"v":89.0,"q":3,"f":"","vt":89.0,"tams_str":"Único(3)","tams":{"Único":3}},{"n":"Stick para picada Benadryl 2x","m":"BENADRYL","c":"FARMÁCIA","vs":["SABRINA"],"v":178.0,"q":2,"f":"","vt":178.0,"tams_str":"Único(2)","tams":{"Único":2}},{"n":"Osteo Bi-Flex 200 coated tablets","m":"BI-FLEX","c":"FARMÁCIA","vs":["THAIS"],"v":399.0,"q":2,"f":"","vt":399.0,"tams_str":"Único(2)","tams":{"Único":2}},{"n":"Lencinhos antibacterianos Biopure Fresh Morning Breeze","m":"BIOPURE","c":"COSMÉTICOS","vs":["THAIS"],"v":29.0,"q":1,"f":"","vt":29.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Creme para os olhos Blue Love","m":"BLUE LOVE","c":"COSMÉTICOS","vs":["SABRINA"],"v":119.0,"q":1,"f":"","vt":119.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Mini frigideira com espátula Bombay rosa bebê","m":"BOMBAY","c":"CASA","vs":["FABIANA"],"v":149.0,"q":2,"f":"","vt":149.0,"tams_str":"Único(2)","tams":{"Único":2}},{"n":"Pack com 2 sprays antisséptico Boogie","m":"BOOGIE","c":"INFANTIL","vs":["JÉSSICA"],"v":59.0,"q":1,"f":"","vt":59.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Bolsa Shoulder bag Calvin Klein marrom","m":"CALVIN KLEIN","c":"ACESSÓRIOS","vs":["THAIS"],"v":469.0,"q":1,"f":"https://drive.google.com/thumbnail?id=1darqTuPCeIFklnPrd7cx9mR-nXGqz6WY&sz=w400","vt":469.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Conjunto de pijama infantil Carters lilás","m":"CARTERS","c":"ROUPA INFANTIL","vs":["JÉSSICA"],"v":99.0,"q":1,"f":"","vt":99.0,"tams_str":"3 anos","tams":{"3 anos":1}},{"n":"Conjunto infantil Carters amarelo","m":"CARTERS","c":"ROUPA INFANTIL","vs":["JÉSSICA"],"v":119.0,"q":1,"f":"","vt":119.0,"tams_str":"9 meses","tams":{"9 meses":1}},{"n":"Conjunto infantil Carters creme","m":"CARTERS","c":"ROUPA INFANTIL","vs":["JÉSSICA"],"v":109.0,"q":1,"f":"","vt":109.0,"tams_str":"24 meses","tams":{"24 meses":1}},{"n":"Macacão curto infantil Carters rosa","m":"CARTERS","c":"ROUPA INFANTIL","vs":["JÉSSICA"],"v":79.0,"q":1,"f":"https://drive.google.com/thumbnail?id=15yqUTchyx1_zqh69VZzxjJdUcXZlHHRn&sz=w400","vt":79.0,"tams_str":"9 meses","tams":{"9 meses":1}},{"n":"Macacão em fleece infantil Carters cinza","m":"CARTERS","c":"ROUPA INFANTIL","vs":["JÉSSICA"],"v":149.0,"q":1,"f":"https://drive.google.com/thumbnail?id=1_U2sKt0dkpAGyyuhXP-uvBNxZbl7TWhM&sz=w400","vt":149.0,"tams_str":"9 anos","tams":{"9 anos":1}},{"n":"Macacão em fleece infantil Carters rosa claro","m":"CARTERS","c":"ROUPA INFANTIL","vs":["JÉSSICA"],"v":149.0,"q":1,"f":"https://drive.google.com/thumbnail?id=1PjQ6IBoMVyZDLPYYT0KhvQGabHVMTQ-_&sz=w400","vt":149.0,"tams_str":"8 anos","tams":{"8 anos":1}},{"n":"Pack com 3 peças infantis Carters azul claro","m":"CARTERS","c":"ROUPA INFANTIL","vs":["JÉSSICA"],"v":139.0,"q":1,"f":"https://drive.google.com/thumbnail?id=1MBkKzqde0kc7Ns5x-3Ad7U0GwwoWBz2L&sz=w400","vt":139.0,"tams_str":"24 meses","tams":{"24 meses":1}},{"n":"Pack com 4 peças infantis Carters azul","m":"CARTERS","c":"ROUPA INFANTIL","vs":["FABIANA"],"v":169.0,"q":1,"f":"https://drive.google.com/thumbnail?id=1i6M32fwrtiS5DLvnOoBsnJ5eJeXkhQRe&sz=w400","vt":169.0,"tams_str":"24 meses","tams":{"24 meses":1}},{"n":"Pack com 4 peças infantis Carters creme","m":"CARTERS","c":"ROUPA INFANTIL","vs":["FABIANA"],"v":189.0,"q":1,"f":"https://drive.google.com/thumbnail?id=1I_3aESecrlx2rjpabBA1ht2U_fTaB1UU&sz=w400","vt":189.0,"tams_str":"18 meses","tams":{"18 meses":1}},{"n":"Creme facial Centella Skin1004 100ml","m":"CENTELLA","c":"COSMÉTICOS","vs":["FABIANA"],"v":188.0,"q":5,"f":"","vt":188.0,"tams_str":"Único(5)","tams":{"Único":5}},{"n":"Moletom fem Charlotte cinza","m":"CHARLOTTE","c":"FEMININO","vs":["SABRINA"],"v":299.0,"q":1,"f":"","vt":299.0,"tams_str":"G","tams":{"G":1}},{"n":"Jaqueta omni heat fem Columbia gelo","m":"COLUMBIA","c":"FEMININO","vs":["FABIANA"],"v":699.0,"q":1,"f":"https://drive.google.com/thumbnail?id=1dAQuRUsHqnkjhQCfaSjZAfe4whQs7Upb&sz=w400","vt":699.0,"tams_str":"GG","tams":{"GG":1}},{"n":"Jaqueta omni Heat masc Columbia Off White","m":"COLUMBIA","c":"MASCULINO","vs":["FABIANA"],"v":768.0,"q":1,"f":"https://drive.google.com/thumbnail?id=153mU3lv4CGXHUBcY7uePdj5eIOjy32Qi&sz=w400","vt":768.0,"tams_str":"G","tams":{"G":1}},{"n":"Moletom careca fem Columbia preto","m":"COLUMBIA","c":"FEMININO","vs":["THAIS"],"v":299.0,"q":1,"f":"","vt":299.0,"tams_str":"P","tams":{"P":1}},{"n":"Conjunto infantil Converse lilás","m":"CONVERSE","c":"ROUPA INFANTIL","vs":["FABIANA"],"v":228.0,"q":1,"f":"","vt":228.0,"tams_str":"10/12 anos","tams":{"10/12 anos":1}},{"n":"Conjunto infantil Converse rosa claro","m":"CONVERSE","c":"ROUPA INFANTIL","vs":["FABIANA"],"v":228.0,"q":1,"f":"","vt":228.0,"tams_str":"14/16 anos","tams":{"14/16 anos":1}},{"n":"Tênis plataforma fem Converse All Star azul claro","m":"CONVERSE","c":"","vs":[],"v":499.0,"q":1,"f":"https://drive.google.com/thumbnail?id=1EMtEoLUtFjxiRaxqLVqBax6-0zHuveZX&sz=w400","vt":499.0,"tams_str":"36 BR","tams":{"36 BR":1}},{"n":"Pack com 2 escovas de limpeza Core Kitchen marrom","m":"CORE KITCHEN","c":"CASA","vs":["FABIANA"],"v":79.9,"q":1,"f":"","vt":79.9,"tams_str":"Único","tams":{"Único":1}},{"n":"Oléo Dermasil Marula","m":"DERMASIL","c":"COSMÉTICOS","vs":["THAIS"],"v":109.0,"q":1,"f":"","vt":109.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Egg timer Disney x Minnie","m":"EGG TIMER","c":"CASA","vs":["FABIANA"],"v":39.0,"q":3,"f":"","vt":39.0,"tams_str":"Único(3)","tams":{"Único":3}},{"n":"Egg timer Disney x Stitch","m":"EGG TIMER","c":"CASA","vs":["FABIANA"],"v":39.0,"q":4,"f":"","vt":39.0,"tams_str":"Único(4)","tams":{"Único":4}},{"n":"Máscara de hidratção para os pés Epielle Intensive 2x","m":"EPIELLE","c":"COSMÉTICOS","vs":["THAIS"],"v":78.0,"q":1,"f":"","vt":78.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Máscara para os pés Epielle Reparing socks 2x","m":"EPIELLE","c":"COSMÉTICOS","vs":["THAIS"],"v":98.0,"q":1,"f":"","vt":98.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Bota peluciada fem Fashion Nova branca","m":"FASHION NOVA","c":"CALÇADO FEMININO","vs":["SABRINA"],"v":149.0,"q":1,"f":"https://drive.google.com/thumbnail?id=1STY9YNlz_1gu3ht0hT9tEJfcBpErmhic&sz=w400","vt":149.0,"tams_str":"35 BR / 6","tams":{"35 BR / 6":1}},{"n":"Calça em sherpa fem Fashion nova creme","m":"FASHION NOVA","c":"FEMININO","vs":["SABRINA"],"v":129.0,"q":1,"f":"https://drive.google.com/thumbnail?id=1uMe1ZxNbcYsxzu9o2aaZ4KBbCTKav6NN&sz=w400","vt":129.0,"tams_str":"G1","tams":{"G1":1}},{"n":"Conjunto de moletom fem Fashion Nova creme","m":"FASHION NOVA","c":"FEMININO","vs":["SABRINA"],"v":389.0,"q":1,"f":"https://drive.google.com/thumbnail?id=1Pa9MGtIXTb76xsEfDdPwVAUHSHgqe6G5&sz=w400","vt":389.0,"tams_str":"M","tams":{"M":1}},{"n":"Jaqueta sherpa fem Fashion Nova marrom xadrez","m":"FASHION NOVA","c":"FEMININO","vs":["SABRINA"],"v":189.0,"q":2,"f":"https://drive.google.com/thumbnail?id=1x_qGxv4CPz_N37Pc29ZU2sx1ueuL5iu-&sz=w400","vt":189.0,"tams_str":"G · M","tams":{"G":1,"M":1}},{"n":"Jaqueta sherpa fem Fashion Nova vermelha xadrez","m":"FASHION NOVA","c":"FEMININO","vs":["SABRINA"],"v":189.0,"q":1,"f":"https://drive.google.com/thumbnail?id=1lmLBgxBr7sdYF44UyULjkQ7X98XWoLjS&sz=w400","vt":189.0,"tams_str":"PP","tams":{"PP":1}},{"n":"Camiseta infantil GAP champions creme","m":"GAP","c":"ROUPA INFANTIL","vs":["JÉSSICA"],"v":89.0,"q":1,"f":"https://drive.google.com/thumbnail?id=19XB-SypSThrXEiCEkgQJ9ODIkYUEJ9FV&sz=w400","vt":89.0,"tams_str":"10 anos","tams":{"10 anos":1}},{"n":"Camiseta infantil GAP creme","m":"GAP","c":"ROUPA INFANTIL","vs":["FABIANA"],"v":159.9,"q":2,"f":"","vt":159.9,"tams_str":"12 anos · 14/16 anos","tams":{"12 anos":1,"14/16 anos":1}},{"n":"Camiseta infantil Gap verde","m":"GAP","c":"ROUPA INFANTIL","vs":["JÉSSICA"],"v":69.0,"q":2,"f":"https://drive.google.com/thumbnail?id=1O3Fgf1g9fA4WMZ3uROIfUwM-n9kqTN9c&sz=w400","vt":69.0,"tams_str":"14/16 anos(2)","tams":{"14/16 anos":2}},{"n":"Legging infantil GAP rosa brilhante","m":"GAP","c":"ROUPA INFANTIL","vs":["JÉSSICA"],"v":99.0,"q":1,"f":"https://drive.google.com/thumbnail?id=1hLviEGA7DFHhBdSHcgu9W5PoPLsHbkdJ&sz=w400","vt":99.0,"tams_str":"6/12 meses","tams":{"6/12 meses":1}},{"n":"Legging peluciada infantil GAP preta","m":"GAP","c":"ROUPA INFANTIL","vs":["JÉSSICA"],"v":69.0,"q":1,"f":"","vt":69.0,"tams_str":"6/12 meses","tams":{"6/12 meses":1}},{"n":"Moletom fem GAP creme","m":"GAP","c":"FEMININO","vs":["FABIANA"],"v":439.0,"q":1,"f":"","vt":439.0,"tams_str":"M","tams":{"M":1}},{"n":"Moletom infantil GAP creme","m":"GAP","c":"ROUPA INFANTIL","vs":["FABIANA"],"v":328.0,"q":1,"f":"","vt":328.0,"tams_str":"14/16 anos","tams":{"14/16 anos":1}},{"n":"Moletom Oversized infantil GAP creme","m":"GAP","c":"ROUPA INFANTIL","vs":["JÉSSICA"],"v":149.0,"q":1,"f":"https://drive.google.com/thumbnail?id=1UH39_D-e5lUVWN4rvXftfS3ZqXszwUJP&sz=w400","vt":149.0,"tams_str":"14/16 anos","tams":{"14/16 anos":1}},{"n":"Vestido de moletom infantil GAP cinza","m":"GAP","c":"ROUPA INFANTIL","vs":["JÉSSICA"],"v":199.0,"q":1,"f":"https://drive.google.com/thumbnail?id=1UvYHmTb_JuLUfbs7v24GmfduVLvf22C6&sz=w400","vt":199.0,"tams_str":"10 anos","tams":{"10 anos":1}},{"n":"Suéter fem Gloria Vanderbilt verde escuro","m":"GLORIA VANDERBILT","c":"FEMININO","vs":["THAIS"],"v":199.0,"q":1,"f":"","vt":199.0,"tams_str":"P","tams":{"P":1}},{"n":"Saborizador de agua Great Value - Energy","m":"GREAT VALUE","c":"ALIMENTICIO","vs":["FABIANA"],"v":79.0,"q":1,"f":"","vt":79.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Saborizador de agua Great Value - Focus","m":"GREAT VALUE","c":"ALIMENTICIO","vs":["FABIANA"],"v":79.0,"q":1,"f":"","vt":79.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Saborizador de agua Great Value - Grape","m":"GREAT VALUE","c":"ALIMENTICIO","vs":["FABIANA"],"v":79.0,"q":2,"f":"","vt":79.0,"tams_str":"Único(2)","tams":{"Único":2}},{"n":"Sapato slipper fem Jessica Simpson marrom","m":"JESSICA SIMPSON","c":"CALÇADO FEMININO","vs":["FABIANA"],"v":249.9,"q":1,"f":"https://drive.google.com/thumbnail?id=1VJKNZH1yXMLyoQI_07p0rZhSVNsgkxOY&sz=w400","vt":249.9,"tams_str":"38/39 BR","tams":{"38/39 BR":1}},{"n":"Sapato fem Journee Slip On rosa","m":"JOURNEE","c":"CALÇADO FEMININO","vs":["THAIS"],"v":499.0,"q":1,"f":"https://drive.google.com/thumbnail?id=15YuRFSkovhoxdC3WW52zqHndi1PiIzM-&sz=w400","vt":499.0,"tams_str":"35 BR","tams":{"35 BR":1}},{"n":"Tênis fem Juicy Couture preto","m":"JUICY COUTURE","c":"CALÇADO FEMININO","vs":["THAIS"],"v":369.0,"q":1,"f":"","vt":369.0,"tams_str":"38 BR","tams":{"38 BR":1}},{"n":"Leave-in K18 50ml","m":"K18","c":"COSMÉTICOS","vs":["FABIANA"],"v":589.0,"q":1,"f":"","vt":589.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Camiseta fem Keith Haring preta","m":"KEITH HARING","c":"FEMININO","vs":["FABIANA"],"v":149.0,"q":2,"f":"https://drive.google.com/thumbnail?id=1SoKxWXp_iCKDFCoQHP8-yfJK4gUu235s&sz=w400","vt":149.0,"tams_str":"M(2)","tams":{"M":2}},{"n":"Moletom fem Keith Haring preto","m":"KEITH HARING","c":"FEMININO","vs":["FABIANA"],"v":199.0,"q":2,"f":"https://drive.google.com/thumbnail?id=1Y2pCr8TS7olac6VX83Eub29V-qwWblfe&sz=w400","vt":199.0,"tams_str":"P · M","tams":{"P":1,"M":1}},{"n":"Multipurpose Masher KitchenAid cinza","m":"KITCHENAID","c":"CASA","vs":["THAIS"],"v":119.0,"q":1,"f":"","vt":119.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Utility Whisk KitchenAid lilás","m":"KITCHENAID","c":"CASA","vs":["THAIS"],"v":109.0,"q":1,"f":"","vt":109.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Rímel LA colors HD waterproof","m":"LA COLORS","c":"COSMÉTICOS","vs":["SABRINA"],"v":89.0,"q":3,"f":"","vt":89.0,"tams_str":"Único(3)","tams":{"Único":3}},{"n":"Slippers fem Laura Ashley cinza","m":"LAURA ASHLEY","c":"CALÇADO FEMININO","vs":["THAIS"],"v":199.0,"q":1,"f":"","vt":199.0,"tams_str":"39/40 BR","tams":{"39/40 BR":1}},{"n":"Protetor térmico Iron Sleek Coat Loreal 150ml","m":"LOREAL","c":"COSMÉTICOS","vs":["FABIANA"],"v":199.0,"q":9,"f":"","vt":199.0,"tams_str":"Único(9)","tams":{"Único":9}},{"n":"Protetor térmico Iron Sleek Coat Loreal 150ml 2x","m":"LOREAL","c":"COSMÉTICOS","vs":["FABIANA"],"v":398.0,"q":1,"f":"","vt":398.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Protetor térmico para cabelo Loreal Sleek It","m":"LOREAL","c":"COSMÉTICOS","vs":["SABRINA"],"v":139.0,"q":1,"f":"","vt":139.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Esmalte Marie Claire Paris cor Jelly Mint","m":"MARIE CLAIRE PARIS","c":"COSMÉTICOS","vs":["THAIS"],"v":34.0,"q":1,"f":"","vt":34.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Esmalte Marie Claire Paris cor Strawberry Milk","m":"MARIE CLAIRE PARIS","c":"COSMÉTICOS","vs":["THAIS"],"v":34.0,"q":1,"f":"","vt":34.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Pack com 5 Under eye patches Mario Badescu","m":"MARIO BADESCU","c":"COSMÉTICOS","vs":["THAIS"],"v":129.0,"q":1,"f":"","vt":129.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Livro sticker wow Melissa e Doug x Disney Minnie","m":"MELISSA E DOUG","c":"INFANTIL","vs":["JÉSSICA"],"v":89.0,"q":1,"f":"","vt":89.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Shampoo Monday Smooth 50ml","m":"MONDAY","c":"COSMÉTICOS","vs":["THAIS"],"v":0.0,"q":2,"f":"","vt":0.0,"tams_str":"Único(2)","tams":{"Único":2}},{"n":"Suplemento de cabelo Monday 60 gummies","m":"MONDAY","c":"FARMÁCIA","vs":["THAIS"],"v":239.0,"q":2,"f":"","vt":239.0,"tams_str":"Único(2)","tams":{"Único":2}},{"n":"Legging com bolso fem Mondetta cinza","m":"MONDETTA","c":"FEMININO","vs":["FABIANA"],"v":188.0,"q":2,"f":"","vt":188.0,"tams_str":"G · M","tams":{"G":1,"M":1}},{"n":"Legging com bolso fem Mondetta preta","m":"MONDETTA","c":"FEMININO","vs":["FABIANA"],"v":188.0,"q":4,"f":"","vt":188.0,"tams_str":"P(2) · G(2)","tams":{"P":2,"G":2}},{"n":"Legging com bolso fem Mondetta uva","m":"MONDETTA","c":"FEMININO","vs":["FABIANA"],"v":188.0,"q":1,"f":"","vt":188.0,"tams_str":"M","tams":{"M":1}},{"n":"Pack com 2 sabonetes em espuma Mr Bubble","m":"MR BUBBLE","c":"INFANTIL","vs":["JÉSSICA"],"v":159.0,"q":2,"f":"","vt":159.0,"tams_str":"Único(2)","tams":{"Único":2}},{"n":"Melatonina infantil Natrol gomas 1mg 60 gomas","m":"NATROL","c":"FARMÁCIA","vs":["THAIS"],"v":239.0,"q":1,"f":"","vt":239.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Moletom careca fem Old Navy creme","m":"OLD NAVY","c":"FEMININO","vs":["THAIS"],"v":199.0,"q":1,"f":"","vt":199.0,"tams_str":"P","tams":{"P":1}},{"n":"Moletom fem Old Navy preto","m":"OLD NAVY","c":"FEMININO","vs":["THAIS"],"v":199.0,"q":3,"f":"","vt":199.0,"tams_str":"GGG · M(2)","tams":{"GGG":1,"M":2}},{"n":"Sweatshirt fem Old Navy creme","m":"OLD NAVY","c":"FEMININO","vs":["THAIS"],"v":169.0,"q":1,"f":"","vt":169.0,"tams_str":"G","tams":{"G":1}},{"n":"Suéter fem Old Navy x Gap marinho","m":"OLD NAVY X GAP","c":"FEMININO","vs":["SABRINA"],"v":159.0,"q":1,"f":"","vt":159.0,"tams_str":"M","tams":{"M":1}},{"n":"Tapete de silicone para alimentação de pets Park Life Designs cinza","m":"PARK LIFE","c":"CASA","vs":["THAIS"],"v":99.0,"q":1,"f":"","vt":99.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Pack com 3 pares de meia médias fem Ralph Lauren brancas","m":"RALPH LAUREN","c":"FEMININO","vs":["THAIS"],"v":159.0,"q":1,"f":"","vt":159.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Pack com 6 pares de meias cano curto masc Ralph Lauren branca","m":"RALPH LAUREN","c":"MASCULINO","vs":["THAIS"],"v":189.0,"q":2,"f":"https://drive.google.com/thumbnail?id=1Ptt6w3PHEz6gLV5cD2MgReuLb1JE0CTH&sz=w400","vt":189.0,"tams_str":"Único(2)","tams":{"Único":2}},{"n":"Pack com 6 pares de meias cano médio masc Ralph Lauren branca","m":"RALPH LAUREN","c":"MASCULINO","vs":["THAIS"],"v":189.0,"q":1,"f":"https://drive.google.com/thumbnail?id=138_30jqMsB4dRGzhFZ3LvzvNqWcsRxh2&sz=w400","vt":189.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Pack com 6 pares de meias curta fem Ralph Lauren","m":"RALPH LAUREN","c":"FEMININO","vs":["THAIS"],"v":159.0,"q":2,"f":"https://drive.google.com/thumbnail?id=1Sp1ZYFJwSMlyv2BuHPMqMiB1MHzybYTK&sz=w400","vt":159.0,"tams_str":"Único(2)","tams":{"Único":2}},{"n":"Chocolate sem açúcar Russel Stover Peanut Butter 133g","m":"RUSSEL STOVER","c":"ALIMENTICIO","vs":["FABIANA"],"v":79.0,"q":1,"f":"https://drive.google.com/thumbnail?id=1vSR1a2SL69V-R8e6aQuj3r_Hr8_exstW&sz=w400","vt":79.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Chocolate sem açúcar Russel Stover Peanut Butter 133g 2x","m":"RUSSEL STOVER","c":"ALIMENTICIO","vs":["FABIANA"],"v":158.0,"q":1,"f":"https://drive.google.com/thumbnail?id=1vSR1a2SL69V-R8e6aQuj3r_Hr8_exstW&sz=w400","vt":158.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Chocolate sem açúcar Russel Stover Peanuts, caramel & Nougat 133g","m":"RUSSEL STOVER","c":"ALIMENTICIO","vs":["FABIANA"],"v":79.0,"q":2,"f":"https://drive.google.com/thumbnail?id=1Kk7yMMfS-g3bVcrS2N1JK-IkIluT_469&sz=w400","vt":79.0,"tams_str":"Único(2)","tams":{"Único":2}},{"n":"Legging fem Sinopant preta","m":"SINOPANT","c":"FEMININO","vs":["SABRINA"],"v":129.0,"q":1,"f":"","vt":129.0,"tams_str":"G/GG","tams":{"G/GG":1}},{"n":"Legging capri fem Skechers preta","m":"SKECHERS","c":"FEMININO","vs":["FABIANA"],"v":99.0,"q":2,"f":"","vt":99.0,"tams_str":"P(2)","tams":{"P":2}},{"n":"Tênis fem Skechers preto","m":"SKECHERS","c":"CALÇADO FEMININO","vs":["THAIS"],"v":369.0,"q":1,"f":"https://drive.google.com/thumbnail?id=1bzix8u_flO9zzvVCEJ17Dw047zcBWOxi&sz=w400","vt":369.0,"tams_str":"35 BR","tams":{"35 BR":1}},{"n":"Álcool em gel spray Barbie rosa claro","m":"SMART CARE","c":"INFANTIL","vs":["THAIS"],"v":20.0,"q":2,"f":"https://drive.google.com/thumbnail?id=1GaJPAzmcpEdky3QFsMMmZYKbxJ5NCBJA&sz=w400","vt":20.0,"tams_str":"Único(2)","tams":{"Único":2}},{"n":"Álcool em gel spray Barbie rosa claro 2x","m":"SMART CARE","c":"INFANTIL","vs":["THAIS"],"v":40.0,"q":2,"f":"https://drive.google.com/thumbnail?id=1GaJPAzmcpEdky3QFsMMmZYKbxJ5NCBJA&sz=w400","vt":40.0,"tams_str":"Único(2)","tams":{"Único":2}},{"n":"Álcool em gel spray Barbie rosa escuro","m":"SMART CARE","c":"INFANTIL","vs":["THAIS"],"v":20.0,"q":6,"f":"https://drive.google.com/thumbnail?id=1RdWbc-_h1CJ3UCmEg4B2WSbCvCJj7FlD&sz=w400","vt":20.0,"tams_str":"Único(6)","tams":{"Único":6}},{"n":"Álcool em gel spray Barbie rosa escuro 2x","m":"SMART CARE","c":"INFANTIL","vs":["THAIS"],"v":40.0,"q":2,"f":"https://drive.google.com/thumbnail?id=1RdWbc-_h1CJ3UCmEg4B2WSbCvCJj7FlD&sz=w400","vt":40.0,"tams_str":"Único(2)","tams":{"Único":2}},{"n":"Álcool em gel spray Jurassic Park preto","m":"SMART CARE","c":"INFANTIL","vs":["THAIS"],"v":20.0,"q":3,"f":"https://drive.google.com/thumbnail?id=1fnR9Gk7S6LWabFke0zN79ngCuWJe1mcZ&sz=w400","vt":20.0,"tams_str":"Único(3)","tams":{"Único":3}},{"n":"Álcool em gel spray Jurassic Park preto 2x","m":"SMART CARE","c":"INFANTIL","vs":["THAIS"],"v":40.0,"q":2,"f":"https://drive.google.com/thumbnail?id=1fnR9Gk7S6LWabFke0zN79ngCuWJe1mcZ&sz=w400","vt":40.0,"tams_str":"Único(2)","tams":{"Único":2}},{"n":"Álcool em gel spray Squishmallows verde claro","m":"SMART CARE","c":"INFANTIL","vs":["THAIS"],"v":20.0,"q":5,"f":"https://drive.google.com/thumbnail?id=1Teumo37qVIPr2CPasIVz9aq_F-AsNYxa&sz=w400","vt":20.0,"tams_str":"Único(5)","tams":{"Único":5}},{"n":"Álcool em gel spray Squishmallows verde claro 2x","m":"SMART CARE","c":"INFANTIL","vs":["THAIS"],"v":40.0,"q":3,"f":"https://drive.google.com/thumbnail?id=1Teumo37qVIPr2CPasIVz9aq_F-AsNYxa&sz=w400","vt":40.0,"tams_str":"Único(3)","tams":{"Único":3}},{"n":"Lencinhos para maquina de secar Snuggle","m":"SNUGGLE","c":"CASA","vs":["SABRINA"],"v":49.0,"q":1,"f":"https://drive.google.com/thumbnail?id=1oRETRGqNWHYREbOkKkCU8-_gUS3Jd_n4&sz=w400","vt":49.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Lencinhos para maquina de secar Snuggle 2x","m":"SNUGGLE","c":"CASA","vs":["SABRINA"],"v":98.0,"q":1,"f":"https://drive.google.com/thumbnail?id=1oRETRGqNWHYREbOkKkCU8-_gUS3Jd_n4&sz=w400","vt":98.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Bota cano alto fem Steve Madden marrom","m":"STEVE MADDEN","c":"CALÇADO MASCULINO","vs":["SABRINA"],"v":349.0,"q":1,"f":"https://drive.google.com/thumbnail?id=1JoHl-qUVepM-3qvoxRYhKCm2rLvqYTH1&sz=w400","vt":349.0,"tams_str":"36 BR","tams":{"36 BR":1}},{"n":"Chinelo fem Tommy preto com flores brancas","m":"TOMMY","c":"CALÇADO FEMININO","vs":["THAIS"],"v":149.0,"q":2,"f":"","vt":149.0,"tams_str":"39 BR · 36 BR","tams":{"39 BR":1,"36 BR":1}},{"n":"Moletom infantil Tommy rosa","m":"TOMMY","c":"ROUPA INFANTIL","vs":["JÉSSICA"],"v":289.0,"q":2,"f":"https://drive.google.com/thumbnail?id=1__ElQwq_Jtt6lBBNPaaPFJ99gwNRSvLw&sz=w400","vt":289.0,"tams_str":"16 anos · 12 anos","tams":{"16 anos":1,"12 anos":1}},{"n":"Óculos masc Tommy preto","m":"TOMMY","c":"ACESSÓRIOS","vs":["THAIS"],"v":249.0,"q":1,"f":"","vt":249.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Óculos quadrado masc Tommy preto","m":"TOMMY","c":"ACESSÓRIOS","vs":["THAIS"],"v":249.0,"q":1,"f":"","vt":249.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Óleo hidratante Vaseline Sunlit Glow 50ml","m":"VASELINE","c":"COSMÉTICOS","vs":["SABRINA"],"v":55.0,"q":2,"f":"","vt":55.0,"tams_str":"Único(2)","tams":{"Único":2}},{"n":"Calcinha corte laser fio Victoria's Secret preta","m":"VICTORIA'S SECRET","c":"FEMININO","vs":["FABIANA"],"v":68.0,"q":1,"f":"","vt":68.0,"tams_str":"PP","tams":{"PP":1}},{"n":"Calcinha fio logo Victoria's Secret canelada cinza","m":"VICTORIA'S SECRET","c":"FEMININO","vs":["FABIANA"],"v":68.0,"q":2,"f":"","vt":65.24,"tams_str":"P · GG","tams":{"P":1,"GG":1}},{"n":"Calcinha fio logo Victoria's Secret canelada rosa","m":"VICTORIA'S SECRET","c":"FEMININO","vs":["FABIANA"],"v":62.48,"q":1,"f":"","vt":62.48,"tams_str":"GG","tams":{"GG":1}},{"n":"Calcinha fio logo Victoria's Secret cinza","m":"VICTORIA'S SECRET","c":"FEMININO","vs":["FABIANA"],"v":68.0,"q":1,"f":"","vt":68.0,"tams_str":"M","tams":{"M":1}},{"n":"Calcinha fio logo Victoria's Secret marrom","m":"VICTORIA'S SECRET","c":"FEMININO","vs":["FABIANA"],"v":62.48,"q":1,"f":"","vt":62.48,"tams_str":"GG","tams":{"GG":1}},{"n":"Calcinha fio logo Victoria's Secret preta","m":"VICTORIA'S SECRET","c":"FEMININO","vs":["FABIANA"],"v":68.0,"q":2,"f":"https://drive.google.com/thumbnail?id=1_qbrTRGszrMhscAM91GoHGBRszcBwSxM&sz=w400","vt":68.0,"tams_str":"P(2)","tams":{"P":2}},{"n":"Calcinha fio Victoria's Secret animal print","m":"VICTORIA'S SECRET","c":"FEMININO","vs":["FABIANA"],"v":68.0,"q":2,"f":"https://drive.google.com/thumbnail?id=1x8zh1jwcscKOIQlchH8vYWlXNhhc9hDr&sz=w400","vt":65.24,"tams_str":"PP · GG","tams":{"PP":1,"GG":1}},{"n":"Calcinha fio Victoria's Secret branca","m":"VICTORIA'S SECRET","c":"FEMININO","vs":["FABIANA"],"v":62.48,"q":1,"f":"","vt":62.48,"tams_str":"GG","tams":{"GG":1}},{"n":"Calcinha fio Victoria's Secret cinza","m":"VICTORIA'S SECRET","c":"FEMININO","vs":["FABIANA"],"v":62.48,"q":1,"f":"https://drive.google.com/thumbnail?id=11lVoet3xkyvZrsfAfKBUGzAmpW1v1F1k&sz=w400","vt":62.48,"tams_str":"GG","tams":{"GG":1}},{"n":"Calcinha fio Victoria's Secret listrada rosa com branco","m":"VICTORIA'S SECRET","c":"FEMININO","vs":["FABIANA"],"v":68.0,"q":1,"f":"","vt":68.0,"tams_str":"GG","tams":{"GG":1}},{"n":"Calcinha fio Victoria's Secret preta","m":"VICTORIA'S SECRET","c":"FEMININO","vs":["FABIANA"],"v":62.48,"q":1,"f":"https://drive.google.com/thumbnail?id=1Q0wEbDrCnSbO4l9Xvp5pt_UalmJS4jig&sz=w400","vt":62.48,"tams_str":"GG","tams":{"GG":1}},{"n":"Calcinha fio Victoria's Secret quadriculada azul claro","m":"VICTORIA'S SECRET","c":"FEMININO","vs":["FABIANA"],"v":68.0,"q":2,"f":"","vt":65.24,"tams_str":"GG(2)","tams":{"GG":2}},{"n":"Calcinha fio Victoria's Secret quadriculada vermelha","m":"VICTORIA'S SECRET","c":"FEMININO","vs":["FABIANA"],"v":68.0,"q":1,"f":"","vt":68.0,"tams_str":"P","tams":{"P":1}},{"n":"Calcinha renda bumbum médio Victoria's Secret marinho","m":"VICTORIA'S SECRET","c":"FEMININO","vs":["FABIANA"],"v":62.48,"q":1,"f":"","vt":62.48,"tams_str":"M","tams":{"M":1}},{"n":"Calcinha renda fio Victoria's Secret branca corações","m":"VICTORIA'S SECRET","c":"FEMININO","vs":["FABIANA"],"v":68.0,"q":1,"f":"","vt":68.0,"tams_str":"P","tams":{"P":1}},{"n":"Calcinha renda fio Victoria's Secret rosa claro","m":"VICTORIA'S SECRET","c":"FEMININO","vs":["FABIANA"],"v":68.0,"q":1,"f":"https://drive.google.com/thumbnail?id=1XPrQyrrZHvsjMOBqkSdDeYonsLWj78iK&sz=w400","vt":68.0,"tams_str":"M","tams":{"M":1}},{"n":"Calcinha renda trabalhada bumbum médio Victoria's Secret branca","m":"VICTORIA'S SECRET","c":"FEMININO","vs":["FABIANA"],"v":68.0,"q":1,"f":"","vt":68.0,"tams_str":"P","tams":{"P":1}},{"n":"Calcinha renda trabalhada bumbum médio Victoria's Secret cinza claro","m":"VICTORIA'S SECRET","c":"FEMININO","vs":["FABIANA"],"v":62.48,"q":1,"f":"","vt":62.48,"tams_str":"M","tams":{"M":1}},{"n":"Calcinha sem costura bumbum médio Victoria's Secret branca","m":"VICTORIA'S SECRET","c":"FEMININO","vs":["FABIANA"],"v":62.48,"q":3,"f":"","vt":62.48,"tams_str":"M(2) · G","tams":{"M":2,"G":1}},{"n":"Calcinha sem costura bumbum médio Victoria's Secret cinza","m":"VICTORIA'S SECRET","c":"FEMININO","vs":["FABIANA"],"v":62.48,"q":1,"f":"","vt":62.48,"tams_str":"G","tams":{"G":1}},{"n":"Calcinha sem costura bumbum médio Victoria's Secret lilás","m":"VICTORIA'S SECRET","c":"FEMININO","vs":["FABIANA"],"v":62.48,"q":2,"f":"","vt":62.48,"tams_str":"M(2)","tams":{"M":2}},{"n":"Calcinha sem costura bumbum médio Victoria's Secret marrom","m":"VICTORIA'S SECRET","c":"FEMININO","vs":["FABIANA"],"v":68.0,"q":1,"f":"","vt":68.0,"tams_str":"G","tams":{"G":1}},{"n":"Calcinha sem costura bumbum médio Victoria's Secret preta","m":"VICTORIA'S SECRET","c":"FEMININO","vs":["FABIANA"],"v":62.48,"q":4,"f":"","vt":65.24,"tams_str":"M(3) · G","tams":{"M":3,"G":1}},{"n":"Calcinha sem costura bumbum médio Victoria's Secret rosa","m":"VICTORIA'S SECRET","c":"FEMININO","vs":["FABIANA"],"v":62.48,"q":1,"f":"","vt":62.48,"tams_str":"G","tams":{"G":1}},{"n":"Calcinha sem costura bumbum médio Victoria's Secret vermelha","m":"VICTORIA'S SECRET","c":"FEMININO","vs":["FABIANA"],"v":62.48,"q":1,"f":"","vt":62.48,"tams_str":"M","tams":{"M":1}},{"n":"Camiseta masc Volcom preta","m":"VOLCOM","c":"MASCULINO","vs":["THAIS"],"v":99.0,"q":1,"f":"","vt":99.0,"tams_str":"G","tams":{"G":1}},{"n":"Legging fem Walyfrei preta","m":"WALYFREI","c":"FEMININO","vs":["SABRINA"],"v":129.0,"q":2,"f":"","vt":129.0,"tams_str":"G/GG(2)","tams":{"G/GG":2}},{"n":"Escova Wet Brush mini detangler azul","m":"WET","c":"COSMÉTICOS","vs":["FABIANA"],"v":79.0,"q":2,"f":"https://drive.google.com/thumbnail?id=1I3_nlrGRVcuZbbKFMjPmme5ieEi53GW2&sz=w400","vt":79.0,"tams_str":"Único(2)","tams":{"Único":2}},{"n":"Escova Wet Brush mini detangler rosa escuro","m":"WET","c":"COSMÉTICOS","vs":["FABIANA"],"v":79.0,"q":1,"f":"","vt":79.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Escova Wet Brush speed dry lilás","m":"WET","c":"COSMÉTICOS","vs":["FABIANA"],"v":99.0,"q":1,"f":"","vt":99.0,"tams_str":"Único","tams":{"Único":1}}];
+const RAW_DATA = [{"n":"Band Aid Barbie","m":"","c":"INFANTIL","vs":["JÉSSICA"],"v":29.0,"q":2,"f":"","vt":29.0,"vmin":29.0,"vmax":29.0,"tams_str":"Único(2)","tams":{"Único":2}},{"n":"Band Aid Looney Tunes","m":"","c":"INFANTIL","vs":["JÉSSICA"],"v":29.0,"q":2,"f":"","vt":29.0,"vmin":29.0,"vmax":29.0,"tams_str":"Único(2)","tams":{"Único":2}},{"n":"Conjunto térmico fem cinza","m":"","c":"FEMININO","vs":["THAIS"],"v":199.0,"q":5,"f":"","vt":199.0,"vmin":199.0,"vmax":199.0,"tams_str":"G · M(2) · GG · GGG","tams":{"G":1,"M":2,"GG":1,"GGG":1}},{"n":"Conjunto térmico fem preto","m":"","c":"FEMININO","vs":["THAIS"],"v":199.0,"q":6,"f":"","vt":199.0,"vmin":199.0,"vmax":199.0,"tams_str":"M · G(3) · P(2)","tams":{"M":1,"G":3,"P":2}},{"n":"Conjunto térmico masc preto","m":"","c":"FEMININO","vs":["THAIS"],"v":269.0,"q":3,"f":"","vt":269.0,"vmin":269.0,"vmax":269.0,"tams_str":"GG · G · M","tams":{"GG":1,"G":1,"M":1}},{"n":"Pack com 10 mini pincéis de maquiagem","m":"","c":"COSMÉTICOS","vs":["SABRINA"],"v":79.0,"q":41,"f":"https://drive.google.com/thumbnail?id=1HaKUnKGu-1FS6DiLHoiDmmGJc6qvn1V_&sz=w400","vt":79.0,"vmin":79.0,"vmax":79.0,"tams_str":"Único(41)","tams":{"Único":41}},{"n":"Par de meias Disney Stitch marinho","m":"","c":"FEMININO","vs":["THAIS"],"v":29.0,"q":1,"f":"https://drive.google.com/thumbnail?id=1HtfdWKxUaTpQ4JU1vyHWlE83V6a81YmA&sz=w400","vt":29.0,"vmin":29.0,"vmax":29.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Par de meias Pringles vermelha","m":"","c":"FEMININO","vs":["THAIS"],"v":29.0,"q":4,"f":"https://drive.google.com/thumbnail?id=1CyR819vHouzwEC_fGwvI7nMacucbM3ZB&sz=w400","vt":29.0,"vmin":29.0,"vmax":29.0,"tams_str":"Único(4)","tams":{"Único":4}},{"n":"Set escova de dentes + pasta Hotwells","m":"","c":"INFANTIL","vs":["JÉSSICA"],"v":49.0,"q":2,"f":"","vt":49.0,"vmin":49.0,"vmax":49.0,"tams_str":"Único(2)","tams":{"Único":2}},{"n":"Camiseta masc 32 Degrees cinza escuro mescla","m":"32 DEGREES","c":"MASCULINO","vs":["SABRINA"],"v":99.0,"q":1,"f":"https://drive.google.com/thumbnail?id=1HMylr01GVBkNHZz9K_30gs4_URDLFASA&sz=w400","vt":99.0,"vmin":99.0,"vmax":99.0,"tams_str":"M","tams":{"M":1}},{"n":"Conjunto térmico fem 32 Degrees cinza","m":"32 DEGREES","c":"FEMININO","vs":["FABIANA"],"v":199.0,"q":10,"f":"https://drive.google.com/thumbnail?id=1j3xLOYJYIXdvsV7JZ2AbWMmlgppJOKn2&sz=w400","vt":199.0,"vmin":199.0,"vmax":199.0,"tams_str":"??? (a definir) · G(3) · M(3) · P(3)","tams":{"??? (a definir)":1,"G":3,"M":3,"P":3}},{"n":"Pack com 5 pares de meias cano alto masc 32 Degrees marrom","m":"32 DEGREES","c":"FEMININO","vs":["SABRINA"],"v":159.0,"q":1,"f":"","vt":159.0,"vmin":159.0,"vmax":159.0,"tams_str":"G","tams":{"G":1}},{"n":"Pack com 6 pares de meias infantil Adidas marrom","m":"ADIDAS","c":"ROUPA INFANTIL","vs":["JÉSSICA"],"v":149.0,"q":1,"f":"","vt":149.0,"vmin":149.0,"vmax":149.0,"tams_str":"??? (a definir)","tams":{"??? (a definir)":1}},{"n":"Tênis barreda fem Adidas branco","m":"ADIDAS","c":"CALÇADO FEMININO","vs":["FABIANA"],"v":269.6,"q":3,"f":"","vt":303.3,"vmin":269.6,"vmax":337.0,"tams_str":"10 USA / ? BR · 8 USA · 6.5 USA / 35.5 BR","tams":{"10 USA / ? BR":1,"8 USA":1,"6.5 USA / 35.5 BR":1}},{"n":"Legging extra alta fem Aerie azul claro M - regular","m":"AERIE","c":"FEMININO","vs":["THAIS"],"v":369.0,"q":1,"f":"https://drive.google.com/thumbnail?id=1uxgRm2FpAn64HFLaKp9Yavb03Vk13Nl8&sz=w400","vt":369.0,"vmin":369.0,"vmax":369.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Legging extra alta fem Aerie verde escuro M - regular","m":"AERIE","c":"FEMININO","vs":["THAIS"],"v":369.0,"q":1,"f":"https://drive.google.com/thumbnail?id=1UrrA2WotXfeMtvBuNxaMGGl3HFeb9ihh&sz=w400","vt":369.0,"vmin":369.0,"vmax":369.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Suéter Après fem Aerie creme","m":"AERIE","c":"FEMININO","vs":["THAIS"],"v":269.0,"q":2,"f":"https://drive.google.com/thumbnail?id=1IlKgYDAucVlRdDR6AGlyfqcWlcsgxicS&sz=w400","vt":269.0,"vmin":269.0,"vmax":269.0,"tams_str":"G · GG","tams":{"G":1,"GG":1}},{"n":"Serum de cílios Babe Lash  - 3 meses","m":"BABE LASH","c":"COSMÉTICOS","vs":["FABIANA"],"v":489.0,"q":1,"f":"","vt":489.0,"vmin":489.0,"vmax":489.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Pack com 3 pares de meias de pilates fem Balance branca","m":"BALANCE","c":"FEMININO","vs":["FABIANA"],"v":189.0,"q":2,"f":"https://drive.google.com/thumbnail?id=1aY1F5pPV8aVasCySlFEOLb5Li4NvyVL3&sz=w400","vt":189.0,"vmin":189.0,"vmax":189.0,"tams_str":"Único(2)","tams":{"Único":2}},{"n":"Pack com 3 pares de meias de pilates fem Balance rosa","m":"BALANCE","c":"FEMININO","vs":["FABIANA"],"v":189.0,"q":1,"f":"https://drive.google.com/thumbnail?id=1KAuYuwtW3L40RvYWX9SVO_OPxteq-Y7h&sz=w400","vt":189.0,"vmin":189.0,"vmax":189.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Pack com 3 pares de meias fem Balance preto","m":"BALANCE","c":"FEMININO","vs":["FABIANA"],"v":189.0,"q":1,"f":"https://drive.google.com/thumbnail?id=1KLkdFoJXOuI2ZEBqyDbs6LWD7smY_mcO&sz=w400","vt":189.0,"vmin":189.0,"vmax":189.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Calça fem Banana Republic bege","m":"BANANA REPUBLIC","c":"FEMININO","vs":["FABIANA"],"v":199.0,"q":2,"f":"https://drive.google.com/thumbnail?id=1pdh3KXXOv6wd1zJJzbj6u2oRz01sQGaj&sz=w400","vt":199.0,"vmin":199.0,"vmax":199.0,"tams_str":"G(2)","tams":{"G":2}},{"n":"Fio dental individual BB 80un","m":"BB","c":"FARMÁCIA","vs":["FABIANA"],"v":39.0,"q":3,"f":"","vt":39.0,"vmin":39.0,"vmax":39.0,"tams_str":"Único(3)","tams":{"Único":3}},{"n":"Body cream BBW Always Fleur","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":149.9,"q":1,"f":"","vt":149.9,"vmin":149.9,"vmax":149.9,"tams_str":"Único","tams":{"Único":1}},{"n":"Body cream travel size BBW Champagne Toast","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":63.0,"q":2,"f":"","vt":63.0,"vmin":63.0,"vmax":63.0,"tams_str":"Único(2)","tams":{"Único":2}},{"n":"Body cream travel size BBW Gingham","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":64.5,"q":1,"f":"","vt":64.5,"vmin":64.5,"vmax":64.5,"tams_str":"Único","tams":{"Único":1}},{"n":"Body cream travel size BBW Ocean","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":64.5,"q":3,"f":"","vt":64.5,"vmin":64.5,"vmax":64.5,"tams_str":"Único(3)","tams":{"Único":3}},{"n":"Body cream travel size BBW Strawberry Pound Cake","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":64.5,"q":1,"f":"","vt":64.5,"vmin":64.5,"vmax":64.5,"tams_str":"Único","tams":{"Único":1}},{"n":"Body cream travel size BBW Waikiki","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":63.0,"q":1,"f":"","vt":63.0,"vmin":63.0,"vmax":63.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Body lotion travel size BBW A Thousand Wishes","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":63.0,"q":2,"f":"","vt":63.0,"vmin":63.0,"vmax":63.0,"tams_str":"Único(2)","tams":{"Único":2}},{"n":"Body lotion travel size BBW Champagne Toast","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":63.0,"q":1,"f":"","vt":63.0,"vmin":63.0,"vmax":63.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Body lotion travel size BBW Into The Night","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":63.0,"q":1,"f":"","vt":63.0,"vmin":63.0,"vmax":63.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Body lotion travel size BBW Waikiki","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":31.5,"q":2,"f":"","vt":31.5,"vmin":31.5,"vmax":31.5,"tams_str":"Único(2)","tams":{"Único":2}},{"n":"Body mist BBW Infinite Radiance","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":169.9,"q":1,"f":"","vt":169.9,"vmin":169.9,"vmax":169.9,"tams_str":"Único","tams":{"Único":1}},{"n":"Body mist BBW Pink Obsessed","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":169.0,"q":6,"f":"","vt":169.0,"vmin":169.0,"vmax":169.0,"tams_str":"Único(6)","tams":{"Único":6}},{"n":"Body mist BBW Salted Shorelines","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":169.9,"q":1,"f":"","vt":169.9,"vmin":169.9,"vmax":169.9,"tams_str":"Único","tams":{"Único":1}},{"n":"Body mist travel size BBW A Thousand Wishes","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":63.0,"q":1,"f":"","vt":63.0,"vmin":63.0,"vmax":63.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Body mist travel size BBW Bela","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":69.0,"q":1,"f":"","vt":69.0,"vmin":69.0,"vmax":69.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Body mist travel size BBW Champagne Toast","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":69.0,"q":3,"f":"","vt":66.0,"vmin":63.0,"vmax":69.0,"tams_str":"Único(3)","tams":{"Único":3}},{"n":"Body mist travel size BBW Covered In Roses","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":69.9,"q":9,"f":"","vt":66.3,"vmin":64.5,"vmax":69.9,"tams_str":"Único(9)","tams":{"Único":9}},{"n":"Body mist travel size BBW Gingham","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":64.5,"q":2,"f":"","vt":66.75,"vmin":64.5,"vmax":69.0,"tams_str":"Único(2)","tams":{"Único":2}},{"n":"Body mist travel size BBW Gingham Fresh","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":69.0,"q":1,"f":"","vt":69.0,"vmin":69.0,"vmax":69.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Body mist travel size BBW Into The Night","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":63.0,"q":3,"f":"","vt":63.0,"vmin":63.0,"vmax":63.0,"tams_str":"Único(3)","tams":{"Único":3}},{"n":"Body mist travel size BBW Into Waikiki","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":63.0,"q":1,"f":"","vt":63.0,"vmin":63.0,"vmax":63.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Body mist travel size BBW Ocean","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":64.5,"q":2,"f":"","vt":64.5,"vmin":64.5,"vmax":64.5,"tams_str":"Único(2)","tams":{"Único":2}},{"n":"Body mist travel size BBW Strawberry Pound Cake","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":64.5,"q":1,"f":"","vt":64.5,"vmin":64.5,"vmax":64.5,"tams_str":"Único","tams":{"Único":1}},{"n":"Gel de banho travel size BBW A Thousand Wishes","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":63.0,"q":6,"f":"","vt":63.0,"vmin":63.0,"vmax":63.0,"tams_str":"Único(6)","tams":{"Único":6}},{"n":"Gel de banho travel size BBW Champagne Toast","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":63.0,"q":4,"f":"","vt":53.0,"vmin":31.5,"vmax":64.5,"tams_str":"Único(4)","tams":{"Único":4}},{"n":"Gel de banho travel size BBW Covered In Roses","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":64.5,"q":2,"f":"","vt":64.5,"vmin":64.5,"vmax":64.5,"tams_str":"Único(2)","tams":{"Único":2}},{"n":"Gel de banho travel size BBW Into The Night","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":63.0,"q":1,"f":"","vt":63.0,"vmin":63.0,"vmax":63.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Gel de banho travel size BBW Ocean","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":64.5,"q":1,"f":"","vt":64.5,"vmin":64.5,"vmax":64.5,"tams_str":"Único","tams":{"Único":1}},{"n":"Gel de banho travel size BBW Waikiki","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":63.0,"q":1,"f":"","vt":63.0,"vmin":63.0,"vmax":63.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Refil de tomada BBW Breakfast In Bed","m":"BBW","c":"CASA","vs":["FABIANA"],"v":60.0,"q":1,"f":"","vt":60.0,"vmin":60.0,"vmax":60.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Refil de tomada BBW Flowers for Mom","m":"BBW","c":"CASA","vs":["FABIANA"],"v":79.9,"q":11,"f":"","vt":77.45,"vmin":75.0,"vmax":79.9,"tams_str":"Único(11)","tams":{"Único":11}},{"n":"Refil de tomada BBW Gingham","m":"BBW","c":"CASA","vs":["FABIANA"],"v":85.0,"q":1,"f":"","vt":85.0,"vmin":85.0,"vmax":85.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Refil de tomada BBW Laudry Day","m":"BBW","c":"CASA","vs":["FABIANA"],"v":85.0,"q":1,"f":"","vt":85.0,"vmin":85.0,"vmax":85.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Refil de tomada BBW Spa Day For Mom","m":"BBW","c":"CASA","vs":["FABIANA"],"v":60.0,"q":8,"f":"","vt":76.4,"vmin":75.0,"vmax":79.9,"tams_str":"Único(8)","tams":{"Único":8}},{"n":"Refil de tomada BBW Whipped Honey & Vanilla","m":"BBW","c":"CASA","vs":["FABIANA"],"v":85.0,"q":1,"f":"","vt":85.0,"vmin":85.0,"vmax":85.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Shower Steamers BBW lavender + vanilla","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":159.9,"q":1,"f":"","vt":159.9,"vmin":159.9,"vmax":159.9,"tams_str":"Único","tams":{"Único":1}},{"n":"Spray para travesseiro e corpo BBW Sleep Lavender + Vanilla","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":149.9,"q":1,"f":"","vt":149.9,"vmin":149.9,"vmax":149.9,"tams_str":"Único","tams":{"Único":1}},{"n":"Tomada básica BBW branca","m":"BBW","c":"CASA","vs":["FABIANA"],"v":78.0,"q":3,"f":"","vt":78.0,"vmin":78.0,"vmax":78.0,"tams_str":"Único(3)","tams":{"Único":3}},{"n":"Tomada básica BBW preta","m":"BBW","c":"CASA","vs":["FABIANA"],"v":78.0,"q":1,"f":"","vt":78.0,"vmin":78.0,"vmax":78.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Tomada com regulagem e luz BBW trabalhada","m":"BBW","c":"CASA","vs":["FABIANA"],"v":139.9,"q":1,"f":"https://drive.google.com/thumbnail?id=1nNf2Q0ar8tgHAqM-t74ozj6lLo4Z0Q5x&sz=w400","vt":139.9,"vmin":139.9,"vmax":139.9,"tams_str":"Único","tams":{"Único":1}},{"n":"Álcool em gel BBW Japanese Cherry Blossom","m":"BBW","c":"PERFUMARIA","vs":["FABIANA"],"v":0.0,"q":1,"f":"","vt":0.0,"vmin":0.0,"vmax":0.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Stick para picada Benadryl","m":"BENADRYL","c":"FARMÁCIA","vs":["SABRINA"],"v":89.0,"q":7,"f":"","vt":89.0,"vmin":89.0,"vmax":89.0,"tams_str":"Único(7)","tams":{"Único":7}},{"n":"Osteo Bi-Flex 200 coated tablets","m":"BI-FLEX","c":"FARMÁCIA","vs":["THAIS"],"v":399.0,"q":2,"f":"","vt":399.0,"vmin":399.0,"vmax":399.0,"tams_str":"Único(2)","tams":{"Único":2}},{"n":"Lencinhos antibacterianos Biopure Fresh Morning Breeze","m":"BIOPURE","c":"COSMÉTICOS","vs":["THAIS"],"v":29.0,"q":1,"f":"","vt":29.0,"vmin":29.0,"vmax":29.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Creme para os olhos Blue Love","m":"BLUE LOVE","c":"COSMÉTICOS","vs":["SABRINA"],"v":119.0,"q":1,"f":"","vt":119.0,"vmin":119.0,"vmax":119.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Mini frigideira com espátula Bombay rosa bebê","m":"BOMBAY","c":"CASA","vs":["FABIANA"],"v":149.0,"q":2,"f":"","vt":149.0,"vmin":149.0,"vmax":149.0,"tams_str":"Único(2)","tams":{"Único":2}},{"n":"Pack com 2 sprays antisséptico Boogie","m":"BOOGIE","c":"INFANTIL","vs":["JÉSSICA"],"v":59.0,"q":1,"f":"","vt":59.0,"vmin":59.0,"vmax":59.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Bolsa Shoulder bag Calvin Klein marrom","m":"CALVIN KLEIN","c":"ACESSÓRIOS","vs":["THAIS"],"v":469.0,"q":1,"f":"https://drive.google.com/thumbnail?id=1darqTuPCeIFklnPrd7cx9mR-nXGqz6WY&sz=w400","vt":469.0,"vmin":469.0,"vmax":469.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Conjunto de pijama infantil Carters lilás","m":"CARTERS","c":"ROUPA INFANTIL","vs":["JÉSSICA"],"v":99.0,"q":1,"f":"","vt":99.0,"vmin":99.0,"vmax":99.0,"tams_str":"3 anos","tams":{"3 anos":1}},{"n":"Conjunto infantil Carters amarelo","m":"CARTERS","c":"ROUPA INFANTIL","vs":["JÉSSICA"],"v":119.0,"q":1,"f":"","vt":119.0,"vmin":119.0,"vmax":119.0,"tams_str":"9 meses","tams":{"9 meses":1}},{"n":"Conjunto infantil Carters creme","m":"CARTERS","c":"ROUPA INFANTIL","vs":["JÉSSICA"],"v":109.0,"q":1,"f":"","vt":109.0,"vmin":109.0,"vmax":109.0,"tams_str":"24 meses","tams":{"24 meses":1}},{"n":"Macacão curto infantil Carters rosa","m":"CARTERS","c":"ROUPA INFANTIL","vs":["JÉSSICA"],"v":79.0,"q":1,"f":"https://drive.google.com/thumbnail?id=15yqUTchyx1_zqh69VZzxjJdUcXZlHHRn&sz=w400","vt":79.0,"vmin":79.0,"vmax":79.0,"tams_str":"9 meses","tams":{"9 meses":1}},{"n":"Macacão em fleece infantil Carters cinza","m":"CARTERS","c":"ROUPA INFANTIL","vs":["JÉSSICA"],"v":149.0,"q":1,"f":"https://drive.google.com/thumbnail?id=1_U2sKt0dkpAGyyuhXP-uvBNxZbl7TWhM&sz=w400","vt":149.0,"vmin":149.0,"vmax":149.0,"tams_str":"9 anos","tams":{"9 anos":1}},{"n":"Macacão em fleece infantil Carters rosa claro","m":"CARTERS","c":"ROUPA INFANTIL","vs":["JÉSSICA"],"v":149.0,"q":1,"f":"https://drive.google.com/thumbnail?id=1PjQ6IBoMVyZDLPYYT0KhvQGabHVMTQ-_&sz=w400","vt":149.0,"vmin":149.0,"vmax":149.0,"tams_str":"8 anos","tams":{"8 anos":1}},{"n":"Pack com 3 peças infantis Carters azul claro","m":"CARTERS","c":"ROUPA INFANTIL","vs":["JÉSSICA"],"v":139.0,"q":1,"f":"https://drive.google.com/thumbnail?id=1MBkKzqde0kc7Ns5x-3Ad7U0GwwoWBz2L&sz=w400","vt":139.0,"vmin":139.0,"vmax":139.0,"tams_str":"24 meses","tams":{"24 meses":1}},{"n":"Pack com 4 peças infantis Carters azul","m":"CARTERS","c":"ROUPA INFANTIL","vs":["FABIANA"],"v":169.0,"q":1,"f":"https://drive.google.com/thumbnail?id=1i6M32fwrtiS5DLvnOoBsnJ5eJeXkhQRe&sz=w400","vt":169.0,"vmin":169.0,"vmax":169.0,"tams_str":"24 meses","tams":{"24 meses":1}},{"n":"Pack com 4 peças infantis Carters creme","m":"CARTERS","c":"ROUPA INFANTIL","vs":["FABIANA"],"v":189.0,"q":1,"f":"https://drive.google.com/thumbnail?id=1I_3aESecrlx2rjpabBA1ht2U_fTaB1UU&sz=w400","vt":189.0,"vmin":189.0,"vmax":189.0,"tams_str":"18 meses","tams":{"18 meses":1}},{"n":"Creme facial Centella Skin1004 100ml","m":"CENTELLA","c":"COSMÉTICOS","vs":["FABIANA"],"v":188.0,"q":5,"f":"","vt":188.0,"vmin":188.0,"vmax":188.0,"tams_str":"Único(5)","tams":{"Único":5}},{"n":"Moletom fem Charlotte cinza","m":"CHARLOTTE","c":"FEMININO","vs":["SABRINA"],"v":299.0,"q":1,"f":"","vt":299.0,"vmin":299.0,"vmax":299.0,"tams_str":"G","tams":{"G":1}},{"n":"Jaqueta omni heat fem Columbia gelo","m":"COLUMBIA","c":"FEMININO","vs":["FABIANA"],"v":699.0,"q":1,"f":"https://drive.google.com/thumbnail?id=1dAQuRUsHqnkjhQCfaSjZAfe4whQs7Upb&sz=w400","vt":699.0,"vmin":699.0,"vmax":699.0,"tams_str":"GG","tams":{"GG":1}},{"n":"Jaqueta omni Heat masc Columbia Off White","m":"COLUMBIA","c":"MASCULINO","vs":["FABIANA"],"v":768.0,"q":1,"f":"https://drive.google.com/thumbnail?id=153mU3lv4CGXHUBcY7uePdj5eIOjy32Qi&sz=w400","vt":768.0,"vmin":768.0,"vmax":768.0,"tams_str":"G","tams":{"G":1}},{"n":"Moletom careca fem Columbia preto","m":"COLUMBIA","c":"FEMININO","vs":["THAIS"],"v":299.0,"q":1,"f":"","vt":299.0,"vmin":299.0,"vmax":299.0,"tams_str":"P","tams":{"P":1}},{"n":"Conjunto infantil Converse lilás","m":"CONVERSE","c":"ROUPA INFANTIL","vs":["FABIANA"],"v":228.0,"q":1,"f":"","vt":228.0,"vmin":228.0,"vmax":228.0,"tams_str":"10/12 anos","tams":{"10/12 anos":1}},{"n":"Conjunto infantil Converse rosa claro","m":"CONVERSE","c":"ROUPA INFANTIL","vs":["FABIANA"],"v":228.0,"q":1,"f":"","vt":228.0,"vmin":228.0,"vmax":228.0,"tams_str":"14/16 anos","tams":{"14/16 anos":1}},{"n":"Tênis plataforma fem Converse All Star azul claro","m":"CONVERSE","c":"","vs":[],"v":499.0,"q":1,"f":"https://drive.google.com/thumbnail?id=1EMtEoLUtFjxiRaxqLVqBax6-0zHuveZX&sz=w400","vt":499.0,"vmin":499.0,"vmax":499.0,"tams_str":"36 BR","tams":{"36 BR":1}},{"n":"Pack com 2 escovas de limpeza Core Kitchen marrom","m":"CORE KITCHEN","c":"CASA","vs":["FABIANA"],"v":79.9,"q":1,"f":"","vt":79.9,"vmin":79.9,"vmax":79.9,"tams_str":"Único","tams":{"Único":1}},{"n":"Oléo Dermasil Marula","m":"DERMASIL","c":"COSMÉTICOS","vs":["THAIS"],"v":109.0,"q":1,"f":"","vt":109.0,"vmin":109.0,"vmax":109.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Egg timer Disney x Minnie","m":"EGG TIMER","c":"CASA","vs":["FABIANA"],"v":39.0,"q":3,"f":"","vt":39.0,"vmin":39.0,"vmax":39.0,"tams_str":"Único(3)","tams":{"Único":3}},{"n":"Egg timer Disney x Stitch","m":"EGG TIMER","c":"CASA","vs":["FABIANA"],"v":39.0,"q":4,"f":"","vt":39.0,"vmin":39.0,"vmax":39.0,"tams_str":"Único(4)","tams":{"Único":4}},{"n":"Máscara de hidratção para os pés Epielle Intensive","m":"EPIELLE","c":"COSMÉTICOS","vs":["THAIS"],"v":39.0,"q":2,"f":"","vt":39.0,"vmin":39.0,"vmax":39.0,"tams_str":"Único(2)","tams":{"Único":2}},{"n":"Máscara para os pés Epielle Reparing socks","m":"EPIELLE","c":"COSMÉTICOS","vs":["THAIS"],"v":49.0,"q":2,"f":"","vt":49.0,"vmin":49.0,"vmax":49.0,"tams_str":"Único(2)","tams":{"Único":2}},{"n":"Bota peluciada fem Fashion Nova branca","m":"FASHION NOVA","c":"CALÇADO FEMININO","vs":["SABRINA"],"v":149.0,"q":1,"f":"https://drive.google.com/thumbnail?id=1STY9YNlz_1gu3ht0hT9tEJfcBpErmhic&sz=w400","vt":149.0,"vmin":149.0,"vmax":149.0,"tams_str":"35 BR / 6","tams":{"35 BR / 6":1}},{"n":"Calça em sherpa fem Fashion nova creme","m":"FASHION NOVA","c":"FEMININO","vs":["SABRINA"],"v":129.0,"q":1,"f":"https://drive.google.com/thumbnail?id=1uMe1ZxNbcYsxzu9o2aaZ4KBbCTKav6NN&sz=w400","vt":129.0,"vmin":129.0,"vmax":129.0,"tams_str":"G1","tams":{"G1":1}},{"n":"Conjunto de moletom fem Fashion Nova creme","m":"FASHION NOVA","c":"FEMININO","vs":["SABRINA"],"v":389.0,"q":1,"f":"https://drive.google.com/thumbnail?id=1Pa9MGtIXTb76xsEfDdPwVAUHSHgqe6G5&sz=w400","vt":389.0,"vmin":389.0,"vmax":389.0,"tams_str":"M","tams":{"M":1}},{"n":"Jaqueta sherpa fem Fashion Nova marrom xadrez","m":"FASHION NOVA","c":"FEMININO","vs":["SABRINA"],"v":189.0,"q":2,"f":"https://drive.google.com/thumbnail?id=1x_qGxv4CPz_N37Pc29ZU2sx1ueuL5iu-&sz=w400","vt":189.0,"vmin":189.0,"vmax":189.0,"tams_str":"G · M","tams":{"G":1,"M":1}},{"n":"Jaqueta sherpa fem Fashion Nova vermelha xadrez","m":"FASHION NOVA","c":"FEMININO","vs":["SABRINA"],"v":189.0,"q":1,"f":"https://drive.google.com/thumbnail?id=1lmLBgxBr7sdYF44UyULjkQ7X98XWoLjS&sz=w400","vt":189.0,"vmin":189.0,"vmax":189.0,"tams_str":"PP","tams":{"PP":1}},{"n":"Camiseta infantil GAP champions creme","m":"GAP","c":"ROUPA INFANTIL","vs":["JÉSSICA"],"v":89.0,"q":1,"f":"https://drive.google.com/thumbnail?id=19XB-SypSThrXEiCEkgQJ9ODIkYUEJ9FV&sz=w400","vt":89.0,"vmin":89.0,"vmax":89.0,"tams_str":"10 anos","tams":{"10 anos":1}},{"n":"Camiseta infantil GAP creme","m":"GAP","c":"ROUPA INFANTIL","vs":["FABIANA"],"v":159.9,"q":2,"f":"","vt":159.9,"vmin":159.9,"vmax":159.9,"tams_str":"12 anos · 14/16 anos","tams":{"12 anos":1,"14/16 anos":1}},{"n":"Camiseta infantil Gap verde","m":"GAP","c":"ROUPA INFANTIL","vs":["JÉSSICA"],"v":69.0,"q":2,"f":"https://drive.google.com/thumbnail?id=1O3Fgf1g9fA4WMZ3uROIfUwM-n9kqTN9c&sz=w400","vt":69.0,"vmin":69.0,"vmax":69.0,"tams_str":"14/16 anos(2)","tams":{"14/16 anos":2}},{"n":"Legging infantil GAP rosa brilhante","m":"GAP","c":"ROUPA INFANTIL","vs":["JÉSSICA"],"v":99.0,"q":1,"f":"https://drive.google.com/thumbnail?id=1hLviEGA7DFHhBdSHcgu9W5PoPLsHbkdJ&sz=w400","vt":99.0,"vmin":99.0,"vmax":99.0,"tams_str":"6/12 meses","tams":{"6/12 meses":1}},{"n":"Legging peluciada infantil GAP preta","m":"GAP","c":"ROUPA INFANTIL","vs":["JÉSSICA"],"v":69.0,"q":1,"f":"","vt":69.0,"vmin":69.0,"vmax":69.0,"tams_str":"6/12 meses","tams":{"6/12 meses":1}},{"n":"Moletom fem GAP creme","m":"GAP","c":"FEMININO","vs":["FABIANA"],"v":439.0,"q":1,"f":"","vt":439.0,"vmin":439.0,"vmax":439.0,"tams_str":"M","tams":{"M":1}},{"n":"Moletom infantil GAP creme","m":"GAP","c":"ROUPA INFANTIL","vs":["FABIANA"],"v":328.0,"q":1,"f":"","vt":328.0,"vmin":328.0,"vmax":328.0,"tams_str":"14/16 anos","tams":{"14/16 anos":1}},{"n":"Moletom Oversized infantil GAP creme","m":"GAP","c":"ROUPA INFANTIL","vs":["JÉSSICA"],"v":149.0,"q":1,"f":"https://drive.google.com/thumbnail?id=1UH39_D-e5lUVWN4rvXftfS3ZqXszwUJP&sz=w400","vt":149.0,"vmin":149.0,"vmax":149.0,"tams_str":"14/16 anos","tams":{"14/16 anos":1}},{"n":"Vestido de moletom infantil GAP cinza","m":"GAP","c":"ROUPA INFANTIL","vs":["JÉSSICA"],"v":199.0,"q":1,"f":"https://drive.google.com/thumbnail?id=1UvYHmTb_JuLUfbs7v24GmfduVLvf22C6&sz=w400","vt":199.0,"vmin":199.0,"vmax":199.0,"tams_str":"10 anos","tams":{"10 anos":1}},{"n":"Suéter fem Gloria Vanderbilt verde escuro","m":"GLORIA VANDERBILT","c":"FEMININO","vs":["THAIS"],"v":199.0,"q":1,"f":"","vt":199.0,"vmin":199.0,"vmax":199.0,"tams_str":"P","tams":{"P":1}},{"n":"Saborizador de agua Great Value - Energy","m":"GREAT VALUE","c":"ALIMENTICIO","vs":["FABIANA"],"v":79.0,"q":1,"f":"","vt":79.0,"vmin":79.0,"vmax":79.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Saborizador de agua Great Value - Focus","m":"GREAT VALUE","c":"ALIMENTICIO","vs":["FABIANA"],"v":79.0,"q":1,"f":"","vt":79.0,"vmin":79.0,"vmax":79.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Saborizador de agua Great Value - Grape","m":"GREAT VALUE","c":"ALIMENTICIO","vs":["FABIANA"],"v":79.0,"q":2,"f":"","vt":79.0,"vmin":79.0,"vmax":79.0,"tams_str":"Único(2)","tams":{"Único":2}},{"n":"Sapato slipper fem Jessica Simpson marrom","m":"JESSICA SIMPSON","c":"CALÇADO FEMININO","vs":["FABIANA"],"v":249.9,"q":1,"f":"https://drive.google.com/thumbnail?id=1VJKNZH1yXMLyoQI_07p0rZhSVNsgkxOY&sz=w400","vt":249.9,"vmin":249.9,"vmax":249.9,"tams_str":"38/39 BR","tams":{"38/39 BR":1}},{"n":"Sapato fem Journee Slip On rosa","m":"JOURNEE","c":"CALÇADO FEMININO","vs":["THAIS"],"v":499.0,"q":1,"f":"https://drive.google.com/thumbnail?id=15YuRFSkovhoxdC3WW52zqHndi1PiIzM-&sz=w400","vt":499.0,"vmin":499.0,"vmax":499.0,"tams_str":"35 BR","tams":{"35 BR":1}},{"n":"Tênis fem Juicy Couture preto","m":"JUICY COUTURE","c":"CALÇADO FEMININO","vs":["THAIS"],"v":369.0,"q":1,"f":"","vt":369.0,"vmin":369.0,"vmax":369.0,"tams_str":"38 BR","tams":{"38 BR":1}},{"n":"Leave-in K18 50ml","m":"K18","c":"COSMÉTICOS","vs":["FABIANA"],"v":589.0,"q":1,"f":"","vt":589.0,"vmin":589.0,"vmax":589.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Camiseta fem Keith Haring preta","m":"KEITH HARING","c":"FEMININO","vs":["FABIANA"],"v":149.0,"q":2,"f":"https://drive.google.com/thumbnail?id=1SoKxWXp_iCKDFCoQHP8-yfJK4gUu235s&sz=w400","vt":149.0,"vmin":149.0,"vmax":149.0,"tams_str":"M(2)","tams":{"M":2}},{"n":"Moletom fem Keith Haring preto","m":"KEITH HARING","c":"FEMININO","vs":["FABIANA"],"v":199.0,"q":2,"f":"https://drive.google.com/thumbnail?id=1Y2pCr8TS7olac6VX83Eub29V-qwWblfe&sz=w400","vt":199.0,"vmin":199.0,"vmax":199.0,"tams_str":"P · M","tams":{"P":1,"M":1}},{"n":"Multipurpose Masher KitchenAid cinza","m":"KITCHENAID","c":"CASA","vs":["THAIS"],"v":119.0,"q":1,"f":"","vt":119.0,"vmin":119.0,"vmax":119.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Utility Whisk KitchenAid lilás","m":"KITCHENAID","c":"CASA","vs":["THAIS"],"v":109.0,"q":1,"f":"","vt":109.0,"vmin":109.0,"vmax":109.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Rímel LA colors HD waterproof","m":"LA COLORS","c":"COSMÉTICOS","vs":["SABRINA"],"v":89.0,"q":3,"f":"","vt":89.0,"vmin":89.0,"vmax":89.0,"tams_str":"Único(3)","tams":{"Único":3}},{"n":"Slippers fem Laura Ashley cinza","m":"LAURA ASHLEY","c":"CALÇADO FEMININO","vs":["THAIS"],"v":199.0,"q":1,"f":"","vt":199.0,"vmin":199.0,"vmax":199.0,"tams_str":"39/40 BR","tams":{"39/40 BR":1}},{"n":"Protetor térmico Iron Sleek Coat Loreal 150ml","m":"LOREAL","c":"COSMÉTICOS","vs":["FABIANA"],"v":199.0,"q":11,"f":"","vt":199.0,"vmin":199.0,"vmax":199.0,"tams_str":"Único(11)","tams":{"Único":11}},{"n":"Protetor térmico para cabelo Loreal Sleek It","m":"LOREAL","c":"COSMÉTICOS","vs":["SABRINA"],"v":139.0,"q":1,"f":"","vt":139.0,"vmin":139.0,"vmax":139.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Esmalte Marie Claire Paris cor Jelly Mint","m":"MARIE CLAIRE PARIS","c":"COSMÉTICOS","vs":["THAIS"],"v":34.0,"q":1,"f":"","vt":34.0,"vmin":34.0,"vmax":34.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Esmalte Marie Claire Paris cor Strawberry Milk","m":"MARIE CLAIRE PARIS","c":"COSMÉTICOS","vs":["THAIS"],"v":34.0,"q":1,"f":"","vt":34.0,"vmin":34.0,"vmax":34.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Pack com 5 Under eye patches Mario Badescu","m":"MARIO BADESCU","c":"COSMÉTICOS","vs":["THAIS"],"v":129.0,"q":1,"f":"","vt":129.0,"vmin":129.0,"vmax":129.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Livro sticker wow Melissa e Doug x Disney Minnie","m":"MELISSA E DOUG","c":"INFANTIL","vs":["JÉSSICA"],"v":89.0,"q":1,"f":"","vt":89.0,"vmin":89.0,"vmax":89.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Shampoo Monday Smooth 50ml","m":"MONDAY","c":"COSMÉTICOS","vs":["THAIS"],"v":0.0,"q":2,"f":"","vt":0.0,"vmin":0.0,"vmax":0.0,"tams_str":"Único(2)","tams":{"Único":2}},{"n":"Suplemento de cabelo Monday 60 gummies","m":"MONDAY","c":"FARMÁCIA","vs":["THAIS"],"v":239.0,"q":2,"f":"","vt":239.0,"vmin":239.0,"vmax":239.0,"tams_str":"Único(2)","tams":{"Único":2}},{"n":"Legging com bolso fem Mondetta cinza","m":"MONDETTA","c":"FEMININO","vs":["FABIANA"],"v":188.0,"q":2,"f":"","vt":188.0,"vmin":188.0,"vmax":188.0,"tams_str":"G · M","tams":{"G":1,"M":1}},{"n":"Legging com bolso fem Mondetta preta","m":"MONDETTA","c":"FEMININO","vs":["FABIANA"],"v":188.0,"q":4,"f":"","vt":188.0,"vmin":188.0,"vmax":188.0,"tams_str":"P(2) · G(2)","tams":{"P":2,"G":2}},{"n":"Legging com bolso fem Mondetta uva","m":"MONDETTA","c":"FEMININO","vs":["FABIANA"],"v":188.0,"q":1,"f":"","vt":188.0,"vmin":188.0,"vmax":188.0,"tams_str":"M","tams":{"M":1}},{"n":"Pack com 2 sabonetes em espuma Mr Bubble","m":"MR BUBBLE","c":"INFANTIL","vs":["JÉSSICA"],"v":159.0,"q":2,"f":"","vt":159.0,"vmin":159.0,"vmax":159.0,"tams_str":"Único(2)","tams":{"Único":2}},{"n":"Melatonina infantil Natrol gomas 1mg 60 gomas","m":"NATROL","c":"FARMÁCIA","vs":["THAIS"],"v":239.0,"q":1,"f":"","vt":239.0,"vmin":239.0,"vmax":239.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Moletom careca fem Old Navy creme","m":"OLD NAVY","c":"FEMININO","vs":["THAIS"],"v":199.0,"q":1,"f":"","vt":199.0,"vmin":199.0,"vmax":199.0,"tams_str":"P","tams":{"P":1}},{"n":"Moletom fem Old Navy preto","m":"OLD NAVY","c":"FEMININO","vs":["THAIS"],"v":199.0,"q":3,"f":"","vt":199.0,"vmin":199.0,"vmax":199.0,"tams_str":"GGG · M(2)","tams":{"GGG":1,"M":2}},{"n":"Sweatshirt fem Old Navy creme","m":"OLD NAVY","c":"FEMININO","vs":["THAIS"],"v":169.0,"q":1,"f":"","vt":169.0,"vmin":169.0,"vmax":169.0,"tams_str":"G","tams":{"G":1}},{"n":"Suéter fem Old Navy x Gap marinho","m":"OLD NAVY X GAP","c":"FEMININO","vs":["SABRINA"],"v":159.0,"q":1,"f":"","vt":159.0,"vmin":159.0,"vmax":159.0,"tams_str":"M","tams":{"M":1}},{"n":"Tapete de silicone para alimentação de pets Park Life Designs cinza","m":"PARK LIFE","c":"CASA","vs":["THAIS"],"v":99.0,"q":1,"f":"","vt":99.0,"vmin":99.0,"vmax":99.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Pack com 3 pares de meia médias fem Ralph Lauren brancas","m":"RALPH LAUREN","c":"FEMININO","vs":["THAIS"],"v":159.0,"q":1,"f":"","vt":159.0,"vmin":159.0,"vmax":159.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Pack com 6 pares de meias cano curto masc Ralph Lauren branca","m":"RALPH LAUREN","c":"MASCULINO","vs":["THAIS"],"v":189.0,"q":2,"f":"https://drive.google.com/thumbnail?id=1Ptt6w3PHEz6gLV5cD2MgReuLb1JE0CTH&sz=w400","vt":189.0,"vmin":189.0,"vmax":189.0,"tams_str":"Único(2)","tams":{"Único":2}},{"n":"Pack com 6 pares de meias cano médio masc Ralph Lauren branca","m":"RALPH LAUREN","c":"MASCULINO","vs":["THAIS"],"v":189.0,"q":1,"f":"https://drive.google.com/thumbnail?id=138_30jqMsB4dRGzhFZ3LvzvNqWcsRxh2&sz=w400","vt":189.0,"vmin":189.0,"vmax":189.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Pack com 6 pares de meias curta fem Ralph Lauren","m":"RALPH LAUREN","c":"FEMININO","vs":["THAIS"],"v":159.0,"q":2,"f":"https://drive.google.com/thumbnail?id=1Sp1ZYFJwSMlyv2BuHPMqMiB1MHzybYTK&sz=w400","vt":159.0,"vmin":159.0,"vmax":159.0,"tams_str":"Único(2)","tams":{"Único":2}},{"n":"Chocolate sem açúcar Russel Stover Peanut Butter 133g","m":"RUSSEL STOVER","c":"ALIMENTICIO","vs":["FABIANA"],"v":79.0,"q":3,"f":"https://drive.google.com/thumbnail?id=1vSR1a2SL69V-R8e6aQuj3r_Hr8_exstW&sz=w400","vt":79.0,"vmin":79.0,"vmax":79.0,"tams_str":"Único(3)","tams":{"Único":3}},{"n":"Chocolate sem açúcar Russel Stover Peanuts, caramel & Nougat 133g","m":"RUSSEL STOVER","c":"ALIMENTICIO","vs":["FABIANA"],"v":79.0,"q":2,"f":"https://drive.google.com/thumbnail?id=1Kk7yMMfS-g3bVcrS2N1JK-IkIluT_469&sz=w400","vt":79.0,"vmin":79.0,"vmax":79.0,"tams_str":"Único(2)","tams":{"Único":2}},{"n":"Legging fem Sinopant preta","m":"SINOPANT","c":"FEMININO","vs":["SABRINA"],"v":129.0,"q":1,"f":"","vt":129.0,"vmin":129.0,"vmax":129.0,"tams_str":"G/GG","tams":{"G/GG":1}},{"n":"Legging capri fem Skechers preta","m":"SKECHERS","c":"FEMININO","vs":["FABIANA"],"v":99.0,"q":2,"f":"","vt":99.0,"vmin":99.0,"vmax":99.0,"tams_str":"P(2)","tams":{"P":2}},{"n":"Tênis fem Skechers preto","m":"SKECHERS","c":"CALÇADO FEMININO","vs":["THAIS"],"v":369.0,"q":1,"f":"https://drive.google.com/thumbnail?id=1bzix8u_flO9zzvVCEJ17Dw047zcBWOxi&sz=w400","vt":369.0,"vmin":369.0,"vmax":369.0,"tams_str":"35 BR","tams":{"35 BR":1}},{"n":"Álcool em gel spray Barbie rosa claro","m":"SMART CARE","c":"INFANTIL","vs":["THAIS"],"v":20.0,"q":6,"f":"https://drive.google.com/thumbnail?id=1GaJPAzmcpEdky3QFsMMmZYKbxJ5NCBJA&sz=w400","vt":20.0,"vmin":20.0,"vmax":20.0,"tams_str":"Único(6)","tams":{"Único":6}},{"n":"Álcool em gel spray Barbie rosa escuro","m":"SMART CARE","c":"INFANTIL","vs":["THAIS"],"v":20.0,"q":10,"f":"https://drive.google.com/thumbnail?id=1RdWbc-_h1CJ3UCmEg4B2WSbCvCJj7FlD&sz=w400","vt":20.0,"vmin":20.0,"vmax":20.0,"tams_str":"Único(10)","tams":{"Único":10}},{"n":"Álcool em gel spray Jurassic Park preto","m":"SMART CARE","c":"INFANTIL","vs":["THAIS"],"v":20.0,"q":7,"f":"https://drive.google.com/thumbnail?id=1fnR9Gk7S6LWabFke0zN79ngCuWJe1mcZ&sz=w400","vt":20.0,"vmin":20.0,"vmax":20.0,"tams_str":"Único(7)","tams":{"Único":7}},{"n":"Álcool em gel spray Squishmallows verde claro","m":"SMART CARE","c":"INFANTIL","vs":["THAIS"],"v":20.0,"q":11,"f":"https://drive.google.com/thumbnail?id=1Teumo37qVIPr2CPasIVz9aq_F-AsNYxa&sz=w400","vt":20.0,"vmin":20.0,"vmax":20.0,"tams_str":"Único(11)","tams":{"Único":11}},{"n":"Lencinhos para maquina de secar Snuggle","m":"SNUGGLE","c":"CASA","vs":["SABRINA"],"v":49.0,"q":3,"f":"https://drive.google.com/thumbnail?id=1oRETRGqNWHYREbOkKkCU8-_gUS3Jd_n4&sz=w400","vt":49.0,"vmin":49.0,"vmax":49.0,"tams_str":"Único(3)","tams":{"Único":3}},{"n":"Bota cano alto fem Steve Madden marrom","m":"STEVE MADDEN","c":"CALÇADO MASCULINO","vs":["SABRINA"],"v":349.0,"q":1,"f":"https://drive.google.com/thumbnail?id=1JoHl-qUVepM-3qvoxRYhKCm2rLvqYTH1&sz=w400","vt":349.0,"vmin":349.0,"vmax":349.0,"tams_str":"36 BR","tams":{"36 BR":1}},{"n":"Chinelo fem Tommy preto com flores brancas","m":"TOMMY","c":"CALÇADO FEMININO","vs":["THAIS"],"v":149.0,"q":2,"f":"","vt":149.0,"vmin":149.0,"vmax":149.0,"tams_str":"39 BR · 36 BR","tams":{"39 BR":1,"36 BR":1}},{"n":"Moletom infantil Tommy rosa","m":"TOMMY","c":"ROUPA INFANTIL","vs":["JÉSSICA"],"v":289.0,"q":2,"f":"https://drive.google.com/thumbnail?id=1__ElQwq_Jtt6lBBNPaaPFJ99gwNRSvLw&sz=w400","vt":289.0,"vmin":289.0,"vmax":289.0,"tams_str":"16 anos · 12 anos","tams":{"16 anos":1,"12 anos":1}},{"n":"Óculos masc Tommy preto","m":"TOMMY","c":"ACESSÓRIOS","vs":["THAIS"],"v":249.0,"q":1,"f":"","vt":249.0,"vmin":249.0,"vmax":249.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Óculos quadrado masc Tommy preto","m":"TOMMY","c":"ACESSÓRIOS","vs":["THAIS"],"v":249.0,"q":1,"f":"","vt":249.0,"vmin":249.0,"vmax":249.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Óleo hidratante Vaseline Sunlit Glow 50ml","m":"VASELINE","c":"COSMÉTICOS","vs":["SABRINA"],"v":55.0,"q":2,"f":"","vt":55.0,"vmin":55.0,"vmax":55.0,"tams_str":"Único(2)","tams":{"Único":2}},{"n":"Calcinha corte laser fio Victoria's Secret preta","m":"VICTORIA'S SECRET","c":"FEMININO","vs":["FABIANA"],"v":68.0,"q":1,"f":"","vt":68.0,"vmin":68.0,"vmax":68.0,"tams_str":"PP","tams":{"PP":1}},{"n":"Calcinha fio logo Victoria's Secret canelada cinza","m":"VICTORIA'S SECRET","c":"FEMININO","vs":["FABIANA"],"v":68.0,"q":2,"f":"","vt":65.24,"vmin":62.48,"vmax":68.0,"tams_str":"P · GG","tams":{"P":1,"GG":1}},{"n":"Calcinha fio logo Victoria's Secret canelada rosa","m":"VICTORIA'S SECRET","c":"FEMININO","vs":["FABIANA"],"v":62.48,"q":1,"f":"","vt":62.48,"vmin":62.48,"vmax":62.48,"tams_str":"GG","tams":{"GG":1}},{"n":"Calcinha fio logo Victoria's Secret cinza","m":"VICTORIA'S SECRET","c":"FEMININO","vs":["FABIANA"],"v":68.0,"q":1,"f":"","vt":68.0,"vmin":68.0,"vmax":68.0,"tams_str":"M","tams":{"M":1}},{"n":"Calcinha fio logo Victoria's Secret marrom","m":"VICTORIA'S SECRET","c":"FEMININO","vs":["FABIANA"],"v":62.48,"q":1,"f":"","vt":62.48,"vmin":62.48,"vmax":62.48,"tams_str":"GG","tams":{"GG":1}},{"n":"Calcinha fio logo Victoria's Secret preta","m":"VICTORIA'S SECRET","c":"FEMININO","vs":["FABIANA"],"v":68.0,"q":2,"f":"https://drive.google.com/thumbnail?id=1_qbrTRGszrMhscAM91GoHGBRszcBwSxM&sz=w400","vt":68.0,"vmin":68.0,"vmax":68.0,"tams_str":"P(2)","tams":{"P":2}},{"n":"Calcinha fio Victoria's Secret animal print","m":"VICTORIA'S SECRET","c":"FEMININO","vs":["FABIANA"],"v":68.0,"q":2,"f":"https://drive.google.com/thumbnail?id=1x8zh1jwcscKOIQlchH8vYWlXNhhc9hDr&sz=w400","vt":65.24,"vmin":62.48,"vmax":68.0,"tams_str":"PP · GG","tams":{"PP":1,"GG":1}},{"n":"Calcinha fio Victoria's Secret branca","m":"VICTORIA'S SECRET","c":"FEMININO","vs":["FABIANA"],"v":62.48,"q":1,"f":"","vt":62.48,"vmin":62.48,"vmax":62.48,"tams_str":"GG","tams":{"GG":1}},{"n":"Calcinha fio Victoria's Secret cinza","m":"VICTORIA'S SECRET","c":"FEMININO","vs":["FABIANA"],"v":62.48,"q":1,"f":"https://drive.google.com/thumbnail?id=11lVoet3xkyvZrsfAfKBUGzAmpW1v1F1k&sz=w400","vt":62.48,"vmin":62.48,"vmax":62.48,"tams_str":"GG","tams":{"GG":1}},{"n":"Calcinha fio Victoria's Secret listrada rosa com branco","m":"VICTORIA'S SECRET","c":"FEMININO","vs":["FABIANA"],"v":68.0,"q":1,"f":"","vt":68.0,"vmin":68.0,"vmax":68.0,"tams_str":"GG","tams":{"GG":1}},{"n":"Calcinha fio Victoria's Secret preta","m":"VICTORIA'S SECRET","c":"FEMININO","vs":["FABIANA"],"v":62.48,"q":1,"f":"https://drive.google.com/thumbnail?id=1Q0wEbDrCnSbO4l9Xvp5pt_UalmJS4jig&sz=w400","vt":62.48,"vmin":62.48,"vmax":62.48,"tams_str":"GG","tams":{"GG":1}},{"n":"Calcinha fio Victoria's Secret quadriculada azul claro","m":"VICTORIA'S SECRET","c":"FEMININO","vs":["FABIANA"],"v":68.0,"q":2,"f":"","vt":65.24,"vmin":62.48,"vmax":68.0,"tams_str":"GG(2)","tams":{"GG":2}},{"n":"Calcinha fio Victoria's Secret quadriculada vermelha","m":"VICTORIA'S SECRET","c":"FEMININO","vs":["FABIANA"],"v":68.0,"q":1,"f":"","vt":68.0,"vmin":68.0,"vmax":68.0,"tams_str":"P","tams":{"P":1}},{"n":"Calcinha renda bumbum médio Victoria's Secret marinho","m":"VICTORIA'S SECRET","c":"FEMININO","vs":["FABIANA"],"v":62.48,"q":1,"f":"","vt":62.48,"vmin":62.48,"vmax":62.48,"tams_str":"M","tams":{"M":1}},{"n":"Calcinha renda fio Victoria's Secret branca corações","m":"VICTORIA'S SECRET","c":"FEMININO","vs":["FABIANA"],"v":68.0,"q":1,"f":"","vt":68.0,"vmin":68.0,"vmax":68.0,"tams_str":"P","tams":{"P":1}},{"n":"Calcinha renda fio Victoria's Secret rosa claro","m":"VICTORIA'S SECRET","c":"FEMININO","vs":["FABIANA"],"v":68.0,"q":1,"f":"https://drive.google.com/thumbnail?id=1XPrQyrrZHvsjMOBqkSdDeYonsLWj78iK&sz=w400","vt":68.0,"vmin":68.0,"vmax":68.0,"tams_str":"M","tams":{"M":1}},{"n":"Calcinha renda trabalhada bumbum médio Victoria's Secret branca","m":"VICTORIA'S SECRET","c":"FEMININO","vs":["FABIANA"],"v":68.0,"q":1,"f":"","vt":68.0,"vmin":68.0,"vmax":68.0,"tams_str":"P","tams":{"P":1}},{"n":"Calcinha renda trabalhada bumbum médio Victoria's Secret cinza claro","m":"VICTORIA'S SECRET","c":"FEMININO","vs":["FABIANA"],"v":62.48,"q":1,"f":"","vt":62.48,"vmin":62.48,"vmax":62.48,"tams_str":"M","tams":{"M":1}},{"n":"Calcinha sem costura bumbum médio Victoria's Secret branca","m":"VICTORIA'S SECRET","c":"FEMININO","vs":["FABIANA"],"v":62.48,"q":3,"f":"","vt":62.48,"vmin":62.48,"vmax":62.48,"tams_str":"M(2) · G","tams":{"M":2,"G":1}},{"n":"Calcinha sem costura bumbum médio Victoria's Secret cinza","m":"VICTORIA'S SECRET","c":"FEMININO","vs":["FABIANA"],"v":62.48,"q":1,"f":"","vt":62.48,"vmin":62.48,"vmax":62.48,"tams_str":"G","tams":{"G":1}},{"n":"Calcinha sem costura bumbum médio Victoria's Secret lilás","m":"VICTORIA'S SECRET","c":"FEMININO","vs":["FABIANA"],"v":62.48,"q":2,"f":"","vt":62.48,"vmin":62.48,"vmax":62.48,"tams_str":"M(2)","tams":{"M":2}},{"n":"Calcinha sem costura bumbum médio Victoria's Secret marrom","m":"VICTORIA'S SECRET","c":"FEMININO","vs":["FABIANA"],"v":68.0,"q":1,"f":"","vt":68.0,"vmin":68.0,"vmax":68.0,"tams_str":"G","tams":{"G":1}},{"n":"Calcinha sem costura bumbum médio Victoria's Secret preta","m":"VICTORIA'S SECRET","c":"FEMININO","vs":["FABIANA"],"v":62.48,"q":4,"f":"","vt":65.24,"vmin":62.48,"vmax":68.0,"tams_str":"M(3) · G","tams":{"M":3,"G":1}},{"n":"Calcinha sem costura bumbum médio Victoria's Secret rosa","m":"VICTORIA'S SECRET","c":"FEMININO","vs":["FABIANA"],"v":62.48,"q":1,"f":"","vt":62.48,"vmin":62.48,"vmax":62.48,"tams_str":"G","tams":{"G":1}},{"n":"Calcinha sem costura bumbum médio Victoria's Secret vermelha","m":"VICTORIA'S SECRET","c":"FEMININO","vs":["FABIANA"],"v":62.48,"q":1,"f":"","vt":62.48,"vmin":62.48,"vmax":62.48,"tams_str":"M","tams":{"M":1}},{"n":"Camiseta masc Volcom preta","m":"VOLCOM","c":"MASCULINO","vs":["THAIS"],"v":99.0,"q":1,"f":"","vt":99.0,"vmin":99.0,"vmax":99.0,"tams_str":"G","tams":{"G":1}},{"n":"Legging fem Walyfrei preta","m":"WALYFREI","c":"FEMININO","vs":["SABRINA"],"v":129.0,"q":2,"f":"","vt":129.0,"vmin":129.0,"vmax":129.0,"tams_str":"G/GG(2)","tams":{"G/GG":2}},{"n":"Escova Wet Brush mini detangler azul","m":"WET","c":"COSMÉTICOS","vs":["FABIANA"],"v":79.0,"q":2,"f":"https://drive.google.com/thumbnail?id=1I3_nlrGRVcuZbbKFMjPmme5ieEi53GW2&sz=w400","vt":79.0,"vmin":79.0,"vmax":79.0,"tams_str":"Único(2)","tams":{"Único":2}},{"n":"Escova Wet Brush mini detangler rosa escuro","m":"WET","c":"COSMÉTICOS","vs":["FABIANA"],"v":79.0,"q":1,"f":"","vt":79.0,"vmin":79.0,"vmax":79.0,"tams_str":"Único","tams":{"Único":1}},{"n":"Escova Wet Brush speed dry lilás","m":"WET","c":"COSMÉTICOS","vs":["FABIANA"],"v":99.0,"q":1,"f":"","vt":99.0,"vmin":99.0,"vmax":99.0,"tams_str":"Único","tams":{"Único":1}}];
 
 let PRODUTOS = RAW_DATA.map((p,i) => ({...p, _id:i, nok:false, comments:[], qty: p.q}));
-let fVends = new Set(['TODAS']), fMarcas = new Set(), fSearch = '';
+let fVends = new Set(['TODAS']), fMarcas = new Set(), fCat = '', fSearch = '';
 let modalId = null;
 const SEEN = new Set();
 let fbUnsub = null;
@@ -433,27 +448,33 @@ function editarSubtitulo() {
     const val = inp.value.trim() || 'Faltantes — Junho 2026';
     el.textContent = val;
     localStorage.setItem('app_subtitulo', val);
-    // Sync to Firebase
+    // Sync to Firebase with history
     if (window._db) {
-      window._db.collection('config').doc('app').set({subtitulo: val}, {merge: true})
-        .catch(e => console.log('sync subtitulo error:', e));
+      const now = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+      const who = localStorage.getItem('chat_nome') || 'Anônimo';
+      window._db.collection('config').doc('app').set({subtitulo: val}, {merge: true});
+      window._db.collection('config').doc('versoes').get().then(doc => {
+        const hist = doc.exists ? (doc.data().lista || []) : [];
+        hist.unshift({titulo: val, who, time: now});
+        window._db.collection('config').doc('versoes').set({lista: hist.slice(0,20)});
+      }).catch(e => console.log('version history error:', e));
     }
   };
   inp.onblur = save;
   inp.onkeydown = e => { if (e.key === 'Enter') inp.blur(); if (e.key === 'Escape') { el.textContent = atual; } };
 }
 
-let _addQty = 1;
+let _addTams = [];
 
 function abrirModalAdd() {
-  _addQty = 1;
-  document.getElementById('add-qty').textContent = 1;
+  _addTams = [{tam: '', qty: 1}];
   document.getElementById('add-nome').value = '';
   document.getElementById('add-marca').value = '';
   document.getElementById('add-valor').value = '';
   _addFotoBase64 = '';
   document.getElementById('add-foto-preview').innerHTML = '📷';
   document.getElementById('add-foto-input').value = '';
+  renderAddTams();
   document.getElementById('modal-add-bg').style.display = 'flex';
   setTimeout(() => document.getElementById('add-nome').focus(), 200);
 }
@@ -462,10 +483,38 @@ function fecharModalAdd() {
   document.getElementById('modal-add-bg').style.display = 'none';
 }
 
-function addQtyChange(d) {
-  _addQty = Math.max(1, _addQty + d);
-  document.getElementById('add-qty').textContent = _addQty;
+function renderAddTams() {
+  const list = document.getElementById('add-tams-list');
+  if (!list) return;
+  list.innerHTML = '';
+  _addTams.forEach((t, i) => {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;gap:8px;align-items:center';
+    row.innerHTML =
+      '<input type="text" placeholder="Tam (ex: M, GG, 38)" value="'+t.tam+'" '+
+      'style="flex:1;border:0.5px solid #ede0d4;border-radius:10px;padding:8px 12px;font-size:13px;font-family:inherit;outline:none;background:#fdf8f4;color:#1a1a1a">' +
+      '<div style="display:flex;align-items:center;gap:6px;border:0.5px solid #ede0d4;border-radius:10px;padding:6px 10px;background:#fdf8f4">'+
+      '<button style="background:none;border:none;color:#7a0b1e;font-size:16px;cursor:pointer;padding:0;line-height:1">−</button>'+
+      '<span style="min-width:18px;text-align:center;font-size:13px;font-weight:600;color:#7a0b1e">'+t.qty+'</span>'+
+      '<button style="background:none;border:none;color:#7a0b1e;font-size:16px;cursor:pointer;padding:0;line-height:1">+</button>'+
+      '</div>'+
+      (i > 0 ? '<button style="background:none;border:none;color:#c4a898;font-size:16px;cursor:pointer;padding:0">×</button>' : '<div style="width:20px"></div>');
+    const inp = row.querySelector('input');
+    inp.addEventListener('input', () => { _addTams[i].tam = inp.value.trim(); });
+    const btns = row.querySelectorAll('button');
+    btns[0].addEventListener('click', () => { _addTams[i].qty = Math.max(1, _addTams[i].qty-1); renderAddTams(); });
+    btns[1].addEventListener('click', () => { _addTams[i].qty++; renderAddTams(); });
+    if (i > 0) btns[2].addEventListener('click', () => { _addTams.splice(i,1); renderAddTams(); });
+    list.appendChild(row);
+  });
 }
+
+function adicionarTamanho() {
+  _addTams.push({tam: '', qty: 1});
+  renderAddTams();
+}
+
+function addQtyChange(d) {} // kept for compatibility
 
 let _addFotoBase64 = '';
 
@@ -491,10 +540,21 @@ function salvarNovoItem() {
   const marca = document.getElementById('add-marca').value.trim();
   const valor = parseFloat(document.getElementById('add-valor').value) || 0;
   const newId = PRODUTOS.length;
+  // Build tams from _addTams
+  const tams = {};
+  let totalQty = 0;
+  _addTams.forEach(t => {
+    const key = t.tam || 'Único';
+    tams[key] = (tams[key]||0) + t.qty;
+    totalQty += t.qty;
+  });
+  const hasOnlyUnico = Object.keys(tams).length === 1 && tams['Único'];
   const novoItem = {
-    _id: newId, n: nome, m: marca, vs: [], v: valor, vt: valor,
-    q: _addQty, qty: _addQty, f: _addFotoBase64, c: '', nok: false, comments: [],
-    _manual: true
+    _id: newId, n: nome, m: marca, vs: [], v: valor, vt: valor, vmin: valor, vmax: valor,
+    q: totalQty, qty: totalQty, f: _addFotoBase64, c: '', nok: false, comments: [],
+    tams: hasOnlyUnico ? {'Único': totalQty} : tams,
+    tams_str: hasOnlyUnico ? '' : Object.entries(tams).map(([t,q])=>q>1?t+'('+q+')':t).join(' · '),
+    nokTams: {}, _manual: true
   };
   PRODUTOS.push(novoItem);
   _addFotoBase64 = '';
@@ -505,6 +565,11 @@ function salvarNovoItem() {
   // Save to Firebase
   fbSave(newId);
 }
+
+// ── Offline indicator ──────────────────────
+window.addEventListener('online',  () => { document.getElementById('offline-banner').style.display='none'; document.querySelector('.main-content') && (document.querySelector('.main-content').style.paddingTop=''); });
+window.addEventListener('offline', () => { document.getElementById('offline-banner').style.display='block'; });
+if (!navigator.onLine) document.addEventListener('DOMContentLoaded', () => { document.getElementById('offline-banner').style.display='block'; });
 
 let _isDark = localStorage.getItem('dark_mode') === '1';
 function toggleDark() {
@@ -530,9 +595,11 @@ function toggleGrid() {
   document.getElementById('grid').style.gridTemplateColumns = `repeat(${_gridCols}, 1fr)`;
 }
 
-function abbrev(n) {
-  const w = n.split(' ').filter(x => x.length > 2 && !/^(de|da|do|em|com|para|a|e|o|as|os)$/i.test(x));
-  return (w[0]?.[0]||'') + (w[1]?.[0]||'');
+function abbrev(n, marca) {
+  if (marca && marca.trim()) return marca.trim().charAt(0).toUpperCase();
+  const w = (n||'').split(' ').filter(x => x.length > 2 && !/^(de|da|do|em|com|para|a|e|o|as|os)$/i.test(x));
+  const result = ((w[0]?.[0]||'') + (w[1]?.[0]||'')).toUpperCase();
+  return result || '?';
 }
 
 function fmtVal(v) {
@@ -543,9 +610,9 @@ function getFiltered() {
   const q = fSearch.toLowerCase();
   const minQty = parseInt(document.getElementById('filter-qty')?.value) || 0;
   return PRODUTOS.filter(p => {
-    if (p.nok) return false;
     if (!fVends.has('TODAS') && !(p.vs||[]).some(v => fVends.has(v.toUpperCase()))) return false;
     if (fMarcas.size > 0 && !fMarcas.has((p.m||'').trim())) return false;
+    if (fCat && (p.c||'').trim() !== fCat) return false;
     if (q && !p.n.toLowerCase().includes(q) && !(p.m||'').toLowerCase().includes(q)) return false;
     if (minQty > 0 && (p.qty||p.q||0) < minQty) return false;
     return true;
@@ -554,6 +621,21 @@ function getFiltered() {
 
 function renderGrid() {
   fSearch = document.getElementById('search-input').value;
+  // Populate cat chips if empty
+  const catRow = document.getElementById('cat-row');
+  if (catRow && catRow.querySelectorAll('.chip').length === 1) {
+    const cats = [...new Set(PRODUTOS.map(p=>(p.c||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+    cats.forEach(c => {
+      const btn = document.createElement('button');
+      btn.className = 'chip';
+      btn.textContent = c;
+      btn.dataset.cat = c;
+      const s = getCatStyle(c, false);
+      if (s) btn.style.cssText = s;
+      btn.onclick = () => setCat(c, btn);
+      catRow.appendChild(btn);
+    });
+  }
   let prods = getFiltered();
   prods.sort((a,b) => {
     const dir = _sortDir === 'asc' ? 1 : -1;
@@ -564,6 +646,18 @@ function renderGrid() {
   const grid = document.getElementById('grid');
   const empty = document.getElementById('empty');
   document.getElementById('count-num').textContent = prods.length;
+  const totalV = prods.filter(p => !p.nok).reduce((a,p) => {
+    const val = parseFloat(p.vmin||p.vt||p.v)||0;
+    // Count only non-NOK tams
+    const nokT = p.nokTams || {};
+    const tams = p.tams ? Object.entries(p.tams) : null;
+    const qty = tams
+      ? tams.filter(([t]) => !nokT[t]).reduce((s,[,q])=>s+q, 0)
+      : (p.qty||p.q||0);
+    return a + val * qty;
+  }, 0);
+  const totalEl = document.getElementById('header-total');
+  if (totalEl) totalEl.textContent = 'R$ ' + totalV.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
   const tv = prods.reduce((a,p)=>{
     const val = parseFloat(p.vt||p.v)||0;
     return a + val * (p.qty||p.q||0);
@@ -574,16 +668,16 @@ function renderGrid() {
   empty.style.display = 'none';
 
   grid.innerHTML = prods.map(p => {
-    const ab = abbrev(p.n);
+    const ab = abbrev(p.n, p.m);
     const img = p.f ? `<img src="${p.f}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
       <span class="card-abbrev" style="display:none">${ab}</span>` 
       : `<span class="card-abbrev">${ab}</span>`;
     const hasC = p.comments && p.comments.length > 0;
     const unread = (p.comments||[]).filter((_,i)=>!SEEN.has(p._id+'_'+i)).length;
-    return `<div class="card" id="card-${p._id}" style="${p.nok?'border-color:#f5c4c4;':'' }">
+    return `<div class="card ${p.nok?'is-nok':''}" id="card-${p._id}">
       <div class="card-img" onclick="openModal(${p._id})">
         ${img}
-        ${p.nok ? '<div class="nok-overlay show"><div style="text-align:center"><div class="nok-label">✕ NOK</div>' + (p.nokWho ? '<div style="font-size:9px;color:rgba(255,255,255,0.7);margin-top:2px">'+p.nokWho+'</div>' : '') + '</div></div>' : ''}
+        ${p.nok ? '<div class="nok-overlay show"><div class="nok-bg"></div><div class="nok-content"><div class="nok-label">✕ NOK</div>' + (p.nokWho ? '<div style="font-size:9px;color:rgba(255,255,255,0.75);margin-top:2px">'+p.nokWho+'</div>' : '') + '</div></div>' : ''}
         <button class="btn-nok" onclick="event.stopPropagation();confirmNok(${p._id})">✕</button>
         ${unread>0 ? '<div style="position:absolute;top:6px;left:6px;background:rgba(122,11,30,0.85);border-radius:10px;padding:1px 6px;font-size:9px;font-weight:700;color:#fff">'+unread+'</div>' : ''}
       </div>
@@ -594,18 +688,22 @@ function renderGrid() {
         </div>
         <div class="card-name" onclick="openModal(${p._id})">${p.n}</div>
         <div class="card-footer">
-          <span class="card-val">${fmtVal(p.vt||p.v)}</span>
+          <span class="card-val">${p.vmin && p.vmax && p.vmin !== p.vmax ? fmtVal(p.vmin)+' – '+fmtVal(p.vmax) : fmtVal(p.vt||p.v)}</span>
           <span style="font-size:10px;background:#fdf2f3;border:0.5px solid #f5c4c4;border-radius:8px;padding:2px 7px;color:#7a0b1e;font-weight:600">${p.qty||p.q} un</span>
         </div>
         ${p.tams && Object.keys(p.tams).length > 0 && !(Object.keys(p.tams).length === 1 && Object.keys(p.tams)[0] === 'Único') ? '<div style="margin-top:6px;display:grid;grid-template-columns:repeat(4,1fr);gap:3px">' +
           Object.entries(p.tams).map(([t,q]) => {
             const isUndef = t === '??? (a definir)';
-            return '<div style="border:0.5px solid ' + (isUndef?'#f5d4a4':'var(--border)') + ';border-radius:6px;padding:3px 2px;text-align:center;background:' + (isUndef?'#fff8e8':'transparent') + '">' +
-              '<div style="font-size:10px;font-weight:600;color:' + (isUndef?'#8a5000':'var(--text)') + '">' + (isUndef?'???':t) + '</div>' +
-              '<div style="font-size:9px;color:' + (isUndef?'#b08070':'var(--text2)') + '">' + q + ' un</div>' +
+            const isNok = (p.nokTams||{})[t];
+            return '<div style="border:0.5px solid ' + (isNok?'rgba(192,57,43,0.3)':isUndef?'#f5d4a4':'var(--border)') + ';border-radius:6px;padding:3px 2px;text-align:center;background:' + (isNok?'rgba(192,57,43,0.06)':isUndef?'#fff8e8':'transparent') + '">' +
+              '<div style="font-size:10px;font-weight:600;color:' + (isNok?'#c0392b':isUndef?'#8a5000':'var(--text)') + ';' + (isNok?'text-decoration:line-through':'') + '">' + (isUndef?'???':t) + '</div>' +
+              '<div style="font-size:9px;color:' + (isNok?'rgba(192,57,43,0.5)':isUndef?'#b08070':'var(--text2)') + '">' + (isNok?'NOK':q+' un') + '</div>' +
             '</div>';
           }).join('') + '</div>' : ''}
-        <div style="margin-top:2px;font-size:9px;color:#c4a898;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${(p.vs||[]).map(v=>v.charAt(0)+v.slice(1).toLowerCase()).join(', ')}</div>
+        <div style="margin-top:2px;font-size:9px;color:#c4a898;display:flex;justify-content:space-between;align-items:center">
+          <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${(p.vs||[]).map(v=>v.charAt(0)+v.slice(1).toLowerCase()).join(', ')}</span>
+          ${(p.comments||[]).length > 0 ? '<span style="flex-shrink:0;background:rgba(122,11,30,0.08);border:0.5px solid rgba(122,11,30,0.15);border-radius:8px;padding:1px 6px;color:var(--red);font-weight:600;display:inline-flex;align-items:center;gap:3px"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>'+(p.comments||[]).length+'</span>' : ''}
+        </div>
       </div>
     </div>`;
   }).join('');
@@ -630,11 +728,19 @@ function confirmNok(id) {
   updateNokBadge();
 }
 
+function resetCat() {
+  fCat = '';
+  document.querySelectorAll('#cat-row .chip').forEach(c => c.classList.remove('active'));
+  const allCat = document.getElementById('chip-all-cat');
+  if (allCat) allCat.classList.add('active');
+}
+
 function setVend(v, btn) {
   if (v === 'TODAS') {
     fVends = new Set(['TODAS']);
     document.querySelectorAll('#vend-row .chip').forEach(c => c.classList.remove('active'));
     document.getElementById('chip-todas').classList.add('active');
+    resetCat();
   } else {
     fVends.delete('TODAS');
     document.getElementById('chip-todas').classList.remove('active');
@@ -690,6 +796,7 @@ function setMarca(m, btn) {
     if (fMarcas.size === 0) {
       document.getElementById('chip-all-marca').classList.add('active');
     }
+    resetCat();
   }
   renderGrid();
 }
@@ -709,6 +816,24 @@ function goTab(tab) {
   if (tab==='upload') {
     const ua = localStorage.getItem('ultima_atualizacao');
     document.getElementById('ultima-atualizacao').textContent = ua ? 'Última atualização: ' + ua : '';
+    // Load version history
+    if (window._db) {
+      window._db.collection('config').doc('versoes').get().then(doc => {
+        const vl = document.getElementById('version-list');
+        if (!vl) return;
+        if (!doc.exists || !(doc.data().lista||[]).length) {
+          vl.innerHTML = '<div style="font-size:11px;color:var(--text4);text-align:center;padding:8px">Nenhuma versão registrada</div>';
+          return;
+        }
+        vl.innerHTML = doc.data().lista.map(v =>
+          '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:0.5px solid var(--border);font-size:11px">' +
+          '<div><div style="font-weight:600;color:var(--text)">' + v.titulo + '</div>' +
+          '<div style="color:var(--text3);font-size:10px">' + v.who + '</div></div>' +
+          '<div style="color:var(--text4);font-size:10px;text-align:right">' + v.time + '</div>' +
+          '</div>'
+        ).join('');
+      }).catch(()=>{});
+    }
     // Populate PDF selects
     const vendas = [...new Set(PRODUTOS.flatMap(p=>p.vs||[]).filter(Boolean))].sort();
     const marcas = [...new Set(PRODUTOS.map(p=>(p.m||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
@@ -718,7 +843,34 @@ function goTab(tab) {
     // Populate PDF marca chips
     const pdfChips = document.getElementById('pdf-marcas-chips');
     if (pdfChips) {
-      // ── Online Presence ──────────────────────────
+      // ── PWA Install ──────────────────────────
+let _deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  _deferredPrompt = e;
+  const banner = document.getElementById('install-banner');
+  if (banner) {
+    banner.style.display = 'flex';
+    setTimeout(() => { banner.style.display = 'none'; }, 8000);
+  }
+});
+
+function instalarApp() {
+  if (!_deferredPrompt) return;
+  _deferredPrompt.prompt();
+  _deferredPrompt.userChoice.then(() => {
+    _deferredPrompt = null;
+    const banner = document.getElementById('install-banner');
+    if (banner) banner.style.display = 'none';
+  });
+}
+
+window.addEventListener('appinstalled', () => {
+  const banner = document.getElementById('install-banner');
+  if (banner) banner.style.display = 'none';
+});
+
+// ── Online Presence ──────────────────────────
 let _presenceRef = null;
 function iniciarPresenca(nome, avatar) {
   if (!window._db) return;
@@ -752,10 +904,16 @@ function encerrarPresenca() {
 window.addEventListener('beforeunload', encerrarPresenca);
 
 window._pdfMarcasSel = new Set();
-      pdfChips.innerHTML = marcas.map(m =>
-        `<button class="pdf-marca-chip" data-m="${m}" onclick="togglePdfMarca(this,'${m.replace(/'/g,"\\'")}')"`+
-        ` style="font-size:10px;padding:3px 10px;border-radius:12px;border:0.5px solid #ede0d4;background:#fff;color:#888;cursor:pointer;font-family:inherit">${m}</button>`
-      ).join('');
+      pdfChips.innerHTML = '';
+      marcas.forEach(function(m) {
+        var btn = document.createElement('button');
+        btn.className = 'pdf-marca-chip';
+        btn.dataset.m = m;
+        btn.textContent = m;
+        btn.style.cssText = 'font-size:10px;padding:3px 10px;border-radius:12px;border:0.5px solid var(--border);background:var(--bg2);color:var(--text2);cursor:pointer;font-family:inherit;margin:2px';
+        btn.addEventListener('click', function(){ togglePdfMarca(btn, m); });
+        pdfChips.appendChild(btn);
+      });
     }
   }
 }
@@ -765,7 +923,7 @@ function openModal(id, focusComment=false) {
   const p = PRODUTOS[id];
   if (!p) return;
   modalId = id;
-  const ab = abbrev(p.n);
+  const ab = abbrev(p.n, p.m);
   const imgEl = document.getElementById('modal-img');
   if (p.f) {
     imgEl.innerHTML = '';
@@ -783,7 +941,8 @@ function openModal(id, focusComment=false) {
   brandEl.innerHTML = (p.m||'') + (p.c ? ' <span style="font-size:10px;font-weight:400;color:var(--text2)">· ' + p.c + '</span>' : '');
   document.getElementById('modal-name').textContent = p.n;
   document.getElementById('modal-name').style.display = '';
-  document.getElementById('modal-val').textContent = fmtVal(p.vt||p.v) + ' · ' + (p.qty||p.q) + ' un';
+  const valStr = p.vmin && p.vmax && p.vmin !== p.vmax ? fmtVal(p.vmin) + ' – ' + fmtVal(p.vmax) : fmtVal(p.vt||p.v);
+  document.getElementById('modal-val').textContent = valStr + ' · ' + (p.qty||p.q) + ' un';
   const totalQty = p.qty||p.q;
   const hasTams = p.tams && Object.keys(p.tams).length > 0 && !(Object.keys(p.tams).length === 1 && Object.keys(p.tams)[0] === 'Único');
   const tamsInline = document.getElementById('modal-tams-inline');
@@ -886,7 +1045,7 @@ function baixarPdfProduto() {
     tamsHtml +
     '</body></html>';
 
-    blob_placeholder = new Blob([html], {type:'text/html'});
+    const blob = new Blob([html], {type:'text/html'});
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url; a.target = '_blank'; a.click();
@@ -916,13 +1075,18 @@ function compartilharWhatsApp() {
   lines.push('*' + p.n + '*');
   if (p.m) lines.push('Marca: ' + p.m);
   lines.push('Valor: ' + fmt(p.vt||p.v));
-  if (p.tams && Object.keys(p.tams).length > 0 && !(Object.keys(p.tams).length===1 && Object.keys(p.tams)[0]==='Único')) {
+  const nokTamsWa = p.nokTams || {};
+  const tamsAtivos = p.tams ? Object.entries(p.tams).filter(([t]) => !nokTamsWa[t]) : [];
+  if (tamsAtivos.length > 0 && !(tamsAtivos.length===1 && tamsAtivos[0][0]==='Único')) {
     lines.push('Tamanhos:');
-    Object.entries(p.tams).forEach(([t,q]) => {
-      if (!p.nokTams?.[t]) lines.push('  ' + (t==='??? (a definir)'?'???':t) + ' — ' + q + ' un');
+    tamsAtivos.forEach(([t,q]) => {
+      lines.push('  ' + (t==='??? (a definir)'?'???':t) + ' — ' + q + ' un');
     });
+    const totalAtivo = tamsAtivos.reduce((a,[,q])=>a+q,0);
+    lines.push('Total: ' + totalAtivo + ' un');
   } else {
-    lines.push('Qtd: ' + (p.qty||p.q) + ' un');
+    const qtdAtiva = tamsAtivos.length ? tamsAtivos[0][1] : (p.qty||p.q);
+    lines.push('Qtd: ' + qtdAtiva + ' un');
   }
   if ((p.vs||[]).length) lines.push('Vendedora: ' + p.vs.map(v=>v.charAt(0)+v.slice(1).toLowerCase()).join(', '));
   const text = encodeURIComponent(lines.join(String.fromCharCode(10)));
@@ -1054,37 +1218,132 @@ function sendComment() {
 // Chat tab
 function renderNok() {
   const list = document.getElementById('nok-list');
-  const prods = PRODUTOS.filter(p => p.nok);
-  document.getElementById('nok-sub').textContent = prods.length + ' item(s) marcado(s)';
-  if (!prods.length) {
+
+  // Include products with full NOK or with nokTams
+  // Deduplicate: if product has both full NOK and nokTams, show only once
+  const prods = PRODUTOS.filter(p => p.nok || (p.nokTams && Object.keys(p.nokTams).some(t => p.nokTams[t])));
+  const totalNok = prods.length;
+  document.getElementById('nok-sub').textContent = totalNok + ' item(s) marcado(s)';
+
+  if (!totalNok) {
     list.innerHTML = '<div style="text-align:center;padding:60px 20px;color:#c4a898;font-size:13px">Nenhum item marcado como NOK</div>';
     return;
   }
-  list.innerHTML = prods.map(p => {
-    const ab = abbrev(p.n);
-    const img = p.f
-      ? `<img src="${p.f}" style="width:52px;height:52px;object-fit:cover;border-radius:10px;flex-shrink:0" onerror="this.style.display='none'">`
-      : `<div style="width:52px;height:52px;border-radius:10px;background:#f5ede8;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#d4b8a8;flex-shrink:0">${ab}</div>`;
-    return `<div style="display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:0.5px solid #ede0d4;cursor:pointer" onclick="openModal(${p._id})">
-      ${img}
-      <div style="flex:1;min-width:0">
-        <div style="font-size:9px;color:#7a0b1e;font-weight:600;letter-spacing:0.5px;margin-bottom:2px">${p.m||''}</div>
-        <div style="font-size:12px;font-weight:600;color:#1a1a1a;line-height:1.3;margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.n}</div>
-        <div style="font-size:11px;color:#c4a898">${(p.vs||[]).map(v=>v.charAt(0)+v.slice(1).toLowerCase()).join(', ')}${p.nokWho ? ' · <span style="color:#f5c4c4">NOK: '+p.nokWho+'</span>' : ''}</div>
-      </div>
-<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
-        ${(p.nokHistory||[]).slice(-1).map(h=>`<div style="font-size:9px;color:rgba(122,11,30,0.6)">${h.who} · ${h.time}</div>`).join('')}
-        <button onclick="event.stopPropagation();PRODUTOS[${p._id}].nok=false;PRODUTOS[${p._id}].nokWho='';fbSave(${p._id});renderNok();updateNokBadge();"
-          style="background:#fdf2f3;border:0.5px solid #f5c4c4;border-radius:8px;color:#7a0b1e;font-size:10px;font-weight:600;padding:5px 10px;cursor:pointer">
-          Desfazer
-        </button>
-      </div>
-    </div>`;
-  }).join('');
+
+  list.innerHTML = '';
+  prods.forEach(p => {
+    const ab = abbrev(p.n, p.m);
+    const nokTams = p.nokTams || {};
+    const hasNokTams = Object.keys(nokTams).length > 0;
+
+    const div = document.createElement('div');
+    div.style.cssText = 'display:flex;align-items:flex-start;gap:12px;padding:10px 16px;border-bottom:0.5px solid var(--border);cursor:pointer';
+    div.addEventListener('click', () => openModal(p._id));
+
+    // Foto
+    const imgWrap = document.createElement('div');
+    if (p.f) {
+      const imgEl = document.createElement('img');
+      imgEl.src = p.f;
+      imgEl.style.cssText = 'width:52px;height:52px;object-fit:cover;border-radius:10px;flex-shrink:0';
+      imgEl.addEventListener('error', function(){ this.style.display='none'; });
+      imgWrap.appendChild(imgEl);
+    } else {
+      imgWrap.innerHTML = '<div style="width:52px;height:52px;border-radius:10px;background:#f5ede8;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#d4b8a8;flex-shrink:0">'+ab+'</div>';
+    }
+
+    // Info
+    const info = document.createElement('div');
+    info.style.cssText = 'flex:1;min-width:0';
+
+    const brand = document.createElement('div');
+    brand.style.cssText = 'font-size:9px;color:var(--red);font-weight:600;letter-spacing:0.5px;margin-bottom:2px';
+    brand.textContent = p.m || '';
+
+    const name = document.createElement('div');
+    name.style.cssText = 'font-size:12px;font-weight:600;color:var(--text);line-height:1.3;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
+    name.textContent = p.n;
+
+    // Tams NOK
+    let tamsEl = null;
+    if (hasNokTams && !p.nok) {
+      tamsEl = document.createElement('div');
+      tamsEl.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;margin-bottom:4px';
+      Object.entries(nokTams).forEach(([t, isNok]) => {
+        if (!isNok) return;
+        const pill = document.createElement('span');
+        pill.style.cssText = 'background:#fff0f0;border:0.5px solid rgba(192,57,43,0.3);border-radius:6px;padding:2px 7px;font-size:10px;font-weight:700;color:#c0392b;text-decoration:line-through';
+        pill.textContent = t === '??? (a definir)' ? '???' : t;
+        tamsEl.appendChild(pill);
+      });
+    }
+
+    const meta = document.createElement('div');
+    meta.style.cssText = 'font-size:11px;color:#c4a898';
+    meta.innerHTML = (p.vs||[]).map(v=>v.charAt(0)+v.slice(1).toLowerCase()).join(', ') +
+      (p.nokWho && p.nok ? ' · <span style="color:#f5c4c4">NOK: '+p.nokWho+'</span>' : '');
+
+    info.appendChild(brand);
+    info.appendChild(name);
+    if (tamsEl) info.appendChild(tamsEl);
+    info.appendChild(meta);
+
+    // Actions
+    const actions = document.createElement('div');
+    actions.style.cssText = 'display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0';
+
+    const hist = (p.nokHistory||[]).slice(-1);
+    if (hist.length) {
+      const hEl = document.createElement('div');
+      hEl.style.cssText = 'font-size:9px;color:rgba(122,11,30,0.6)';
+      hEl.textContent = hist[0].who + ' · ' + hist[0].time;
+      actions.appendChild(hEl);
+    }
+
+    const btn = document.createElement('button');
+    btn.style.cssText = 'background:#fdf2f3;border:0.5px solid #f5c4c4;border-radius:8px;color:#7a0b1e;font-size:10px;font-weight:600;padding:5px 10px;cursor:pointer';
+    btn.textContent = p.nok ? 'Desfazer tudo' : 'Limpar';
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      PRODUTOS[p._id].nok = false;
+      PRODUTOS[p._id].nokWho = '';
+      PRODUTOS[p._id].nokTams = {};
+      fbSave(p._id);
+      renderNok();
+      updateNokBadge();
+      renderGrid();
+    });
+    actions.appendChild(btn);
+
+    // Per-size undo buttons
+    if (hasNokTams && Object.keys(nokTams).length > 0) {
+      Object.entries(nokTams).forEach(([t, isNok]) => {
+        if (!isNok) return;
+        const tamBtn = document.createElement('button');
+        tamBtn.style.cssText = 'background:transparent;border:0.5px solid rgba(192,57,43,0.2);border-radius:6px;color:#c0392b;font-size:9px;padding:2px 7px;cursor:pointer;text-decoration:line-through';
+        tamBtn.textContent = t === '??? (a definir)' ? '???' : t;
+        tamBtn.title = 'Desfazer NOK de ' + t;
+        tamBtn.addEventListener('click', e => {
+          e.stopPropagation();
+          delete PRODUTOS[p._id].nokTams[t];
+          fbSave(p._id);
+          renderNok();
+          updateNokBadge();
+          renderGrid();
+        });
+        actions.appendChild(tamBtn);
+      });
+    }
+
+    div.appendChild(imgWrap);
+    div.appendChild(info);
+    div.appendChild(actions);
+    list.appendChild(div);
+  });
 }
 
 function updateNokBadge() {
-  const count = PRODUTOS.filter(p => p.nok).length;
+  const count = PRODUTOS.filter(p => p.nok || (p.nokTams && Object.keys(p.nokTams).length > 0)).length;
   const badge = document.getElementById('nok-badge');
   if (badge) { badge.textContent = count; badge.style.display = count > 0 ? 'flex' : 'none'; }
 }
@@ -1213,6 +1472,40 @@ function limparMarcasPDF() {
   });
 }
 
+const CAT_COLORS = {
+  'FEMININO':  {bg:'#fce4ec',border:'#f48fb1',color:'#880e4f',active:'#c2185b'},
+  'MASCULINO': {bg:'#e3f2fd',border:'#90caf9',color:'#0d47a1',active:'#1565c0'},
+  'INFANTIL':  {bg:'#f3e5f5',border:'#ce93d8',color:'#4a148c',active:'#6a1b9a'},
+  'CALCADOS':  {bg:'#fff3e0',border:'#ffb74d',color:'#e65100',active:'#ef6c00'},
+  'CALÇADOS':  {bg:'#fff3e0',border:'#ffb74d',color:'#e65100',active:'#ef6c00'},
+  'CASA':      {bg:'#e8f5e9',border:'#81c784',color:'#1b5e20',active:'#2e7d32'},
+  'BELEZA':    {bg:'#fdf8e1',border:'#fff176',color:'#f57f17',active:'#f9a825'},
+  'SAUDE':     {bg:'#e0f7fa',border:'#80deea',color:'#006064',active:'#00838f'},
+  'SAÚDE':     {bg:'#e0f7fa',border:'#80deea',color:'#006064',active:'#00838f'},
+};
+
+function getCatStyle(c, isActive) {
+  const s = CAT_COLORS[c.toUpperCase()];
+  if (!s) return '';
+  return isActive
+    ? 'background:' + s.active + ';border-color:' + s.active + ';color:#fff'
+    : 'background:' + s.bg + ';border-color:' + s.border + ';color:' + s.color;
+}
+
+function setCat(c, btn) {
+  fCat = c;
+  document.querySelectorAll('#cat-row .chip').forEach(x => {
+    x.classList.remove('active');
+    const cat = x.dataset.cat || '';
+    if (cat) x.style.cssText = getCatStyle(cat, false) || '';
+    else x.style.cssText = '';
+  });
+  btn.classList.add('active');
+  const cat = btn.dataset.cat || '';
+  if (cat) btn.style.cssText = getCatStyle(cat, true) || '';
+  renderGrid();
+}
+
 function filtrarPdfMarcas(q) {
   const ql = q.toLowerCase().trim();
   document.querySelectorAll('.pdf-marca-chip').forEach(btn => {
@@ -1321,27 +1614,55 @@ function handleCSV(input) {
       const iMarca=h.indexOf('MARCA'), iCat=h.indexOf('CATEGORIA'), iVend=h.indexOf('VENDEDORA'), iFoto=h.indexOf('FOTO');
 
       const pv = (v) => { v=String(v).replace(/R\$|,/g,'').trim(); try{return parseFloat(v);}catch{return 0;} };
+      // Helper: extract size and multiplier from name
+      function extrairTamMult(nome) {
+        var m = nome.match(/\s+tam\s+(.+?)(\s+(\d+)x)?\s*$/i);
+        if (m) return {base: nome.slice(0,m.index).trim(), tam: m[1].trim(), mult: m[3]?parseInt(m[3]):1};
+        var m2 = nome.match(/\s+(\d+)x\s*$/i);
+        if (m2) return {base: nome.slice(0,m2.index).trim(), tam: null, mult: parseInt(m2[1])};
+        return {base: nome, tam: null, mult: 1};
+      }
+
       const groups = {};
       rows.slice(headerIdx+1).forEach(row => {
         if (!row[iItem]?.trim()) return;
         const item = row[iItem].trim();
         const conf = (row[iConf]||'').trim().toUpperCase();
-        if (conf !== '') return; // só sem status
-        const key = item.toLowerCase().trim();
-        if (!groups[key]) groups[key] = {n:item,m:row[iMarca]?.trim()||'',c:row[iCat]?.trim()||'',vs:[],v:pv(row[iVal]),q:0,_vals:[],f:row[iFoto]?.trim()||''};
+        if (conf !== '') return;
+        const obs = (row[10]||'').trim().toUpperCase();
+        const temDesconto = obs.includes('COM DESCONTO');
+        const {base, tam, mult} = extrairTamMult(item);
+        const valTotal = pv(row[iVal]);
+        const valUnit = (mult > 1 && valTotal > 0) ? Math.round(valTotal/mult*100)/100 : valTotal;
+        const key = base.toLowerCase().trim() + '||' + (row[iMarca]?.trim()||'').toLowerCase();
+        if (!groups[key]) groups[key] = {n:base,m:row[iMarca]?.trim()||'',c:row[iCat]?.trim()||'',vs:[],v:valUnit,q:0,_vals:[],f:row[iFoto]?.trim()||'',tams:{}};
         const g = groups[key];
         const vend = row[iVend]?.trim()||'';
         if (vend && !g.vs.includes(vend)) g.vs.push(vend);
         if (!g.f && row[iFoto]?.trim()) g.f = row[iFoto].trim();
-        g.q++; const v=pv(row[iVal]); if(v>0) g._vals.push(v);
+        const tamKey = tam || 'Único';
+        g.tams[tamKey] = (g.tams[tamKey]||0) + mult;
+        g.q += mult;
+        if (valUnit > 0 && !temDesconto) g._vals.push(valUnit);
       });
 
       // Merge foto IDs
       const fotoMap = JSON.parse(localStorage.getItem('foto_map')||'{}');
       const newData = Object.values(groups).map((p,i) => {
-        p.vt = p._vals.length ? Math.round(p._vals.reduce((a,b)=>a+b,0)/p._vals.length*100)/100 : p.v;
+        const vals = p._vals;
+        p.vt = vals.length ? Math.round(vals.reduce((a,b)=>a+b,0)/vals.length*100)/100 : p.v;
+        const isBazaar = (p.n+' '+p.m).toLowerCase().includes('bazaar');
+        p.vmin = (vals.length && !isBazaar) ? Math.round(Math.min(...vals)*100)/100 : p.vt;
+        p.vmax = (vals.length && !isBazaar) ? Math.round(Math.max(...vals)*100)/100 : p.vt;
         delete p._vals;
         if (p.f && fotoMap[p.f]) p.f = fotoMap[p.f];
+        // Build tams_str
+        const tams = p.tams || {};
+        p.tams_str = Object.entries(tams).map(([t,q]) => t==='???' ? '??? (a definir)' : q>1 ? t+'('+q+')' : t).join(' · ');
+        // Normalize tams keys
+        const newTams = {};
+        Object.entries(tams).forEach(([t,q]) => { newTams[t==='???' ? '??? (a definir)' : t] = q; });
+        p.tams = newTams;
         return p;
       });
       newData.sort((a,b)=>a.n.localeCompare(b.n,'pt-BR'));
@@ -1457,5 +1778,10 @@ document.addEventListener('DOMContentLoaded', () => {
   fbListen();
 });
 </script>
+<!-- Install banner -->
+<div id="install-banner" style="display:none;position:fixed;bottom:75px;left:50%;transform:translateX(-50%);z-index:9999;background:#1a1a1a;border:0.5px solid #333;color:#fff;border-radius:24px;padding:10px 20px;font-size:12px;font-weight:600;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,0.3);white-space:nowrap;align-items:center;gap:8px" onclick="instalarApp()">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+  Instalar app
+</div>
 </body>
 </html>
