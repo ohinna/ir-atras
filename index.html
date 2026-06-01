@@ -612,9 +612,10 @@ function salvarNovoItem() {
 }
 
 // ── Offline indicator ──────────────────────
-window.addEventListener('online',  () => { document.getElementById('offline-banner').style.display='none'; document.querySelector('.main-content') && (document.querySelector('.main-content').style.paddingTop=''); });
-window.addEventListener('offline', () => { document.getElementById('offline-banner').style.display='block'; });
-if (!navigator.onLine) document.addEventListener('DOMContentLoaded', () => { document.getElementById('offline-banner').style.display='block'; });
+window.addEventListener('online',  () => { const ob=document.getElementById('offline-banner'); if(ob) ob.style.display='none'; const mc=document.querySelector('.main-content'); if(mc) mc.style.paddingTop=''; });
+window.addEventListener('offline', () => { const ob=document.getElementById('offline-banner'); if(ob) ob.style.display='block'; });
+if (!navigator.onLine) window.addEventListener('resize', ajustarPaddingHeader);
+document.addEventListener('DOMContentLoaded', () => { const ob=document.getElementById('offline-banner'); if(ob) ob.style.display='block'; });
 
 let _isDark = localStorage.getItem('dark_mode') === '1';
 function toggleDark() {
@@ -637,7 +638,7 @@ function toggleGrid() {
   const icons = ['⊞', '⊟', '▤'];
   _gridCols = cols[(cols.indexOf(_gridCols) + 1) % cols.length];
   document.getElementById('btn-grid').textContent = icons[cols.indexOf(_gridCols)];
-  document.getElementById('grid').style.gridTemplateColumns = `repeat(${_gridCols}, 1fr)`;
+  const _grid=document.getElementById('grid'); if(_grid) _grid.style.gridTemplateColumns = `repeat(${_gridCols}, 1fr)`;
 }
 
 function abbrev(n, marca) {
@@ -664,7 +665,25 @@ function getFiltered() {
   });
 }
 
+
+function ajustarPaddingHeader() {
+  try {
+    const header = document.getElementById('cat-header');
+    const userBar = document.getElementById('user-bar');
+    if (!header) return;
+    const userBarH = (userBar && userBar.style.display !== 'none') ? (userBar.offsetHeight || 36) : 0;
+    const headerH = header.offsetHeight || 0;
+    const total = userBarH + headerH;
+    if (total < 60) return; // DOM ainda não renderizou
+    const countBar = document.getElementById('count-bar');
+    const mainContent = document.querySelector('.main-content');
+    if (countBar) countBar.style.paddingTop = total + 'px';
+    if (mainContent) mainContent.style.paddingTop = total + 'px';
+  } catch(e) {}
+}
+
 function renderGrid() {
+  ajustarPaddingHeader();
   fSearch = document.getElementById('search-input').value;
   // Populate cat chips if empty
   const catRow = document.getElementById('cat-row');
@@ -712,7 +731,23 @@ function renderGrid() {
   if (!prods.length) { grid.innerHTML=''; empty.style.display=''; return; }
   empty.style.display = 'none';
 
-  grid.innerHTML = prods.map(p => {
+  // Agrupar produtos com mesma foto
+  const gruposVistos = new Set();
+  const cardItems = []; // cada item é { tipo: 'single'|'grupo', p, prods }
+  prods.forEach(p => {
+    if (p._grupoFoto) {
+      if (gruposVistos.has(p._grupoFoto)) return; // já processado
+      gruposVistos.add(p._grupoFoto);
+      const grupo = prods.filter(x => x._grupoFoto === p._grupoFoto);
+      cardItems.push({ tipo: 'grupo', p: grupo[0], prods: grupo });
+    } else {
+      cardItems.push({ tipo: 'single', p, prods: [p] });
+    }
+  });
+
+  grid.innerHTML = cardItems.map(item => {
+    if (item.tipo === 'grupo') return renderCardGrupo(item.prods);
+    const p = item.p;
     const ab = abbrev(p.n, p.m);
     const img = p.f ? `<img src="${p.f}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
       <span class="card-abbrev" style="display:none">${ab}</span>` 
@@ -850,8 +885,8 @@ function goTab(tab) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('tab-'+tab).classList.add('active');
   document.getElementById('cat-header').style.display = tab==='cat' ? '' : 'none';
-  document.querySelector('.count-bar').style.display = tab==='cat' ? '' : 'none';
-  document.querySelector('.grid-wrap').style.display = tab==='cat' ? '' : 'none';
+  const _cb=document.querySelector('.count-bar'); if(_cb) _cb.style.display = tab==='cat' ? '' : 'none';
+  const _gw=document.querySelector('.grid-wrap'); if(_gw) _gw.style.display = tab==='cat' ? '' : 'none';
   ['chat','upload','nok'].forEach(t => {
     const pg = document.getElementById('page-'+t);
     if (pg) pg.classList.toggle('active', t===tab);
@@ -1043,6 +1078,60 @@ function trocarFotoModal(input) {
   reader.readAsDataURL(file);
 }
 
+
+// ── Card de grupo (mesma foto) ───────────────
+function renderCardGrupo(prods) {
+  const p0 = prods[0];
+  const totalQty = prods.reduce((s,p) => s + (p.qty||p.q||0), 0);
+  const allNok = prods.every(p => p.nok);
+  const someNok = prods.some(p => p.nok);
+  const marca = p0.m || '';
+  const foto = p0.f || '';
+  const ab = abbrev(p0.n, p0.m);
+  const ids = prods.map(p=>p._id).join(',');
+
+  const variações = prods.map(p => {
+    const isNok = p.nok;
+    const qty = p.qty||p.q||0;
+    // Nome curto: remove prefixo de marca repetido
+    let nome = p.n;
+    if (marca && nome.toLowerCase().includes(marca.toLowerCase())) {
+      nome = nome.replace(new RegExp(marca, 'i'), '').trim().replace(/^[-–·\s]+/, '');
+    }
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:0.5px solid var(--border);cursor:pointer" onclick="openModal(${p._id})">
+      <span style="font-size:11px;font-weight:500;color:${isNok?'#c0392b':'var(--text)'};${isNok?'text-decoration:line-through':''};">${nome||p.n}</span>
+      <span style="font-size:10px;font-weight:600;background:${isNok?'#fff0f0':'#fdf2f3'};border:0.5px solid ${isNok?'rgba(192,57,43,0.3)':'#f5c4c4'};border-radius:6px;padding:1px 6px;color:${isNok?'#c0392b':'#7a0b1e'};flex-shrink:0;margin-left:6px">${isNok?'NOK':qty+' un'}</span>
+    </div>`;
+  }).join('');
+
+  const imgTag = foto
+    ? `<img src="${foto}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><span class="card-abbrev" style="display:none">${ab}</span>`
+    : `<span class="card-abbrev">${ab}</span>`;
+
+  return `<div class="card ${allNok?'is-nok':''}" style="grid-column:span 2">
+    <div class="card-img" style="aspect-ratio:2/1" onclick="abrirModalGrupo([${ids}])">
+      ${imgTag}
+      ${allNok ? '<div class="nok-overlay show"><div class="nok-bg"></div><div class="nok-content"><div class="nok-label">✕ NOK</div></div></div>' : ''}
+      <div style="position:absolute;top:6px;right:6px;background:rgba(122,11,30,0.82);border-radius:10px;padding:2px 8px;font-size:10px;font-weight:700;color:#fff">${prods.length} variações</div>
+    </div>
+    <div class="card-body">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <div class="card-brand">${marca}</div>
+        <span style="font-size:10px;background:#fdf2f3;border:0.5px solid #f5c4c4;border-radius:8px;padding:2px 7px;color:#7a0b1e;font-weight:600">${totalQty} un total</span>
+      </div>
+      <div style="font-size:11px;font-weight:600;color:var(--text);margin-bottom:6px;line-height:1.3">${p0.n.split(' ').slice(0,4).join(' ')}…</div>
+      ${variações}
+    </div>
+  </div>`;
+}
+
+function abrirModalGrupo(ids) {
+  // Abre modal do primeiro item não-NOK, ou do primeiro
+  const ativos = ids.map(id=>PRODUTOS[id]).filter(p=>p&&!p.nok);
+  const p = ativos[0] || PRODUTOS[ids[0]];
+  if (p) openModal(p._id);
+}
+
 // Modal
 function openModal(id, focusComment=false) {
   const p = PRODUTOS[id];
@@ -1065,7 +1154,7 @@ function openModal(id, focusComment=false) {
   const brandEl = document.getElementById('modal-brand');
   brandEl.innerHTML = (p.m||'') + (p.c ? ' <span style="font-size:10px;font-weight:400;color:var(--text2)">· ' + p.c + '</span>' : '');
   document.getElementById('modal-name').textContent = p.n;
-  document.getElementById('modal-name').style.display = '';
+  const _mn=document.getElementById('modal-name'); if(_mn) _mn.style.display = '';
   const valStr = p.vmin && p.vmax && p.vmin !== p.vmax ? fmtVal(p.vmin) + ' – ' + fmtVal(p.vmax) : fmtVal(p.vt||p.v);
   document.getElementById('modal-val').textContent = valStr + ' · ' + (p.qty||p.q) + ' un';
   const totalQty = p.qty||p.q;
@@ -1960,16 +2049,49 @@ function handleFotos(input) {
   const reader = new FileReader();
   reader.onload = e => {
     const lines = e.target.result.split(/\r?\n/).slice(1);
-    const map = {};
+    const map = {}; // nome -> url
+    const idMap = {}; // nome -> drive_id (para detectar grupos)
     lines.forEach(l => {
       const [nome,id] = l.split(',');
-      if (nome&&id) map[nome.trim()] = 'https://drive.google.com/thumbnail?id='+id.trim()+'&sz=w400';
+      if (nome&&id) {
+        const cleanId = id.trim();
+        const url = 'https://drive.google.com/thumbnail?id='+cleanId+'&sz=w400';
+        map[nome.trim()] = url;
+        idMap[nome.trim()] = cleanId;
+      }
     });
     localStorage.setItem('foto_map', JSON.stringify(map));
-    // Apply to current produtos
-    PRODUTOS.forEach(p => { if (p.f && map[p.f]) p.f = map[p.f]; });
-    document.getElementById('foto-status').textContent = '✅ ' + Object.keys(map).length + ' fotos mapeadas';
-    fbSalvarFotosCSV(e.target.result); // Salva CSV de fotos no Firebase
+
+    // Apply foto URLs to produtos
+    PRODUTOS.forEach(p => {
+      if (map[p.n]) p.f = map[p.n];
+      else if (p.f && map[p.f]) p.f = map[p.f];
+      p._grupoFoto = null; // reset
+    });
+
+    // Detectar grupos: produtos com mesmo drive ID → mesmo _grupoFoto
+    const idToProdutos = {};
+    PRODUTOS.forEach(p => {
+      const driveId = idMap[p.n];
+      if (!driveId) return;
+      if (!idToProdutos[driveId]) idToProdutos[driveId] = [];
+      idToProdutos[driveId].push(p._id);
+    });
+    // Assign group key only when 2+ produtos share same photo
+    Object.entries(idToProdutos).forEach(([driveId, ids]) => {
+      if (ids.length > 1) {
+        ids.forEach(id => { PRODUTOS[id]._grupoFoto = driveId; });
+      }
+    });
+    localStorage.setItem('foto_grupos', JSON.stringify(
+      Object.fromEntries(Object.entries(idToProdutos).filter(([,ids])=>ids.length>1))
+    ));
+
+    const grupos = Object.values(idToProdutos).filter(ids=>ids.length>1).length;
+    document.getElementById('foto-status').textContent =
+      '✅ ' + Object.keys(map).length + ' fotos mapeadas' +
+      (grupos > 0 ? ' · ' + grupos + ' grupo(s) detectado(s)' : '');
+    fbSalvarFotosCSV(e.target.result);
     renderGrid();
   };
   reader.readAsText(file);
