@@ -38,6 +38,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .filter-row::-webkit-scrollbar{display:none}
 .chip{background:var(--bg2);border:0.5px solid var(--border);border-radius:16px;padding:4px 12px;font-size:11px;color:var(--red);white-space:nowrap;cursor:pointer;transition:all 0.15s;font-family:inherit;font-weight:500}
 .chip.active{background:var(--red) !important;border-color:var(--red) !important;color:#fff !important}
+@keyframes loadbar{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}
 /* Contador */
 .count-bar{padding:6px 16px;font-size:11px;color:var(--text3);background:var(--bg);border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center}
 .count-bar strong{color:var(--red)}
@@ -96,7 +97,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 /* Chat page */
 .page{display:none;position:fixed;inset:0;background:var(--bg);overflow-y:auto;padding-top:60px;padding-bottom:70px}
 .page.active{display:block}
-.chat-header{position:fixed;top:0;left:0;right:0;z-index:100;background:var(--bg);border-bottom:0.5px solid var(--border);padding:14px 16px}
+.chat-header{position:fixed;top:0;left:0;right:0;z-index:100;background:var(--bg);border-bottom:0.5px solid var(--border);padding:14px 16px;transition:top 0.2s}
+.user-bar-visible .chat-header{top:38px}
+.user-bar-visible .page{padding-top:98px}
+.user-bar-visible .main-content{padding-top:208px}
+.user-bar-visible #count-bar{padding-top:208px}
 .chat-title{font-size:16px;font-weight:600;color:var(--text)}
 .chat-sub{font-size:11px;color:var(--text3);margin-top:2px}
 .chat-item{background:var(--bg2);border-left:3px solid var(--border);border-radius:0 12px 12px 0;margin:0 12px 8px;padding:10px 12px;cursor:pointer}
@@ -158,6 +163,20 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     </button>
   </div>
   <div id="login-error" style="font-size:11px;color:#c0392b;margin-top:12px;text-align:center"></div>
+</div>
+
+<!-- LOADING SCREEN -->
+<div id="loading-screen" style="position:fixed;inset:0;z-index:9998;background:#f9f2ee;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px">
+  <div style="font-size:28px;font-weight:800;color:#7a0b1e;letter-spacing:-1px">bazaar</div>
+  <div style="font-size:13px;color:#c4a898">Conectando...</div>
+  <div style="width:40px;height:4px;background:#ede0d4;border-radius:4px;overflow:hidden">
+    <div style="height:100%;width:40%;background:#7a0b1e;border-radius:4px;animation:loadbar 1s ease-in-out infinite alternate"></div>
+  </div>
+</div>
+
+<!-- OFFLINE BANNER -->
+<div id="offline-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9997;background:#1a1a1a;color:#fff;font-size:12px;font-weight:600;text-align:center;padding:8px;letter-spacing:0.3px">
+  ⚠️ Sem conexão — alterações serão salvas quando voltar
 </div>
 
 <!-- USER BAR -->
@@ -381,6 +400,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <span class="tab-icon">✕</span>
     <span class="tab-label">NOK</span>
   </button>
+  <button class="tab-btn" id="tab-hist" onclick="goTab('hist')" style="position:relative">
+    <span class="tab-icon">📊</span>
+    <span class="tab-label">Histórico</span>
+  </button>
   <button class="tab-btn" id="tab-upload" onclick="goTab('upload')">
     <span class="tab-icon">⬆</span>
     <span class="tab-label">Dados</span>
@@ -396,9 +419,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
         <div class="chat-sub" id="nok-sub">Itens marcados</div>
       </div>
       <div style="display:flex;gap:8px">
-        <button onclick="exportarNokPDF()" style="background:var(--red);border:none;border-radius:12px;padding:8px 14px;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;flex-shrink:0">
-          ↓ PDF
-        </button>
+        <button onclick="limparTodosNok()" style="background:#fff;border:1px solid var(--red);border-radius:12px;padding:8px 14px;color:var(--red);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;flex-shrink:0">🗑 Limpar</button>
+        <button onclick="exportarRelatorioGeralPDF()" style="background:#6366f1;border:none;border-radius:12px;padding:8px 14px;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;flex-shrink:0">📋 Geral</button>
+        <button onclick="exportarNokPDF()" style="background:var(--red);border:none;border-radius:12px;padding:8px 14px;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;flex-shrink:0">↓ PDF</button>
         <button onclick="exportarNokWhatsApp()" style="background:#25d366;border:none;border-radius:12px;padding:8px 14px;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;flex-shrink:0">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M11.999 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.168L2 22l4.985-1.309A9.944 9.944 0 0 0 12 22c5.523 0 10-4.477 10-10S17.523 2 12 2z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
           WhatsApp
@@ -411,10 +434,63 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 
 <div class="page" id="page-compra">
   <div class="chat-header">
-    <div class="chat-title">🛒 Em compra</div>
-    <div class="chat-sub" id="compra-sub">Itens em processo</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;width:100%">
+      <div>
+        <div class="chat-title">🛒 Em compra</div>
+        <div class="chat-sub" id="compra-sub">Itens em processo</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button onclick="exportarCompraPDF()" style="background:#d97706;border:none;border-radius:12px;padding:8px 14px;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;flex-shrink:0">↓ PDF</button>
+        <button onclick="exportarCompraWhatsApp()" style="background:#25d366;border:none;border-radius:12px;padding:8px 14px;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;flex-shrink:0">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M11.999 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.168L2 22l4.985-1.309A9.944 9.944 0 0 0 12 22c5.523 0 10-4.477 10-10S17.523 2 12 2z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+          WhatsApp
+        </button>
+      </div>
+    </div>
   </div>
   <div style="padding:12px 0" id="compra-list"></div>
+</div>
+
+<!-- HIST PAGE -->
+<div class="page" id="page-hist">
+  <div class="chat-header">
+    <div style="display:flex;align-items:center;justify-content:space-between;width:100%">
+      <div>
+        <div class="chat-title">📊 Histórico</div>
+        <div class="chat-sub" id="hist-sub">Atividade recente</div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button onclick="setHistView('timeline')" id="hist-btn-timeline" class="chip active" style="font-size:10px">Timeline</button>
+        <button onclick="setHistView('relatorio')" id="hist-btn-relatorio" class="chip" style="font-size:10px">Semanal</button>
+      </div>
+    </div>
+  </div>
+  <div id="hist-timeline" style="padding:12px 0"></div>
+  <div id="hist-relatorio" style="padding:12px 16px;display:none"></div>
+</div>
+
+<!-- MODAL FOTO CHEIA -->
+<div id="modal-foto" onclick="fecharFotoCheia()" style="display:none;position:fixed;inset:0;z-index:9995;background:rgba(0,0,0,0.92);align-items:center;justify-content:center;flex-direction:column">
+  <div style="position:absolute;top:16px;right:16px;color:#fff;font-size:24px;cursor:pointer;opacity:0.7">✕</div>
+  <img id="modal-foto-img" src="" style="max-width:95vw;max-height:80vh;object-fit:contain;border-radius:12px">
+  <div style="margin-top:14px;text-align:center">
+    <div id="modal-foto-nome" style="color:#fff;font-size:14px;font-weight:600"></div>
+    <div id="modal-foto-marca" style="color:rgba(255,255,255,0.6);font-size:12px;margin-top:2px"></div>
+  </div>
+</div>
+
+<!-- MODAL LIMPAR NOK -->
+<div id="modal-clear-nok" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.5);align-items:center;justify-content:center">
+  <div style="background:var(--bg);border-radius:20px;padding:24px;margin:20px;max-width:340px;width:100%">
+    <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px">🗑 Limpar todos os NOK?</div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:16px">Esta ação vai remover o NOK de todos os <strong id="nok-clear-count">0</strong> itens marcados. O histórico será preservado.</div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:6px">Confirmado por:</div>
+    <div id="nok-clear-who" style="font-size:13px;font-weight:600;color:var(--red);margin-bottom:16px;padding:8px 12px;background:var(--red-light);border-radius:10px"></div>
+    <div style="display:flex;gap:8px">
+      <button onclick="document.getElementById('modal-clear-nok').style.display='none'" style="flex:1;padding:12px;border-radius:12px;background:var(--bg2);border:0.5px solid var(--border);color:var(--text);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Cancelar</button>
+      <button onclick="confirmarLimparNok()" style="flex:1;padding:12px;border-radius:12px;background:var(--red);border:none;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Limpar tudo</button>
+    </div>
+  </div>
 </div>
 
 <!-- MODAL PRODUTO -->
@@ -726,7 +802,7 @@ function renderGrid() {
 
   grid.innerHTML = prods.map(p => {
     const ab = abbrev(p.n, p.m);
-    const img = p.f ? `<img src="${p.f}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+    const img = p.f ? `<img src="${p.f}" onclick="event.stopPropagation();abrirFotoCheia('${p.f.replace(/'/g,"\\'")}','${p.n.replace(/'/g,"\\'")}','${(p.m||'').replace(/'/g,"\\'")}');" style="cursor:zoom-in" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
       <span class="card-abbrev" style="display:none">${ab}</span>` 
       : `<span class="card-abbrev">${ab}</span>`;
     const hasC = p.comments && p.comments.length > 0;
@@ -763,11 +839,54 @@ function renderGrid() {
           <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${(p.vs||[]).map(v=>v.charAt(0)+v.slice(1).toLowerCase()).join(', ')}</span>
           ${(p.comments||[]).length > 0 ? '<span style="flex-shrink:0;background:rgba(122,11,30,0.08);border:0.5px solid rgba(122,11,30,0.15);border-radius:8px;padding:1px 6px;color:var(--red);font-weight:600;display:inline-flex;align-items:center;gap:3px"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>'+(p.comments||[]).length+'</span>' : ''}
         </div>
+        <div style="display:flex;gap:4px;margin-top:6px" onclick="event.stopPropagation()">
+          <input id="quick-comment-${p._id}" type="text" placeholder="Comentar..." maxlength="120"
+            style="flex:1;font-size:10px;padding:4px 8px;border:0.5px solid var(--border);border-radius:8px;background:var(--bg2);color:var(--text);font-family:inherit;outline:none"
+            onkeydown="if(event.key==='Enter'){enviarComentarioRapido(${p._id});}"
+          >
+          <button onclick="enviarComentarioRapido(${p._id})"
+            style="background:var(--red);border:none;border-radius:8px;color:#fff;font-size:10px;padding:4px 8px;cursor:pointer;font-family:inherit;font-weight:600;flex-shrink:0">↑</button>
+        </div>
       </div>
     </div>`;
   }).join('');
   updateChatBadge();
   updateNokBadge();
+}
+
+function abrirFotoCheia(src, nome, marca) {
+  const m = document.getElementById('modal-foto');
+  document.getElementById('modal-foto-img').src = src;
+  document.getElementById('modal-foto-nome').textContent = nome;
+  document.getElementById('modal-foto-marca').textContent = marca;
+  m.style.display = 'flex';
+}
+
+function fecharFotoCheia() {
+  document.getElementById('modal-foto').style.display = 'none';
+}
+
+// Fechar com ESC
+document.addEventListener('keydown', e => { if (e.key === 'Escape') fecharFotoCheia(); });
+
+function enviarComentarioRapido(id) {
+  const input = document.getElementById('quick-comment-' + id);
+  if (!input) return;
+  const txt = input.value.trim();
+  if (!txt) return;
+  const p = PRODUTOS[id];
+  if (!p) return;
+  p.comments = p.comments || [];
+  p.comments.push({
+    text: txt,
+    who: localStorage.getItem('chat_nome') || 'Anônimo',
+    time: new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})
+  });
+  fbSave(id);
+  registrarAtividade('comentario', id, localStorage.getItem('chat_nome')||'Anônimo', new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}));
+  input.value = '';
+  renderGrid();
+  updateChatBadge();
 }
 
 function confirmNok(id) {
@@ -782,6 +901,9 @@ function confirmNok(id) {
       time: new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})
     });
   }
+  const _quem = localStorage.getItem('chat_nome')||'Anônimo';
+  const _t = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+  registrarAtividade(p.nok ? 'nok_on' : 'nok_off', id, _quem, _t);
   fbSave(id);
   renderGrid();
   updateNokBadge();
@@ -853,13 +975,14 @@ function goTab(tab) {
   document.getElementById('cat-header').style.display = tab==='cat' ? '' : 'none';
   document.querySelector('.count-bar').style.display = tab==='cat' ? '' : 'none';
   document.querySelector('.grid-wrap').style.display = tab==='cat' ? '' : 'none';
-  ['chat','upload','nok','compra'].forEach(t => {
+  ['chat','upload','nok','compra','hist'].forEach(t => {
     const pg = document.getElementById('page-'+t);
     if (pg) pg.classList.toggle('active', t===tab);
   });
   if (tab==='chat') renderChat();
   if (tab==='nok') renderNok();
   if (tab==='compra') renderCompra();
+  if (tab==='hist') renderHist();
   if (tab==='upload') {
     const ua = localStorage.getItem('ultima_atualizacao');
     document.getElementById('ultima-atualizacao').textContent = ua ? 'Última atualização: ' + ua : '';
@@ -1036,6 +1159,16 @@ function openModal(id, focusComment=false) {
     btnEc.style.background = p.em_compra ? '#d97706' : '#f59e0b';
     btnEc.textContent = p.em_compra ? '🛒 Em compra ✓' : '🛒 Em compra';
   }
+  // Show compra history
+  let compraHistEl = document.getElementById('compra-hist-modal');
+  if (!compraHistEl) {
+    compraHistEl = document.createElement('div');
+    compraHistEl.id = 'compra-hist-modal';
+    compraHistEl.style.cssText = 'margin-top:8px;font-size:10px;color:#b08070';
+    btnEc && btnEc.parentNode.insertAdjacentElement('afterend', compraHistEl);
+  }
+  const hist = (p.compraHistory||[]).slice(-3).reverse();
+  compraHistEl.innerHTML = hist.length ? hist.map(h=>`<span style="margin-right:8px">🛒 <b>${h.who}</b> ${h.action} em ${h.time}</span>`).join('<br>') : '';
   renderModalComments(p);
   document.getElementById('modal-bg').classList.add('open');
   if (focusComment) setTimeout(() => document.getElementById('comment-input').focus(), 300);
@@ -1128,6 +1261,285 @@ function baixarPdfProduto() {
   } else {
     gerarHtmlComFoto(null);
   }
+}
+
+let _histView = 'timeline';
+
+function setHistView(view) {
+  _histView = view;
+  document.getElementById('hist-timeline').style.display = view === 'timeline' ? '' : 'none';
+  document.getElementById('hist-relatorio').style.display = view === 'relatorio' ? '' : 'none';
+  document.getElementById('hist-btn-timeline').classList.toggle('active', view === 'timeline');
+  document.getElementById('hist-btn-relatorio').classList.toggle('active', view === 'relatorio');
+  if (view === 'relatorio') renderRelatorioSemanal();
+}
+
+function renderHist() {
+  setHistView(_histView);
+  if (_histView === 'timeline') renderTimeline();
+  else renderRelatorioSemanal();
+}
+
+function renderTimeline() {
+  const el = document.getElementById('hist-timeline');
+  if (!window._db) { el.innerHTML = '<div style="text-align:center;padding:40px;color:#c4a898;font-size:13px">Firebase não conectado</div>'; return; }
+  el.innerHTML = '<div style="text-align:center;padding:40px;color:#c4a898;font-size:13px">Carregando...</div>';
+  window._db.collection('atividade').orderBy('ts','desc').limit(100).get().then(snap => {
+    if (snap.empty) { el.innerHTML = '<div style="text-align:center;padding:40px;color:#c4a898;font-size:13px">Nenhuma atividade registrada ainda</div>'; return; }
+    const icons = { nok_on:'🚫', nok_off:'✅', compra_on:'🛒', compra_off:'↩️', comentario:'💬', nok_clear:'🗑' };
+    const labels = { nok_on:'marcou NOK', nok_off:'removeu NOK', compra_on:'colocou em compra', compra_off:'removeu de compra', comentario:'comentou em', nok_clear:'limpou NOK em' };
+    const colors = { nok_on:'#7a0b1e', nok_off:'#1D9E75', compra_on:'#d97706', compra_off:'#888', comentario:'#6366f1', nok_clear:'#888' };
+    document.getElementById('hist-sub').textContent = snap.size + ' evento(s)';
+    el.innerHTML = snap.docs.map(doc => {
+      const d = doc.data();
+      const icon = icons[d.tipo] || '•';
+      const label = labels[d.tipo] || d.tipo;
+      const color = colors[d.tipo] || '#888';
+      return `<div style="display:flex;gap:12px;padding:10px 16px;border-bottom:0.5px solid var(--border);align-items:flex-start">
+        <div style="width:32px;height:32px;border-radius:50%;background:${color}22;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">${icon}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:600;color:var(--text)"><span style="color:${color}">${d.quem}</span> ${label} <span style="font-weight:400">${d.prodNome||''}</span></div>
+          ${d.prodMarca ? `<div style="font-size:10px;color:var(--text3)">${d.prodMarca}</div>` : ''}
+          <div style="font-size:10px;color:var(--text4);margin-top:2px">${d.time||''}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }).catch(() => { el.innerHTML = '<div style="text-align:center;padding:40px;color:#c4a898;font-size:13px">Erro ao carregar histórico</div>'; });
+}
+
+function renderRelatorioSemanal() {
+  const el = document.getElementById('hist-relatorio');
+  // Calcular semana atual (últimos 7 dias)
+  const agora = Date.now();
+  const semana = 7 * 24 * 60 * 60 * 1000;
+  // Dados locais: agregar por vendedora
+  const stats = {};
+  const vendedoras = ['FABIANA','JÉSSICA','SABRINA','THAIS'];
+  vendedoras.forEach(v => { stats[v] = { nok:0, compra:0, comentarios:0, produtos:[] }; });
+
+  PRODUTOS.forEach(p => {
+    (p.vs||[]).forEach(v => {
+      if (!stats[v]) stats[v] = { nok:0, compra:0, comentarios:0, produtos:[] };
+    });
+    (p.nokHistory||[]).forEach(h => {
+      if (!h.who) return;
+      const nome = h.who.toUpperCase();
+      const match = vendedoras.find(v => nome.includes(v));
+      if (match && stats[match]) { stats[match].nok++; if (!stats[match].produtos.includes(p.n)) stats[match].produtos.push(p.n); }
+    });
+    (p.compraHistory||[]).forEach(h => {
+      if (!h.who || h.action !== 'marcou') return;
+      const nome = h.who.toUpperCase();
+      const match = vendedoras.find(v => nome.includes(v));
+      if (match && stats[match]) stats[match].compra++;
+    });
+    (p.comments||[]).forEach(c => {
+      if (!c.who) return;
+      const nome = c.who.toUpperCase();
+      const match = vendedoras.find(v => nome.includes(v));
+      if (match && stats[match]) stats[match].comentarios++;
+    });
+  });
+
+  const fmt = v => 'R$ ' + parseFloat(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const rows = vendedoras.map(v => {
+    const s = stats[v];
+    const prodsDaVend = PRODUTOS.filter(p => (p.vs||[]).includes(v));
+    const totalNokVal = prodsDaVend.filter(p=>p.nok).reduce((a,p)=>a+(parseFloat(p.vt||p.v)||0),0);
+    const totalCompraVal = prodsDaVend.filter(p=>p.em_compra).reduce((a,p)=>a+(parseFloat(p.vt||p.v)||0),0);
+    return `<div style="background:var(--bg2);border:0.5px solid var(--border);border-radius:16px;padding:16px;margin-bottom:12px">
+      <div style="font-size:14px;font-weight:700;color:var(--red);margin-bottom:12px">${v.charAt(0)+v.slice(1).toLowerCase()}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div style="background:#fdf2f3;border-radius:10px;padding:10px;text-align:center">
+          <div style="font-size:20px;font-weight:700;color:var(--red)">${prodsDaVend.filter(p=>p.nok).length}</div>
+          <div style="font-size:10px;color:#b08070;margin-top:2px">NOK ativos</div>
+          <div style="font-size:10px;color:var(--red);font-weight:600">${fmt(totalNokVal)}</div>
+        </div>
+        <div style="background:#fff8e8;border-radius:10px;padding:10px;text-align:center">
+          <div style="font-size:20px;font-weight:700;color:#d97706">${prodsDaVend.filter(p=>p.em_compra).length}</div>
+          <div style="font-size:10px;color:#b08070;margin-top:2px">Em compra</div>
+          <div style="font-size:10px;color:#d97706;font-weight:600">${fmt(totalCompraVal)}</div>
+        </div>
+        <div style="background:#f0f0ff;border-radius:10px;padding:10px;text-align:center">
+          <div style="font-size:20px;font-weight:700;color:#6366f1">${s.comentarios}</div>
+          <div style="font-size:10px;color:#b08070;margin-top:2px">Comentários</div>
+        </div>
+        <div style="background:#f0fdf4;border-radius:10px;padding:10px;text-align:center">
+          <div style="font-size:20px;font-weight:700;color:#1D9E75">${prodsDaVend.length}</div>
+          <div style="font-size:10px;color:#b08070;margin-top:2px">Produtos</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  const totalNok = PRODUTOS.filter(p=>p.nok).length;
+  const totalCompra = PRODUTOS.filter(p=>p.em_compra).length;
+  el.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
+      <div style="background:#fdf2f3;border-radius:12px;padding:12px;text-align:center">
+        <div style="font-size:22px;font-weight:700;color:var(--red)">${totalNok}</div>
+        <div style="font-size:10px;color:#b08070">Total NOK</div>
+      </div>
+      <div style="background:#fff8e8;border-radius:12px;padding:12px;text-align:center">
+        <div style="font-size:22px;font-weight:700;color:#d97706">${totalCompra}</div>
+        <div style="font-size:10px;color:#b08070">Total em compra</div>
+      </div>
+    </div>
+    ${rows}
+    <button onclick="exportarRelatorioSemanalpDF()" style="width:100%;padding:12px;border-radius:12px;background:var(--red);border:none;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:4px">↓ Exportar PDF</button>`;
+}
+
+function exportarRelatorioSemanalpDF() {
+  const now = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  const fmt = v => 'R$ ' + parseFloat(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const vendedoras = ['FABIANA','JÉSSICA','SABRINA','THAIS'];
+  const rows = vendedoras.map(v => {
+    const prodsDaVend = PRODUTOS.filter(p => (p.vs||[]).includes(v));
+    const nokAtivos = prodsDaVend.filter(p=>p.nok);
+    const compraAtivos = prodsDaVend.filter(p=>p.em_compra);
+    const comentarios = prodsDaVend.reduce((a,p)=>a+(p.comments||[]).length,0);
+    const nokVal = nokAtivos.reduce((a,p)=>a+(parseFloat(p.vt||p.v)||0),0);
+    const compraVal = compraAtivos.reduce((a,p)=>a+(parseFloat(p.vt||p.v)||0),0);
+    return `<tr><td><strong>${v.charAt(0)+v.slice(1).toLowerCase()}</strong></td><td>${prodsDaVend.length}</td><td>${nokAtivos.length}<br><small style="color:#888">${fmt(nokVal)}</small></td><td>${compraAtivos.length}<br><small style="color:#888">${fmt(compraVal)}</small></td><td>${comentarios}</td></tr>`;
+  }).join('');
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Relatório Semanal — Bazaar</title>
+  <style>body{font-family:Arial,sans-serif;font-size:13px;color:#1a1a1a;padding:24px}h1{color:#7a0b1e;font-size:18px;margin:0 0 4px}.sub{color:#888;font-size:12px;margin-bottom:20px}table{width:100%;border-collapse:collapse}th{background:#7a0b1e;color:#fff;padding:10px;text-align:left;font-size:12px}td{padding:10px;border-bottom:0.5px solid #eee;vertical-align:top}@media print{body{padding:0}}</style></head><body>
+  <h1>📊 Relatório por Vendedora — Bazaar</h1><div class="sub">Gerado em ${now}</div>
+  <table><thead><tr><th>Vendedora</th><th>Produtos</th><th>NOK ativos</th><th>Em compra</th><th>Comentários</th></tr></thead><tbody>${rows}</tbody></table>
+  <script>window.onload=()=>{window.print();}<\/script></body></html>`;
+  const blob = new Blob([html], {type:'text/html'});
+  window.open(URL.createObjectURL(blob), '_blank');
+}
+
+function limparTodosNok() {
+  const noks = PRODUTOS.filter(p => p.nok || (p.nokTams && Object.keys(p.nokTams).some(t=>p.nokTams[t])));
+  if (!noks.length) { alert('Nenhum item NOK para limpar.'); return; }
+  const quem = localStorage.getItem('chat_nome') || 'Anônimo';
+  document.getElementById('nok-clear-count').textContent = noks.length;
+  document.getElementById('nok-clear-who').textContent = quem;
+  document.getElementById('modal-clear-nok').style.display = 'flex';
+}
+
+function confirmarLimparNok() {
+  document.getElementById('modal-clear-nok').style.display = 'none';
+  const quem = localStorage.getItem('chat_nome') || 'Anônimo';
+  const agora = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+  PRODUTOS.forEach(p => {
+    if (p.nok || (p.nokTams && Object.keys(p.nokTams).some(t=>p.nokTams[t]))) {
+      p.nokHistory = p.nokHistory || [];
+      p.nokHistory.push({ action: 'limpou (em lote)', who: quem, time: agora });
+      registrarAtividade('nok_clear', p._id, quem, agora);
+      p.nok = false;
+      p.nokWho = '';
+      p.nokTams = {};
+      fbSave(p._id);
+    }
+  });
+  renderNok();
+  renderGrid();
+  updateNokBadge();
+  mostrarSyncToast(true);
+}
+
+function registrarAtividade(tipo, prodId, quem, time) {
+  if (!window._db) return;
+  const p = PRODUTOS[prodId];
+  if (!p) return;
+  window._db.collection('atividade').add({
+    tipo, prodId, prodNome: p.n, prodMarca: p.m||'', quem, time,
+    ts: new Date().toISOString()
+  }).catch(()=>{});
+}
+
+function exportarRelatorioGeralPDF() {
+  const noks   = PRODUTOS.filter(p => p.nok).sort((a,b)=>(parseFloat(b.vt||b.v)||0)-(parseFloat(a.vt||a.v)||0));
+  const compras = PRODUTOS.filter(p => p.em_compra).sort((a,b)=>(parseFloat(b.vt||b.v)||0)-(parseFloat(a.vt||a.v)||0));
+  if (!noks.length && !compras.length) { alert('Nenhum item para exportar.'); return; }
+  const fmt = v => 'R$ ' + parseFloat(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const now = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  const makeRows = (prods, showNokBy) => prods.map((p,i) => {
+    const nokT = p.nokTams||{};
+    const tamsAtivos = p.tams ? Object.entries(p.tams).filter(([t])=>!nokT[t]) : [];
+    const tamStr = tamsAtivos.length>0 && !(tamsAtivos.length===1&&tamsAtivos[0][0]==='Único')
+      ? tamsAtivos.map(([t,q])=>`${t==='??? (a definir)'?'???':t}(${q})`).join(', ')
+      : (tamsAtivos.length ? tamsAtivos[0][1] : (p.qty||p.q||0)) + ' un';
+    const vend = (p.vs||[]).map(v=>v.charAt(0)+v.slice(1).toLowerCase()).join(', ')||'—';
+    const extra = showNokBy ? `<td>${p.nokWho||'—'}</td>` : '';
+    return `<tr><td style="text-align:center;color:#888">${i+1}</td><td><strong>${p.n}</strong><br><span style="font-size:11px;color:#888">${p.m||'—'}</span></td><td>${fmt(p.vt||p.v)}</td><td>${tamStr}</td><td>${vend}</td>${extra}</tr>`;
+  }).join('');
+  const nokTotal = noks.reduce((a,p)=>(a+parseFloat(p.vt||p.v)||0),0);
+  const compraTotal = compras.reduce((a,p)=>(a+parseFloat(p.vt||p.v)||0),0);
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Relatório Geral — Bazaar</title>
+  <style>body{font-family:Arial,sans-serif;font-size:13px;color:#1a1a1a;padding:24px}
+  h1{font-size:20px;margin:0 0 2px}h2{font-size:15px;margin:24px 0 8px;padding-bottom:4px;border-bottom:2px solid currentColor}
+  .sub{color:#888;font-size:12px;margin-bottom:20px}
+  table{width:100%;border-collapse:collapse;margin-bottom:8px}
+  th{padding:8px 10px;text-align:left;font-size:12px;color:#fff}
+  td{padding:8px 10px;border-bottom:0.5px solid #eee;vertical-align:top}
+  tr:nth-child(even) td{background:#fafafa}
+  .total{text-align:right;font-size:12px;color:#888;margin-bottom:4px}
+  .footer{margin-top:24px;font-size:11px;color:#888;text-align:right;border-top:0.5px solid #eee;padding-top:8px}
+  @media print{body{padding:0}}</style></head><body>
+  <h1>📋 Relatório Geral — Bazaar</h1>
+  <div class="sub">Gerado em ${now}</div>
+  ${noks.length ? `<h2 style="color:#7a0b1e">🚫 NOK — ${noks.length} item(s)</h2>
+  <table><thead><tr style="background:#7a0b1e"><th>#</th><th>Produto</th><th>Valor</th><th>Qtd/Tam</th><th>Vendedora</th><th>NOK por</th></tr></thead><tbody>${makeRows(noks,true)}</tbody></table>
+  <div class="total">Total NOK: ${fmt(nokTotal)}</div>` : ''}
+  ${compras.length ? `<h2 style="color:#d97706">🛒 Em Compra — ${compras.length} item(s)</h2>
+  <table><thead><tr style="background:#d97706"><th>#</th><th>Produto</th><th>Valor</th><th>Qtd/Tam</th><th>Vendedora</th></tr></thead><tbody>${makeRows(compras,false)}</tbody></table>
+  <div class="total">Total em compra: ${fmt(compraTotal)}</div>` : ''}
+  <div class="footer">Bazaar Faltantes · ${now}</div>
+  <script>window.onload=()=>{window.print();}<\/script></body></html>`;
+  const blob = new Blob([html], {type:'text/html'});
+  window.open(URL.createObjectURL(blob), '_blank');
+}
+
+function exportarCompraPDF() {
+  const prods = PRODUTOS.filter(p => p.em_compra);
+  if (!prods.length) { alert('Nenhum item em compra para exportar.'); return; }
+  const fmt = v => 'R$ ' + parseFloat(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const now = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  const rows = prods.map((p,i) => {
+    const nokT = p.nokTams||{};
+    const tamsAtivos = p.tams ? Object.entries(p.tams).filter(([t])=>!nokT[t]) : [];
+    let tamStr = tamsAtivos.length>0 && !(tamsAtivos.length===1&&tamsAtivos[0][0]==='Único')
+      ? tamsAtivos.map(([t,q])=>`${t==='??? (a definir)'?'???':t}(${q})`).join(', ')
+      : (tamsAtivos.length ? tamsAtivos[0][1] : (p.qty||p.q||0)) + ' un';
+    const vend = (p.vs||[]).map(v=>v.charAt(0)+v.slice(1).toLowerCase()).join(', ')||'—';
+    return `<tr><td style="text-align:center;color:#888">${i+1}</td><td><strong>${p.n}</strong><br><span style="font-size:11px;color:#888">${p.m||'—'}</span></td><td>${fmt(p.vt||p.v)}</td><td>${tamStr}</td><td>${vend}</td></tr>`;
+  }).join('');
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Em Compra — Bazaar</title>
+  <style>body{font-family:Arial,sans-serif;font-size:13px;color:#1a1a1a;padding:24px}h1{color:#d97706;font-size:18px;margin:0 0 4px}.sub{color:#888;font-size:12px;margin-bottom:20px}table{width:100%;border-collapse:collapse}th{background:#d97706;color:#fff;padding:8px 10px;text-align:left;font-size:12px}td{padding:8px 10px;border-bottom:0.5px solid #eee;vertical-align:top}tr:nth-child(even) td{background:#fffbf0}.footer{margin-top:16px;font-size:11px;color:#888;text-align:right}@media print{body{padding:0}}</style></head><body>
+  <h1>🛒 Em Compra — Bazaar</h1><div class="sub">Gerado em ${now} · ${prods.length} item(s)</div>
+  <table><thead><tr><th>#</th><th>Produto</th><th>Valor</th><th>Qtd / Tamanhos</th><th>Vendedora</th></tr></thead><tbody>${rows}</tbody></table>
+  <div class="footer">Bazaar Faltantes · ${now}</div>
+  <script>window.onload=()=>{window.print();}<\/script></body></html>`;
+  const blob = new Blob([html], {type:'text/html'});
+  window.open(URL.createObjectURL(blob), '_blank');
+}
+
+function exportarCompraWhatsApp() {
+  const prods = PRODUTOS.filter(p => p.em_compra);
+  if (!prods.length) { alert('Nenhum item em compra para exportar.'); return; }
+  const fmt = v => 'R$ ' + parseFloat(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const nl = String.fromCharCode(10);
+  let lines = ['🛒 *EM COMPRA — BAZAAR*', ''];
+  prods.forEach((p,i) => {
+    lines.push(`*${i+1}. ${p.n}*`);
+    if (p.m) lines.push(`Marca: ${p.m}`);
+    lines.push(`Valor: ${fmt(p.vt||p.v)}`);
+    const nokT = p.nokTams||{};
+    const tamsAtivos = p.tams ? Object.entries(p.tams).filter(([t])=>!nokT[t]) : [];
+    if (tamsAtivos.length>0 && !(tamsAtivos.length===1&&tamsAtivos[0][0]==='Único')) {
+      lines.push(`Tam: ${tamsAtivos.map(([t,q])=>`${t==='??? (a definir)'?'???':t}(${q})`).join(', ')}`);
+    } else {
+      lines.push(`Qtd: ${tamsAtivos.length ? tamsAtivos[0][1] : (p.qty||p.q||0)} un`);
+    }
+    if ((p.vs||[]).length) lines.push(`Vend: ${p.vs.map(v=>v.charAt(0)+v.slice(1).toLowerCase()).join(', ')}`);
+    lines.push('');
+  });
+  lines.push(`Total: ${prods.length} item(s) em compra`);
+  window.open('https://wa.me/?text=' + encodeURIComponent(lines.join(nl)), '_blank');
 }
 
 function exportarNokPDF() {
@@ -1265,6 +1677,16 @@ function toggleEmCompraCard(id) {
   const p = PRODUTOS[id];
   if (!p) return;
   p.em_compra = !p.em_compra;
+  p.compraHistory = p.compraHistory || [];
+  p.compraHistory = p.compraHistory || [];
+  p.compraHistory.push({
+    action: p.em_compra ? 'marcou' : 'removeu',
+    who: localStorage.getItem('chat_nome') || 'Anônimo',
+    time: new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})
+  });
+  const _quemC = localStorage.getItem('chat_nome')||'Anônimo';
+  const _tC = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+  registrarAtividade(p.em_compra ? 'compra_on' : 'compra_off', id, _quemC, _tC);
   fbSave(id);
   renderGrid();
   updateEmCompraBadge();
@@ -1344,6 +1766,16 @@ function notificarComentario(produto, quem, texto) {
 }
 
 // Pede permissão quando firebase listener detecta novo comentário de outro usuário
+function mostrarNotificacao(titulo, texto, cor) {
+  const meuNome = localStorage.getItem('chat_nome') || '';
+  if (meuNome && texto.startsWith(meuNome)) return;
+  const toast = document.createElement('div');
+  toast.style.cssText = `position:fixed;top:60px;left:50%;transform:translateX(-50%);z-index:9999;background:${cor||'#1a1a1a'};color:#fff;border-radius:14px;padding:10px 18px;font-size:12px;font-weight:600;pointer-events:none;box-shadow:0 4px 20px rgba(0,0,0,0.2);max-width:85vw;text-align:center;line-height:1.4`;
+  toast.innerHTML = `<div style="font-size:13px">${titulo}</div><div style="font-weight:400;opacity:0.9;font-size:11px;margin-top:2px">${texto}</div>`;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 4000);
+}
+
 function notificarSeNovo(prodId, prevLen) {
   const p = PRODUTOS[prodId];
   if (!p || !p.comments) return;
@@ -1397,6 +1829,7 @@ function updateEmCompraBadge() {
 function renderCompra() {
   const list = document.getElementById('compra-list');
   const prods = PRODUTOS.filter(p => p.em_compra);
+  prods.sort((a,b) => (parseFloat(b.vt||b.v)||0) - (parseFloat(a.vt||a.v)||0));
   document.getElementById('compra-sub').textContent = prods.length + ' item(s) em processo';
   if (!prods.length) {
     list.innerHTML = '<div style="text-align:center;padding:60px 20px;color:#c4a898;font-size:13px">Nenhum item em processo de compra</div>';
@@ -1447,6 +1880,7 @@ function renderNok() {
   // Include products with full NOK or with nokTams
   // Deduplicate: if product has both full NOK and nokTams, show only once
   const prods = PRODUTOS.filter(p => p.nok || (p.nokTams && Object.keys(p.nokTams).some(t => p.nokTams[t])));
+  prods.sort((a,b) => (parseFloat(b.vt||b.v)||0) - (parseFloat(a.vt||a.v)||0));
   const totalNok = prods.length;
   document.getElementById('nok-sub').textContent = totalNok + ' item(s) marcado(s)';
 
@@ -1652,7 +2086,7 @@ function fbSave(id) {
   const dot = document.querySelector('.sync-dot');
   if (dot) { dot.style.background = '#f59e0b'; dot.title = 'Salvando…'; }
   window._db.collection('faltantes').doc(String(id)).set({
-    nok: p.nok, nokWho: p.nokWho||'', nokHistory: p.nokHistory||[], nokTams: p.nokTams||{}, comments: p.comments||[], qty: p.qty||p.q, em_compra: p.em_compra||false, updatedAt: new Date().toISOString()
+    nok: p.nok, nokWho: p.nokWho||'', nokHistory: p.nokHistory||[], nokTams: p.nokTams||{}, comments: p.comments||[], qty: p.qty||p.q, em_compra: p.em_compra||false, compraHistory: p.compraHistory||[], updatedAt: new Date().toISOString()
   }).then(() => {
     _pendingSaves.delete(id);
     if (dot) { dot.style.background = '#7a0b1e'; dot.title = 'Sincronizado'; }
@@ -1686,14 +2120,26 @@ function fbListen() {
       if (!isNaN(id) && PRODUTOS[id] && !_pendingSaves.has(id)) {
         const data = doc.data();
         const prevLen = (PRODUTOS[id].comments||[]).length;
+        const prevNok = PRODUTOS[id].nok;
+        const prevCompra = PRODUTOS[id].em_compra;
         PRODUTOS[id].nok        = data.nok        || false;
         PRODUTOS[id].nokWho    = data.nokWho     || '';
         PRODUTOS[id].nokHistory = data.nokHistory || [];
         PRODUTOS[id].nokTams   = data.nokTams    || {};
         PRODUTOS[id].comments = data.comments || [];
         PRODUTOS[id].em_compra = data.em_compra || false;
+        PRODUTOS[id].compraHistory = data.compraHistory || [];
         if (data.qty !== undefined) PRODUTOS[id].qty = data.qty;
         if ((data.comments||[]).length > prevLen) notificarSeNovo(id, prevLen);
+        // Notificar mudança de NOK
+        if (!prevNok && PRODUTOS[id].nok) {
+          mostrarNotificacao('🚫 NOK', PRODUTOS[id].nokWho + ' marcou ' + PRODUTOS[id].n + ' como NOK', 'var(--red)');
+        }
+        // Notificar mudança de Em Compra
+        if (!prevCompra && PRODUTOS[id].em_compra) {
+          const quem = (PRODUTOS[id].compraHistory||[]).slice(-1)[0]?.who || '';
+          mostrarNotificacao('🛒 Em compra', (quem ? quem + ' marcou ' : '') + PRODUTOS[id].n + ' em compra', '#d97706');
+        }
       }
     });
     fbRenderDebounced();
@@ -2036,12 +2482,17 @@ function logoutGoogle() {
 if (typeof firebase !== 'undefined' && firebase.apps.length) {
   firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL).then(() => {});
   firebase.auth().onAuthStateChanged(user => {
+    // Hide loading screen
+    const ls = document.getElementById('loading-screen');
+    if (ls) ls.style.display = 'none';
+
     const overlay = document.getElementById('login-overlay');
     const userBar = document.getElementById('user-bar');
     const catHeader = document.getElementById('cat-header');
     if (user) {
       overlay.style.display = 'none';
       userBar.style.display = 'flex';
+      document.body.classList.add('user-bar-visible');
       const uName = user.displayName || user.email;
       document.getElementById('user-name').textContent = uName;
       const avatarImg = document.getElementById('user-avatar');
@@ -2062,12 +2513,31 @@ if (typeof firebase !== 'undefined' && firebase.apps.length) {
     } else {
       overlay.style.display = 'flex';
       userBar.style.display = 'none';
+      document.body.classList.remove('user-bar-visible');
       catHeader.style.top = '0';
     }
   });
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  // Online/offline detection
+  const offlineBanner = document.getElementById('offline-banner');
+  function updateOnlineStatus() {
+    if (!navigator.onLine) {
+      offlineBanner.style.background = '#1a1a1a';
+      offlineBanner.textContent = '⚠️ Sem conexão — alterações serão salvas quando voltar';
+      offlineBanner.style.display = 'block';
+    } else {
+      offlineBanner.textContent = '✓ Conexão restaurada';
+      offlineBanner.style.background = '#1D9E75';
+      offlineBanner.style.display = 'block';
+      setTimeout(() => { offlineBanner.style.display = 'none'; }, 2500);
+    }
+  }
+  window.addEventListener('online', updateOnlineStatus);
+  window.addEventListener('offline', updateOnlineStatus);
+  if (!navigator.onLine) updateOnlineStatus();
+
   const ua = localStorage.getItem('ultima_atualizacao');
   if (ua) document.getElementById('header-meta').title = 'Atualizado ' + ua;
   // Apply saved dark mode
