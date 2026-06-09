@@ -17,19 +17,24 @@
   --border:#ede0d4;--border2:#f5c4c4;
   --text:#1a1a1a;--text2:#888;--text3:#b08070;--text4:#c4a898;
   --red:#7a0b1e;--red-light:#fdf2f3;
+  --card-bg:#fff;--input-bg:#fff;--chip-bg:#fff;
+  --modal-overlay:rgba(0,0,0,0.6);
 }
 body.dark{
   --bg:#111;--bg2:#1a1a1a;--bg3:#1f0a0e;
   --border:#2a2a2a;--border2:#4a1a1e;
-  --text:#f0f0f0;--text2:#888;--text3:#c4a898;--text4:#555;
-  --red:#c0392b;--red-light:#1f0a0e;
+  --text:#f0f0f0;--text2:#999;--text3:#c4a898;--text4:#555;
+  --red:#e05555;--red-light:#1f0a0e;
+  --card-bg:#1a1a1a;--input-bg:#222;--chip-bg:#222;
+  --modal-overlay:rgba(0,0,0,0.8);
 }
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overscroll-behavior:none;transition:background 0.3s,color 0.3s}
 /* Header */
-.header{position:fixed;top:0;left:0;right:0;z-index:100;background:var(--bg);border-bottom:0.5px solid var(--border)}
+.header{position:fixed;top:0;left:0;right:0;z-index:100;background:var(--bg);border-bottom:0.5px solid var(--border);transition:transform 0.25s ease}
+.header.hidden{transform:translateY(-100%)}
 .header-top{padding:12px 16px 8px;display:flex;align-items:center;justify-content:space-between}
 .logo{font-size:16px;font-weight:600;color:var(--red);letter-spacing:2px}
-.header-meta{font-size:11px;color:#b08070;background:#fff;border:0.5px solid #ede0d4;border-radius:14px;padding:3px 10px}
+.header-meta{font-size:11px;color:var(--text3);background:var(--bg2);border:0.5px solid var(--border);border-radius:14px;padding:3px 10px}
 .search-wrap{padding:0 12px 8px;position:relative}
 .search-input{width:100%;background:var(--bg2);border:0.5px solid var(--border);border-radius:20px;padding:8px 14px 8px 36px;font-size:13px;color:var(--text);outline:none;font-family:inherit}
 .search-input::placeholder{color:var(--text4)}
@@ -39,6 +44,19 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .chip{background:var(--bg2);border:0.5px solid var(--border);border-radius:16px;padding:4px 12px;font-size:11px;color:var(--red);white-space:nowrap;cursor:pointer;transition:all 0.15s;font-family:inherit;font-weight:500}
 .chip.active{background:var(--red) !important;border-color:var(--red) !important;color:#fff !important}
 @keyframes loadbar{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}
+/* Dark mode overrides */
+body.dark .upload-card{background:var(--bg2);border-color:var(--border)}
+body.dark .btn-secondary{background:var(--bg2);border-color:var(--border);color:var(--text)}
+body.dark .search-input{background:var(--input-bg)}
+body.dark .chip{background:var(--chip-bg)}
+body.dark .comment-input-wrap input{background:var(--input-bg);color:var(--text)}
+body.dark .modal{background:var(--bg)}
+body.dark .count-bar{background:var(--bg)}
+body.dark #loading-screen{background:#111}
+body.dark #loading-screen div:first-child{color:#e05555}
+body.dark #loading-screen div:nth-child(2){color:#555}
+body.dark #loading-screen > div:last-child{background:#222}
+body.dark #loading-screen > div:last-child > div{background:#e05555}
 /* Contador */
 .count-bar{padding:6px 16px;font-size:11px;color:var(--text3);background:var(--bg);border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center}
 .count-bar strong{color:var(--red)}
@@ -62,12 +80,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .card-brand{font-size:9px;color:var(--red);font-weight:600;letter-spacing:0.8px;margin-bottom:2px;text-transform:uppercase}
 .card-name{font-size:11px;font-weight:500;color:var(--text);line-height:1.35;margin-bottom:6px;cursor:pointer}
 .card-name:hover{color:#7a0b1e}
-.card-footer{display:flex;justify-content:space-between;align-items:center}
-.card-val{font-size:11px;color:var(--text2)}
+.card-footer{display:flex;justify-content:space-between;align-items:center;gap:4px;flex-wrap:nowrap}
+.card-val{font-size:11px;color:var(--text2);white-space:nowrap}
 /* Modal */
-.modal-bg{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px)}
-.modal-bg.open{display:flex;align-items:flex-end}
-.modal{background:var(--bg);border-radius:24px 24px 0 0;box-shadow:0 -8px 40px rgba(0,0,0,0.15);width:100%;max-height:85vh;overflow-y:auto;padding:20px 20px 40px}
+.modal-bg{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0);backdrop-filter:blur(0px);transition:background 0.25s,backdrop-filter 0.25s}
+.modal-bg.open{display:flex;align-items:flex-end;background:var(--modal-overlay);backdrop-filter:blur(4px)}
+.modal-bg.closing{background:rgba(0,0,0,0);backdrop-filter:blur(0px)}
+.modal{background:var(--bg);border-radius:24px 24px 0 0;box-shadow:0 -8px 40px rgba(0,0,0,0.15);width:100%;max-height:85vh;overflow-y:auto;padding:20px 20px 40px;transform:translateY(100%);transition:transform 0.3s cubic-bezier(0.32,0.72,0,1)}
+.modal-bg.open .modal{transform:translateY(0)}
+.modal-bg.closing .modal{transform:translateY(100%)}
 .modal-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px}
 .modal-img{width:100%;aspect-ratio:1;border-radius:14px;background:var(--bg3);object-fit:cover;margin-bottom:14px;display:flex;align-items:center;justify-content:center;font-size:48px;font-weight:600;color:#d4b8a8}
 .modal-brand{font-size:11px;color:var(--red);font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px}
@@ -209,6 +230,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:1px">
       <span class="header-meta" id="header-meta">231 itens · R$ 48.959,50</span>
       <span id="header-total" style="font-size:9px;color:var(--text4)"></span>
+      <span id="header-vend-total" style="font-size:9px;color:var(--red);font-weight:600;display:none"></span>
       <span id="header-compra" style="font-size:9px;color:#f59e0b;font-weight:600;display:none"></span>
     </div>
     </div>
@@ -805,7 +827,20 @@ function renderGrid() {
   }, 0);
   const cvEl = document.getElementById('count-val'); if (cvEl) cvEl.textContent = fmtVal(tv);
   // Update header-meta with live filtered totals
-  const headerMeta = document.getElementById('header-meta');
+  // Contador por vendedora
+  const vendTotal = document.getElementById('header-vend-total');
+  if (vendTotal) {
+    const soUmaVend = !fVends.has('TODAS') && fVends.size === 1;
+    if (soUmaVend) {
+      const vend = [...fVends][0];
+      const prodsDaVend = PRODUTOS.filter(p => (p.vs||[]).includes(vend));
+      const totalVend = prodsDaVend.filter(p => !p.nok).reduce((a,p) => a + (parseFloat(p.vt||p.v)||0) * (p.qty||p.q||0), 0);
+      vendTotal.textContent = vend.charAt(0) + vend.slice(1).toLowerCase() + ': R$ ' + totalVend.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+      vendTotal.style.display = '';
+    } else {
+      vendTotal.style.display = 'none';
+    }
+  }
   if (headerMeta) {
     const totalItens = PRODUTOS.length;
     const totalGeral = PRODUTOS.filter(p => !p.nok).reduce((a,p) => {
@@ -1162,21 +1197,52 @@ function openModal(id, focusComment=false) {
   const hasTams = p.tams && Object.keys(p.tams).length > 0 && !(Object.keys(p.tams).length === 1 && Object.keys(p.tams)[0] === 'Único');
   const tamsInline = document.getElementById('modal-tams-inline');
   const qtyEl = document.getElementById('modal-qty');
+  const tamsPerVend = p.tams_por_vend || {};
+  const multiVend = Object.keys(tamsPerVend).length > 1;
+
   if (tamsInline) {
     if (hasTams) {
-      tamsInline.style.display = 'flex';
+      tamsInline.style.display = 'block';
       tamsInline.innerHTML = '';
-      Object.entries(p.tams).forEach(([t,q]) => {
-        const isUndef = t === '??? (a definir)';
-        const nokTams = p.nokTams || {};
-        const isNok = nokTams[t];
-        const div = document.createElement('div');
-        div.style.cssText = 'border:0.5px solid ' + (isNok?'rgba(200,50,50,0.3)':isUndef?'rgba(180,120,0,0.3)':'rgba(122,11,30,0.2)') + ';border-radius:8px;padding:4px 10px;text-align:center;background:' + (isNok?'rgba(200,50,50,0.08)':'rgba(255,255,255,0.5)') + ';cursor:pointer;position:relative;transition:all 0.15s';
-        div.innerHTML = '<div style="font-size:12px;font-weight:700;color:' + (isNok?'#c0392b':isUndef?'#8a5000':'var(--red)') + ';' + (isNok?'text-decoration:line-through':'') + '">' + (isUndef?'???':t) + '</div>' +
-          '<div style="font-size:10px;color:' + (isNok?'rgba(192,57,43,0.5)':isUndef?'#b08070':'rgba(122,11,30,0.6)') + '">' + (isNok?'NOK':q+' un') + '</div>';
-        div.addEventListener('click', () => toggleTamNok(p._id, t));
-        tamsInline.appendChild(div);
-      });
+
+      if (multiVend) {
+        // Separado por vendedora
+        Object.entries(tamsPerVend).forEach(([vend, vtams]) => {
+          const vendLabel = document.createElement('div');
+          vendLabel.style.cssText = 'font-size:10px;font-weight:700;color:var(--red);letter-spacing:0.5px;text-transform:uppercase;margin:8px 0 4px';
+          vendLabel.textContent = vend.charAt(0) + vend.slice(1).toLowerCase();
+          tamsInline.appendChild(vendLabel);
+          const row = document.createElement('div');
+          row.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;margin-bottom:4px';
+          Object.entries(vtams).forEach(([t, q]) => {
+            const isUndef = t === '??? (a definir)';
+            const nokTams = p.nokTams || {};
+            const isNok = nokTams[t];
+            const div = document.createElement('div');
+            div.style.cssText = 'border:0.5px solid ' + (isNok?'rgba(200,50,50,0.3)':isUndef?'rgba(180,120,0,0.3)':'rgba(122,11,30,0.2)') + ';border-radius:8px;padding:4px 10px;text-align:center;background:' + (isNok?'rgba(200,50,50,0.08)':'rgba(255,255,255,0.5)') + ';cursor:pointer';
+            div.innerHTML = '<div style="font-size:12px;font-weight:700;color:' + (isNok?'#c0392b':isUndef?'#8a5000':'var(--red)') + ';' + (isNok?'text-decoration:line-through':'') + '">' + (isUndef?'???':t) + '</div>' +
+              '<div style="font-size:10px;color:' + (isNok?'rgba(192,57,43,0.5)':isUndef?'#b08070':'rgba(122,11,30,0.6)') + '">' + (isNok?'NOK':q+' un') + '</div>';
+            div.addEventListener('click', () => toggleTamNok(p._id, t));
+            row.appendChild(div);
+          });
+          tamsInline.appendChild(row);
+        });
+      } else {
+        // Uma só vendedora — layout original
+        tamsInline.style.display = 'flex';
+        tamsInline.style.flexWrap = 'wrap';
+        Object.entries(p.tams).forEach(([t,q]) => {
+          const isUndef = t === '??? (a definir)';
+          const nokTams = p.nokTams || {};
+          const isNok = nokTams[t];
+          const div = document.createElement('div');
+          div.style.cssText = 'border:0.5px solid ' + (isNok?'rgba(200,50,50,0.3)':isUndef?'rgba(180,120,0,0.3)':'rgba(122,11,30,0.2)') + ';border-radius:8px;padding:4px 10px;text-align:center;background:' + (isNok?'rgba(200,50,50,0.08)':'rgba(255,255,255,0.5)') + ';cursor:pointer;position:relative;transition:all 0.15s';
+          div.innerHTML = '<div style="font-size:12px;font-weight:700;color:' + (isNok?'#c0392b':isUndef?'#8a5000':'var(--red)') + ';' + (isNok?'text-decoration:line-through':'') + '">' + (isUndef?'???':t) + '</div>' +
+            '<div style="font-size:10px;color:' + (isNok?'rgba(192,57,43,0.5)':isUndef?'#b08070':'rgba(122,11,30,0.6)') + '">' + (isNok?'NOK':q+' un') + '</div>';
+          div.addEventListener('click', () => toggleTamNok(p._id, t));
+          tamsInline.appendChild(div);
+        });
+      }
       if (qtyEl) { qtyEl.textContent = 'total: ' + totalQty + ' un'; qtyEl.style.cssText = 'font-size:10px;font-weight:400;color:rgba(122,11,30,0.45);margin-top:6px'; }
     } else {
       tamsInline.style.display = 'none';
@@ -1203,7 +1269,10 @@ function openModal(id, focusComment=false) {
   const hist = (p.compraHistory||[]).slice(-3).reverse();
   compraHistEl.innerHTML = hist.length ? hist.map(h=>`<span style="margin-right:8px">🛒 <b>${h.who}</b> ${h.action} em ${h.time}</span>`).join('<br>') : '';
   renderModalComments(p);
-  document.getElementById('modal-bg').classList.add('open');
+  const modalBg = document.getElementById('modal-bg');
+  modalBg.style.display = 'flex';
+  modalBg.classList.remove('closing');
+  requestAnimationFrame(() => { requestAnimationFrame(() => { modalBg.classList.add('open'); }); });
   if (focusComment) setTimeout(() => document.getElementById('comment-input').focus(), 300);
 }
 
@@ -1212,7 +1281,10 @@ function closeModal(e) {
 }
 
 function closeModalBtn() {
-  document.getElementById('modal-bg').classList.remove('open');
+  const modalBg = document.getElementById('modal-bg');
+  modalBg.classList.remove('open');
+  modalBg.classList.add('closing');
+  setTimeout(() => { modalBg.style.display = 'none'; modalBg.classList.remove('closing'); }, 300);
   document.getElementById('comment-input').value = '';
   modalId = null;
   renderGrid();
@@ -2473,13 +2545,18 @@ function handleCSV(input) {
         const valTotal = pv(row[iVal]);
         const valUnit = (mult > 1 && valTotal > 0) ? Math.round(valTotal/mult*100)/100 : valTotal;
         const key = base.toLowerCase().trim() + '||' + (row[iMarca]?.trim()||'').toLowerCase();
-        if (!groups[key]) groups[key] = {n:base,m:row[iMarca]?.trim()||'',c:row[iCat]?.trim()||'',vs:[],v:valUnit,q:0,_vals:[],f:row[iFoto]?.trim()||'',tams:{}};
+        if (!groups[key]) groups[key] = {n:base,m:row[iMarca]?.trim()||'',c:row[iCat]?.trim()||'',vs:[],v:valUnit,q:0,_vals:[],f:row[iFoto]?.trim()||'',tams:{},tams_por_vend:{}};
         const g = groups[key];
         const vend = row[iVend]?.trim()||'';
         if (vend && !g.vs.includes(vend)) g.vs.push(vend);
         if (!g.f && row[iFoto]?.trim()) g.f = row[iFoto].trim();
         const tamKey = tam || 'Único';
         g.tams[tamKey] = (g.tams[tamKey]||0) + mult;
+        // Track per-vendedora tams
+        if (vend) {
+          if (!g.tams_por_vend[vend]) g.tams_por_vend[vend] = {};
+          g.tams_por_vend[vend][tamKey] = (g.tams_por_vend[vend][tamKey]||0) + mult;
+        }
         g.q += mult;
         if (valUnit > 0 && !temDesconto) g._vals.push(valUnit);
       });
@@ -2552,7 +2629,7 @@ function handleCSV(input) {
               const batch = window._db.batch();
               chunk.forEach(p => {
                 const ref = window._db.collection('catalogo').doc(String(p._id));
-                batch.set(ref, {n:p.n,m:p.m||'',c:p.c||'',vs:p.vs||[],v:p.v||0,q:p.q||0,vt:p.vt||0,vmin:p.vmin||0,vmax:p.vmax||0,f:p.f||'',tams:p.tams||{},tams_str:p.tams_str||''});
+                batch.set(ref, {n:p.n,m:p.m||'',c:p.c||'',vs:p.vs||[],v:p.v||0,q:p.q||0,vt:p.vt||0,vmin:p.vmin||0,vmax:p.vmax||0,f:p.f||'',tams:p.tams||{},tams_str:p.tams_str||'',tams_por_vend:p.tams_por_vend||{}});
               });
               return batch.commit();
             });
@@ -2709,6 +2786,21 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   const savedSub = localStorage.getItem('app_subtitulo');
   if (savedSub) document.getElementById('subtitulo').textContent = savedSub;
+
+  // Header hide on scroll down, show on scroll up
+  let _lastScroll = 0;
+  window.addEventListener('scroll', () => {
+    const header = document.getElementById('cat-header');
+    if (!header) return;
+    const curr = window.scrollY;
+    if (curr > _lastScroll && curr > 80) {
+      header.classList.add('hidden');
+    } else {
+      header.classList.remove('hidden');
+    }
+    _lastScroll = curr;
+  }, { passive: true });
+
   renderGrid();
   fbListen();
   resetIdleTimer();
