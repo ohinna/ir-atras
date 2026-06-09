@@ -2494,8 +2494,12 @@ function handleCSV(input) {
   reader.onload = e => {
     try {
       document.getElementById('csv-fill').style.width = '60%';
-      const text = e.target.result;
-      const rows = text.split(/\r?\n/).map(r => {
+      let text = e.target.result;
+      // Remove BOM if present
+      if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+      // Normalize line endings
+      text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+      const rows = text.split('\n').map(r => {
         const cells = []; let cur='', inQ=false;
         for (const ch of r) {
           if (ch==='"') inQ=!inQ;
@@ -2517,7 +2521,7 @@ function handleCSV(input) {
 
       let headerIdx = -1;
       rows.forEach((r,i) => { if (r.includes('ITEM')&&r.includes('CONF')) headerIdx=i; });
-      if (headerIdx === -1) throw new Error('Cabeçalho não encontrado');
+      if (headerIdx === -1) throw new Error('Cabeçalho não encontrado. Verifique se o arquivo é CSV com colunas: ITEM, CONF, VALOR, MARCA, CATEGORIA, VENDEDORA, FOTO');
 
       const h = rows[headerIdx];
       const iItem=h.indexOf('ITEM'), iVal=h.indexOf('VALOR'), iConf=h.indexOf('CONF');
@@ -2648,6 +2652,12 @@ function handleCSV(input) {
     } catch(err) {
       document.getElementById('csv-status').textContent = '❌ Erro: ' + err.message;
     }
+  };
+  reader.onerror = () => {
+    // Try latin1 fallback
+    const r2 = new FileReader();
+    r2.onload = reader.onload;
+    r2.readAsText(file, 'latin1');
   };
   reader.readAsText(file, 'utf-8');
 }
