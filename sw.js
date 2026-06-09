@@ -1,6 +1,5 @@
-// Bazaar — Service Worker
-// Versão gerada automaticamente: a609c6f5
-const CACHE_NAME = 'bazaar-a609c6f5';
+// Bazaar — Service Worker v63a31e80
+const CACHE_NAME = 'bazaar-63a31e80';
 const FILES = ['/ir-atras/', '/ir-atras/index.html'];
 
 self.addEventListener('install', e => {

@@ -2199,6 +2199,29 @@ function fbSave(id) {
 
 function fbListen() {
   if (!window._db) return;
+
+  // Carregar catálogo do Firebase se PRODUTOS estiver vazio
+  if (PRODUTOS.length === 0) {
+    window._db.collection('catalogo').get().then(snap => {
+      if (!snap.empty) {
+        const raw = [];
+        snap.forEach(doc => { raw.push({...doc.data(), _id: parseInt(doc.id)}); });
+        raw.sort((a,b) => a._id - b._id);
+        PRODUTOS = raw.map(p => ({...p, nok:false, em_compra:false, comments:[], qty:p.q}));
+        renderGrid();
+        reconstruirCatChips();
+        updateNokBadge();
+        updateEmCompraBadge();
+      }
+      _fbListenCore();
+    }).catch(() => _fbListenCore());
+  } else {
+    _fbListenCore();
+  }
+}
+
+function _fbListenCore() {
+  if (!window._db) return;
   // Listen to app config (subtitulo)
   window._db.collection('config').doc('app').onSnapshot(doc => {
     if (doc.exists) {
@@ -2499,24 +2522,50 @@ function handleCSV(input) {
       document.getElementById('csv-fill').style.width = '100%';
       const now = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
       localStorage.setItem('ultima_atualizacao', now);
-      document.getElementById('csv-status').textContent = '✅ ' + PRODUTOS.length + ' produtos importados · ' + now;
-      setTimeout(() => { document.getElementById('csv-progress').style.display='none'; }, 1500);
+      document.getElementById('csv-status').textContent = '⬆️ Salvando produtos no Firebase...';
+      setTimeout(() => { document.getElementById('csv-progress').style.display='none'; }, 3000);
       renderGrid();
       if (fbUnsub) { fbUnsub(); fbUnsub=null; }
-      // Limpar todos os docs antigos antes de reconectar
+
       if (window._db) {
-        document.getElementById('csv-status').textContent = '🧹 Limpando dados antigos...';
-        window._db.collection('faltantes').get().then(snap => {
+        // 1. Apaga catálogo antigo
+        const deleteOldCatalogo = window._db.collection('catalogo').get().then(snap => {
+          if (snap.empty) return;
           const batch = window._db.batch();
           snap.docs.forEach(doc => batch.delete(doc.ref));
           return batch.commit();
+        });
+        // 2. Apaga faltantes antigos
+        const deleteOldFaltantes = window._db.collection('faltantes').get().then(snap => {
+          if (snap.empty) return;
+          const batch = window._db.batch();
+          snap.docs.forEach(doc => batch.delete(doc.ref));
+          return batch.commit();
+        });
+
+        Promise.all([deleteOldCatalogo, deleteOldFaltantes]).then(() => {
+          // 3. Salva novos produtos no catálogo em batches de 500
+          const chunks = [];
+          for (let i = 0; i < PRODUTOS.length; i += 400) chunks.push(PRODUTOS.slice(i, i+400));
+          return chunks.reduce((promise, chunk) => {
+            return promise.then(() => {
+              const batch = window._db.batch();
+              chunk.forEach(p => {
+                const ref = window._db.collection('catalogo').doc(String(p._id));
+                batch.set(ref, {n:p.n,m:p.m||'',c:p.c||'',vs:p.vs||[],v:p.v||0,q:p.q||0,vt:p.vt||0,vmin:p.vmin||0,vmax:p.vmax||0,f:p.f||'',tams:p.tams||{},tams_str:p.tams_str||''});
+              });
+              return batch.commit();
+            });
+          }, Promise.resolve());
         }).then(() => {
-          document.getElementById('csv-status').textContent = '✅ ' + PRODUTOS.length + ' produtos importados · ' + now;
+          document.getElementById('csv-status').textContent = '✅ ' + PRODUTOS.length + ' produtos salvos · ' + now;
           fbListen();
-        }).catch(() => {
+        }).catch(e => {
+          document.getElementById('csv-status').textContent = '❌ Erro ao salvar: ' + e.message;
           fbListen();
         });
       } else {
+        document.getElementById('csv-status').textContent = '✅ ' + PRODUTOS.length + ' produtos importados · ' + now;
         fbListen();
       }
     } catch(err) {
