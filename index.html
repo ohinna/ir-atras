@@ -827,6 +827,7 @@ function renderGrid() {
   }, 0);
   const cvEl = document.getElementById('count-val'); if (cvEl) cvEl.textContent = fmtVal(tv);
   // Update header-meta with live filtered totals
+  const headerMeta = document.getElementById('header-meta');
   // Contador por vendedora
   const vendTotal = document.getElementById('header-vend-total');
   if (vendTotal) {
