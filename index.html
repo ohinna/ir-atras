@@ -75,6 +75,8 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
 .btn-nok{position:absolute;bottom:6px;right:6px;width:22px;height:22px;border-radius:50%;background:rgba(122,11,30,0.85);border:none;color:#fff;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .btn-compra{position:absolute;bottom:6px;left:6px;width:22px;height:22px;border-radius:50%;background:rgba(245,158,11,0.85);border:none;color:#fff;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .btn-compra.ativo{background:rgba(245,158,11,1)}
+.btn-eua{position:absolute;top:6px;right:6px;width:22px;height:22px;border-radius:50%;background:rgba(15,107,82,0.85);border:none;color:#fff;font-size:9px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.btn-eua.ativo{background:rgba(15,107,82,1)}
 .btn-comment{position:absolute;top:6px;left:6px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,0.25);border:none;color:#fff;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .card-body{padding:8px 10px 10px;display:flex;flex-direction:column;flex:1}
 .card-brand{font-size:9px;color:var(--red);font-weight:600;letter-spacing:0.8px;margin-bottom:2px;text-transform:uppercase}
@@ -143,6 +145,11 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
 .compra-overlay .compra-bg{position:absolute;inset:0;background:linear-gradient(to top,rgba(180,130,0,0.75) 0%,rgba(180,130,0,0.35) 60%,rgba(180,130,0,0.15) 100%)}
 .compra-overlay .compra-content{position:relative;z-index:1;text-align:center}
 .compra-label{color:#fff;font-size:11px;font-weight:700;letter-spacing:1px}
+.eua-overlay{position:absolute;inset:0;display:none;align-items:center;justify-content:center;border-radius:0}
+.eua-overlay.show{display:flex;animation:nokPop 0.25s ease}
+.eua-overlay .eua-bg{position:absolute;inset:0;background:linear-gradient(to top,rgba(15,107,82,0.75) 0%,rgba(15,107,82,0.35) 60%,rgba(15,107,82,0.15) 100%)}
+.eua-overlay .eua-content{position:relative;z-index:1;text-align:center}
+.eua-label{color:#fff;font-size:11px;font-weight:700;letter-spacing:1px}
 /* Edit name inline */
 .name-edit-row{display:flex;gap:6px;margin-bottom:6px}
 .name-edit-input{flex:1;border:0.5px solid #f5c4c4;border-radius:8px;padding:5px 8px;font-size:11px;font-family:inherit;outline:none;background:#fdf2f3}
@@ -422,6 +429,11 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
     <span class="tab-icon">🛒</span>
     <span class="tab-label">Em compra</span>
   </button>
+  <button class="tab-btn" id="tab-eua" onclick="goTab('eua')" style="position:relative">
+    <span class="tab-badge" id="eua-badge" style="background:#0f6b52">0</span>
+    <span class="tab-icon">🇺🇸</span>
+    <span class="tab-label">Est EUA</span>
+  </button>
   <button class="tab-btn" id="tab-nok" onclick="goTab('nok')" style="position:relative">
     <span class="tab-badge" id="nok-badge" style="background:#7a0b1e">0</span>
     <span class="tab-icon">✕</span>
@@ -497,6 +509,22 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
   <div id="hist-relatorio" style="padding:12px 16px;display:none"></div>
 </div>
 
+<div class="page" id="page-eua">
+  <div class="chat-header">
+    <div style="display:flex;align-items:center;justify-content:space-between;width:100%">
+      <div>
+        <div class="chat-title">🇺🇸 Est EUA</div>
+        <div class="chat-sub" id="eua-sub">Itens no estoque EUA</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button onclick="exportarEuaPDF()" style="background:#0f6b52;border:none;border-radius:12px;padding:8px 14px;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;flex-shrink:0">↓ PDF</button>
+        <button onclick="exportarEuaWhatsApp()" style="background:#25d366;border:none;border-radius:12px;padding:8px 14px;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;flex-shrink:0">WhatsApp</button>
+      </div>
+    </div>
+  </div>
+  <div style="padding:12px 0" id="eua-list"></div>
+</div>
+
 <!-- MODAL FOTO CHEIA -->
 <div id="modal-foto" onclick="fecharFotoCheia()" style="display:none;position:fixed;inset:0;z-index:9995;background:rgba(0,0,0,0.92);align-items:center;justify-content:center;flex-direction:column">
   <div style="position:absolute;top:16px;right:16px;color:#fff;font-size:24px;cursor:pointer;opacity:0.7">✕</div>
@@ -559,6 +587,7 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
     <div style="display:flex;gap:8px;margin-top:16px">
       <button class="btn-secondary" onclick="toggleNok()" style="flex:1">✕ NOK</button>
       <button id="btn-em-compra" onclick="toggleEmCompra()" style="flex:1;padding:12px;border-radius:12px;background:#f59e0b;border:none;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🛒 Em compra</button>
+      <button id="btn-est-eua" onclick="toggleEstEua()" style="flex:1;padding:12px;border-radius:12px;background:#0f6b52;border:none;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🇺🇸 Est EUA</button>
       <button onclick="compartilharWhatsApp()" style="flex:1;padding:12px;border-radius:12px;background:#25d366;border:none;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">WhatsApp</button>
       <button onclick="baixarPdfProduto()" style="flex:1;padding:12px;border-radius:12px;background:var(--red);border:none;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">↓ PDF</button>
     </div>
@@ -884,17 +913,19 @@ function renderGrid() {
         ${img}
         ${p.nok ? '<div class="nok-overlay show"><div class="nok-bg"></div><div class="nok-content"><div class="nok-label">✕ NOK</div>' + (p.nokWho ? '<div style="font-size:9px;color:rgba(255,255,255,0.75);margin-top:2px">'+p.nokWho+'</div>' : '') + '</div></div>' : ''}
         ${p.em_compra ? '<div class="compra-overlay show"><div class="compra-bg"></div><div class="compra-content"><div class="compra-label">🛒 Em compra</div></div></div>' : ''}
+        ${p.est_eua ? '<div class="eua-overlay show"><div class="eua-bg"></div><div class="eua-content"><div class="eua-label">🇺🇸 Est EUA</div></div></div>' : ''}
         <button class="btn-nok" onclick="event.stopPropagation();confirmNok(${p._id})">✕</button>
         <button class="btn-compra ${p.em_compra?'ativo':''}" onclick="event.stopPropagation();toggleEmCompraCard(${p._id})">🛒</button>
+        <button class="btn-eua ${p.est_eua?'ativo':''}" onclick="event.stopPropagation();toggleEstEuaCard(${p._id})">🇺🇸</button>
         ${unread>0 ? '<div style="position:absolute;top:6px;left:6px;background:rgba(122,11,30,0.85);border-radius:10px;padding:1px 6px;font-size:9px;font-weight:700;color:#fff">'+unread+'</div>' : ''}
       </div>
-      <div class="card-body">
+      <div class="card-body" onclick="openModal(${p._id})">
         <div style="display:flex;align-items:center;gap:5px;margin-bottom:2px">
           <div class="card-brand">${p.m||''}</div>
           ${p.c ? '<div style="font-size:8px;color:var(--text4);font-weight:400">· '+p.c+'</div>' : ''}
         </div>
-        <div class="card-name" onclick="openModal(${p._id})">${p.n}</div>
-        <div class="card-footer">
+        <div class="card-name">${p.n}</div>
+        <div class="card-footer" onclick="event.stopPropagation()">
           <span class="card-val">${p.vmin && p.vmax && p.vmin !== p.vmax ? fmtVal(p.vmin)+' – '+fmtVal(p.vmax) : fmtVal(p.vt||p.v)}</span>
           <span style="font-size:10px;background:#fdf2f3;border:0.5px solid #f5c4c4;border-radius:8px;padding:2px 7px;color:#7a0b1e;font-weight:600">${p.qty||p.q} un</span>
         </div>
@@ -1047,7 +1078,7 @@ function goTab(tab) {
   document.getElementById('cat-header').style.display = tab==='cat' ? '' : 'none';
   document.querySelector('.count-bar').style.display = tab==='cat' ? '' : 'none';
   document.querySelector('.grid-wrap').style.display = tab==='cat' ? '' : 'none';
-  ['chat','upload','nok','compra','hist'].forEach(t => {
+  ['chat','upload','nok','compra','hist','eua'].forEach(t => {
     const pg = document.getElementById('page-'+t);
     if (pg) pg.classList.toggle('active', t===tab);
   });
@@ -1055,6 +1086,7 @@ function goTab(tab) {
   if (tab==='nok') renderNok();
   if (tab==='compra') renderCompra();
   if (tab==='hist') renderHist();
+  if (tab==='eua') renderEua();
   if (tab==='upload') {
     const ua = localStorage.getItem('ultima_atualizacao');
     document.getElementById('ultima-atualizacao').textContent = ua ? 'Última atualização: ' + ua : '';
@@ -1215,14 +1247,18 @@ function openModal(id, focusComment=false) {
   if (p.f) {
     imgEl.innerHTML = '';
     imgEl.style.padding = '0';
+    imgEl.style.cursor = 'zoom-in';
+    imgEl.onclick = () => abrirFotoCheia(p.f, p.n, p.m||'');
     const img = document.createElement('img');
     img.src = p.f;
-    img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:14px';
-    img.onerror = () => { imgEl.textContent = ab; imgEl.style.padding = ''; };
+    img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:14px;pointer-events:none';
+    img.onerror = () => { imgEl.textContent = ab; imgEl.style.padding = ''; imgEl.style.cursor = ''; imgEl.onclick = null; };
     imgEl.appendChild(img);
   } else {
     imgEl.textContent = ab;
     imgEl.style.padding = '';
+    imgEl.style.cursor = '';
+    imgEl.onclick = null;
   }
   const brandEl = document.getElementById('modal-brand');
   brandEl.innerHTML = (p.m||'') + (p.c ? ' <span style="font-size:10px;font-weight:400;color:var(--text2)">· ' + p.c + '</span>' : '');
@@ -1301,6 +1337,11 @@ function openModal(id, focusComment=false) {
   if (btnEc) {
     btnEc.style.background = p.em_compra ? '#d97706' : '#f59e0b';
     btnEc.textContent = p.em_compra ? '🛒 Em compra ✓' : '🛒 Em compra';
+  }
+  const btnEua = document.getElementById('btn-est-eua');
+  if (btnEua) {
+    btnEua.style.background = p.est_eua ? '#0a6648' : '#0f6b52';
+    btnEua.textContent = p.est_eua ? '🇺🇸 Est EUA ✓' : '🇺🇸 Est EUA';
   }
   // Show compra history
   let compraHistEl = document.getElementById('compra-hist-modal');
@@ -1886,6 +1927,33 @@ function toggleTamNok(prodId, tam) {
   openModal(prodId);
 }
 
+function toggleEstEuaCard(id) {
+  const p = PRODUTOS[id];
+  if (!p) return;
+  p.est_eua = !p.est_eua;
+  registrarAtividade(p.est_eua ? 'eua_on' : 'eua_off', id, localStorage.getItem('chat_nome')||'Anônimo', new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}));
+  fbSave(id);
+  renderGrid();
+  updateEstEuaBadge();
+}
+
+function toggleEstEua() {
+  if (modalId === null) return;
+  const p = PRODUTOS[modalId];
+  p.est_eua = !p.est_eua;
+  const btn = document.getElementById('btn-est-eua');
+  if (btn) { btn.style.background = p.est_eua ? '#0a6648' : '#0f6b52'; btn.textContent = p.est_eua ? '🇺🇸 Est EUA ✓' : '🇺🇸 Est EUA'; }
+  registrarAtividade(p.est_eua ? 'eua_on' : 'eua_off', modalId, localStorage.getItem('chat_nome')||'Anônimo', new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}));
+  fbSave(modalId);
+  renderGrid();
+}
+
+function updateEstEuaBadge() {
+  const count = PRODUTOS.filter(p => p.est_eua).length;
+  const badge = document.getElementById('eua-badge');
+  if (badge) { badge.textContent = count; badge.style.display = count > 0 ? 'flex' : 'none'; }
+}
+
 function toggleEmCompraCard(id) {
   const p = PRODUTOS[id];
   if (!p) return;
@@ -2037,6 +2105,74 @@ function updateEmCompraBadge() {
   if (badge) { badge.textContent = count; badge.style.display = count > 0 ? 'flex' : 'none'; }
   const hc = document.getElementById('header-compra');
   if (hc) { hc.textContent = '🛒 ' + count + ' em compra'; hc.style.display = count > 0 ? '' : 'none'; }
+}
+
+function renderEua() {
+  const list = document.getElementById('eua-list');
+  const prods = PRODUTOS.filter(p => p.est_eua);
+  prods.sort((a,b) => (parseFloat(b.vt||b.v)||0) - (parseFloat(a.vt||a.v)||0));
+  document.getElementById('eua-sub').textContent = prods.length + ' item(s) no estoque EUA';
+  if (!prods.length) { list.innerHTML = '<div style="text-align:center;padding:60px 20px;color:#c4a898;font-size:13px">Nenhum item marcado como Est EUA</div>'; return; }
+  list.innerHTML = '';
+  prods.forEach(p => {
+    const ab = abbrev(p.n, p.m);
+    const div = document.createElement('div');
+    div.style.cssText = 'display:flex;align-items:flex-start;gap:12px;padding:10px 16px;border-bottom:0.5px solid var(--border);cursor:pointer';
+    div.addEventListener('click', () => openModal(p._id));
+    const imgWrap = document.createElement('div');
+    if (p.f) {
+      const imgEl = document.createElement('img');
+      imgEl.src = p.f;
+      imgEl.style.cssText = 'width:52px;height:52px;object-fit:cover;border-radius:10px;flex-shrink:0;border:2px solid #0f6b52';
+      imgEl.addEventListener('error', function(){ this.style.display='none'; });
+      imgWrap.appendChild(imgEl);
+    } else {
+      imgWrap.innerHTML = '<div style="width:52px;height:52px;border-radius:10px;background:#e8f5f1;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#0f6b52;flex-shrink:0;border:2px solid #0f6b52">'+ab+'</div>';
+    }
+    const info = document.createElement('div');
+    info.style.cssText = 'flex:1;min-width:0';
+    info.innerHTML = '<div style="font-size:9px;color:#0f6b52;font-weight:600;letter-spacing:0.5px;margin-bottom:2px">' + (p.m||'') + '</div>' +
+      '<div style="font-size:12px;font-weight:600;color:var(--text);line-height:1.3;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + p.n + '</div>' +
+      '<div style="font-size:11px;color:#c4a898">' + (p.vs||[]).map(v=>v.charAt(0)+v.slice(1).toLowerCase()).join(', ') + '</div>';
+    const btn = document.createElement('button');
+    btn.style.cssText = 'background:#e8f5f1;border:0.5px solid #0f6b52;border-radius:8px;color:#0f6b52;font-size:10px;font-weight:600;padding:5px 10px;cursor:pointer;flex-shrink:0';
+    btn.textContent = 'Remover';
+    btn.addEventListener('click', e => { e.stopPropagation(); PRODUTOS[p._id].est_eua = false; fbSave(p._id); renderEua(); updateEstEuaBadge(); renderGrid(); });
+    div.appendChild(imgWrap); div.appendChild(info); div.appendChild(btn);
+    list.appendChild(div);
+  });
+}
+
+function exportarEuaPDF() {
+  const prods = PRODUTOS.filter(p => p.est_eua).sort((a,b)=>(parseFloat(b.vt||b.v)||0)-(parseFloat(a.vt||a.v)||0));
+  if (!prods.length) { alert('Nenhum item Est EUA para exportar.'); return; }
+  const fmt = v => 'R$ ' + parseFloat(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const now = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  const rows = prods.map((p,i) => `<tr><td style="text-align:center;color:#888">${i+1}</td><td><strong>${p.n}</strong><br><span style="font-size:11px;color:#888">${p.m||'—'}</span></td><td>${fmt(p.vt||p.v)}</td><td>${p.qty||p.q} un</td><td>${(p.vs||[]).map(v=>v.charAt(0)+v.slice(1).toLowerCase()).join(', ')||'—'}</td></tr>`).join('');
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Est EUA — Bazaar</title><style>body{font-family:Arial,sans-serif;font-size:13px;padding:24px}h1{color:#0f6b52;font-size:18px;margin:0 0 4px}.sub{color:#888;font-size:12px;margin-bottom:20px}table{width:100%;border-collapse:collapse}th{background:#0f6b52;color:#fff;padding:8px 10px;text-align:left;font-size:12px}td{padding:8px 10px;border-bottom:0.5px solid #eee}tr:nth-child(even) td{background:#f0faf6}.footer{margin-top:16px;font-size:11px;color:#888;text-align:right}@media print{body{padding:0}}</style></head><body>
+  <h1>🇺🇸 Estoque EUA — Bazaar</h1><div class="sub">Gerado em ${now} · ${prods.length} item(s)</div>
+  <table><thead><tr><th>#</th><th>Produto</th><th>Valor</th><th>Qtd</th><th>Vendedora</th></tr></thead><tbody>${rows}</tbody></table>
+  <div class="footer">Bazaar Faltantes · ${now}</div><script>window.onload=()=>{window.print();}<\/script></body></html>`;
+  const blob = new Blob([html], {type:'text/html'});
+  window.open(URL.createObjectURL(blob), '_blank');
+}
+
+function exportarEuaWhatsApp() {
+  const prods = PRODUTOS.filter(p => p.est_eua).sort((a,b)=>(parseFloat(b.vt||b.v)||0)-(parseFloat(a.vt||a.v)||0));
+  if (!prods.length) { alert('Nenhum item Est EUA para exportar.'); return; }
+  const fmt = v => 'R$ ' + parseFloat(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const nl = String.fromCharCode(10);
+  let lines = ['🇺🇸 *ESTOQUE EUA — BAZAAR*', ''];
+  prods.forEach((p,i) => {
+    lines.push(`*${i+1}. ${p.n}*`);
+    if (p.m) lines.push(`Marca: ${p.m}`);
+    lines.push(`Valor: ${fmt(p.vt||p.v)}`);
+    lines.push(`Qtd: ${p.qty||p.q} un`);
+    if ((p.vs||[]).length) lines.push(`Vend: ${p.vs.map(v=>v.charAt(0)+v.slice(1).toLowerCase()).join(', ')}`);
+    lines.push('');
+  });
+  lines.push(`Total: ${prods.length} item(s)`);
+  window.open('https://wa.me/?text=' + encodeURIComponent(lines.join(nl)), '_blank');
 }
 
 function renderCompra() {
@@ -2265,8 +2401,10 @@ function fbRenderDebounced() {
     updateChatBadge();
     updateNokBadge();
     updateEmCompraBadge();
+    updateEstEuaBadge();
     if (document.getElementById('page-nok')?.classList.contains('active')) renderNok();
     if (document.getElementById('page-compra')?.classList.contains('active')) renderCompra();
+    if (document.getElementById('page-eua')?.classList.contains('active')) renderEua();
   }, 300);
 }
 
@@ -2300,7 +2438,7 @@ function fbSave(id) {
   const dot = document.querySelector('.sync-dot');
   if (dot) { dot.style.background = '#f59e0b'; dot.title = 'Salvando…'; }
   window._db.collection('faltantes').doc(String(id)).set({
-    nok: p.nok, nokWho: p.nokWho||'', nokHistory: p.nokHistory||[], nokTams: p.nokTams||{}, comments: p.comments||[], qty: p.qty||p.q, em_compra: p.em_compra||false, compraHistory: p.compraHistory||[], updatedAt: new Date().toISOString()
+    nok: p.nok, nokWho: p.nokWho||'', nokHistory: p.nokHistory||[], nokTams: p.nokTams||{}, comments: p.comments||[], qty: p.qty||p.q, em_compra: p.em_compra||false, compraHistory: p.compraHistory||[], est_eua: p.est_eua||false, updatedAt: new Date().toISOString()
   }).then(() => {
     _pendingSaves.delete(id);
     if (dot) { dot.style.background = '#7a0b1e'; dot.title = 'Sincronizado'; }
@@ -2323,7 +2461,7 @@ function fbListen() {
         const raw = [];
         snap.forEach(doc => { raw.push({...doc.data(), _id: parseInt(doc.id)}); });
         raw.sort((a,b) => a._id - b._id);
-        PRODUTOS = raw.map(p => ({...p, nok:false, em_compra:false, comments:[], qty:p.q}));
+        PRODUTOS = raw.map(p => ({...p, nok:false, em_compra:false, est_eua:false, comments:[], qty:p.q}));
         renderGrid();
         reconstruirCatChips();
         updateNokBadge();
@@ -2366,6 +2504,7 @@ function _fbListenCore() {
         PRODUTOS[id].comments = data.comments || [];
         PRODUTOS[id].em_compra = data.em_compra || false;
         PRODUTOS[id].compraHistory = data.compraHistory || [];
+        PRODUTOS[id].est_eua = data.est_eua || false;
         if (data.qty !== undefined) PRODUTOS[id].qty = data.qty;
         if ((data.comments||[]).length > prevLen) notificarSeNovo(id, prevLen);
         // Notificar mudança de NOK
