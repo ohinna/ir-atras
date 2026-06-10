@@ -77,8 +77,10 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
 .btn-compra.ativo{background:rgba(245,158,11,1)}
 .btn-eua{position:absolute;top:6px;right:6px;width:22px;height:22px;border-radius:50%;background:rgba(15,107,82,0.85);border:none;color:#fff;font-size:9px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .btn-eua.ativo{background:rgba(15,107,82,1)}
+.btn-br{position:absolute;top:32px;right:6px;width:22px;height:22px;border-radius:50%;background:rgba(120,72,30,0.85);border:none;color:#fff;font-size:9px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.btn-br.ativo{background:rgba(120,72,30,1)}
 .btn-comment{position:absolute;top:6px;left:6px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,0.25);border:none;color:#fff;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center}
-.card-body{padding:8px 10px 10px;display:flex;flex-direction:column;flex:1}
+.card-body{padding:8px 10px 10px;display:flex;flex-direction:column;flex:1;min-height:120px}
 .card-brand{font-size:9px;color:var(--red);font-weight:600;letter-spacing:0.8px;margin-bottom:2px;text-transform:uppercase}
 .card-name{font-size:11px;font-weight:500;color:var(--text);line-height:1.35;margin-bottom:6px;cursor:pointer;flex:1}
 .card-name:hover{color:#7a0b1e}
@@ -150,6 +152,11 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
 .eua-overlay .eua-bg{position:absolute;inset:0;background:linear-gradient(to top,rgba(15,107,82,0.75) 0%,rgba(15,107,82,0.35) 60%,rgba(15,107,82,0.15) 100%)}
 .eua-overlay .eua-content{position:relative;z-index:1;text-align:center}
 .eua-label{color:#fff;font-size:11px;font-weight:700;letter-spacing:1px}
+.br-overlay{position:absolute;inset:0;display:none;align-items:center;justify-content:center;border-radius:0}
+.br-overlay.show{display:flex;animation:nokPop 0.25s ease}
+.br-overlay .br-bg{position:absolute;inset:0;background:linear-gradient(to top,rgba(120,72,30,0.75) 0%,rgba(120,72,30,0.35) 60%,rgba(120,72,30,0.15) 100%)}
+.br-overlay .br-content{position:relative;z-index:1;text-align:center}
+.br-label{color:#fff;font-size:11px;font-weight:700;letter-spacing:1px}
 /* Edit name inline */
 .name-edit-row{display:flex;gap:6px;margin-bottom:6px}
 .name-edit-input{flex:1;border:0.5px solid #f5c4c4;border-radius:8px;padding:5px 8px;font-size:11px;font-family:inherit;outline:none;background:#fdf2f3}
@@ -431,8 +438,8 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
   </button>
   <button class="tab-btn" id="tab-eua" onclick="goTab('eua')" style="position:relative">
     <span class="tab-badge" id="eua-badge" style="background:#0f6b52">0</span>
-    <span class="tab-icon">🇺🇸</span>
-    <span class="tab-label">Est EUA</span>
+    <span class="tab-icon">🌎</span>
+    <span class="tab-label">Estoques</span>
   </button>
   <button class="tab-btn" id="tab-nok" onclick="goTab('nok')" style="position:relative">
     <span class="tab-badge" id="nok-badge" style="background:#7a0b1e">0</span>
@@ -513,16 +520,21 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
   <div class="chat-header">
     <div style="display:flex;align-items:center;justify-content:space-between;width:100%">
       <div>
-        <div class="chat-title">🇺🇸 Est EUA</div>
-        <div class="chat-sub" id="eua-sub">Itens no estoque EUA</div>
+        <div class="chat-title">🌎 Estoques</div>
+        <div class="chat-sub" id="eua-sub">EUA e BR</div>
       </div>
       <div style="display:flex;gap:8px">
-        <button onclick="exportarEuaPDF()" style="background:#0f6b52;border:none;border-radius:12px;padding:8px 14px;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;flex-shrink:0">↓ PDF</button>
-        <button onclick="exportarEuaWhatsApp()" style="background:#25d366;border:none;border-radius:12px;padding:8px 14px;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;flex-shrink:0">WhatsApp</button>
+        <button onclick="exportarEstoquesPDF()" style="background:#555;border:none;border-radius:12px;padding:8px 14px;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;flex-shrink:0">↓ PDF</button>
+        <button onclick="exportarEstoquesWhatsApp()" style="background:#25d366;border:none;border-radius:12px;padding:8px 14px;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;flex-shrink:0">WhatsApp</button>
       </div>
     </div>
   </div>
-  <div style="padding:12px 0" id="eua-list"></div>
+  <div style="padding:12px 0">
+    <div style="padding:8px 16px 4px;font-size:11px;font-weight:700;color:#0f6b52;letter-spacing:0.5px;display:flex;align-items:center;gap:6px">🇺🇸 Estoque EUA <span id="eua-count" style="background:#e8f5f1;border-radius:8px;padding:1px 8px;font-size:10px">0</span></div>
+    <div id="eua-list"></div>
+    <div style="padding:12px 16px 4px;font-size:11px;font-weight:700;color:#783c18;letter-spacing:0.5px;display:flex;align-items:center;gap:6px;border-top:0.5px solid var(--border);margin-top:4px">🇧🇷 Estoque BR <span id="br-count" style="background:#f5ede8;border-radius:8px;padding:1px 8px;font-size:10px">0</span></div>
+    <div id="br-list"></div>
+  </div>
 </div>
 
 <!-- MODAL FOTO CHEIA -->
@@ -584,12 +596,19 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
       <input class="comment-input" id="comment-input" placeholder="Escrever comentário..." type="text" onkeydown="if(event.key==='Enter')sendComment()">
       <button class="comment-send" onclick="sendComment()">➤</button>
     </div>
-    <div style="display:flex;gap:8px;margin-top:16px">
-      <button class="btn-secondary" onclick="toggleNok()" style="flex:1">✕ NOK</button>
-      <button id="btn-em-compra" onclick="toggleEmCompra()" style="flex:1;padding:12px;border-radius:12px;background:#f59e0b;border:none;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🛒 Em compra</button>
-      <button id="btn-est-eua" onclick="toggleEstEua()" style="flex:1;padding:12px;border-radius:12px;background:#0f6b52;border:none;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🇺🇸 Est EUA</button>
-      <button onclick="compartilharWhatsApp()" style="flex:1;padding:12px;border-radius:12px;background:#25d366;border:none;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">WhatsApp</button>
-      <button onclick="baixarPdfProduto()" style="flex:1;padding:12px;border-radius:12px;background:var(--red);border:none;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">↓ PDF</button>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-top:16px">
+      <div style="display:flex;gap:8px">
+        <button class="btn-secondary" onclick="toggleNok()" style="flex:1;padding:12px">✕ NOK</button>
+        <button id="btn-em-compra" onclick="toggleEmCompra()" style="flex:1;padding:12px;border-radius:12px;background:#f59e0b;border:none;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🛒 Em compra</button>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button id="btn-est-eua" onclick="toggleEstEua()" style="flex:1;padding:12px;border-radius:12px;background:#0f6b52;border:none;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🇺🇸 Est EUA</button>
+        <button id="btn-est-br" onclick="toggleEstBr()" style="flex:1;padding:12px;border-radius:12px;background:#783c18;border:none;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🇧🇷 Est BR</button>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button onclick="compartilharWhatsApp()" style="flex:1;padding:12px;border-radius:12px;background:#25d366;border:none;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">📲 WhatsApp</button>
+        <button onclick="baixarPdfProduto()" style="flex:1;padding:12px;border-radius:12px;background:var(--red);border:none;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">↓ PDF</button>
+      </div>
     </div>
     <button class="btn-primary" onclick="closeModalBtn()" style="width:100%;margin-top:8px">Fechar</button>
   </div>
@@ -613,6 +632,53 @@ window._db = typeof firebase !== 'undefined' ? firebase.firestore() : null;
 const RAW_DATA = [];
 
 let PRODUTOS = RAW_DATA.map((p,i) => ({...p, _id:i, nok:false, em_compra:false, comments:[], qty: p.q}));
+// Restaurar filtros salvos
+function salvarFiltros() {
+  localStorage.setItem('filtros', JSON.stringify({
+    vends: [...fVends], marcas: [...fMarcas], cat: fCat, sortMode: _sortMode, sortDir: _sortDir
+  }));
+}
+
+function restaurarFiltros() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('filtros'));
+    if (!saved) return;
+    if (saved.vends) fVends = new Set(saved.vends);
+    if (saved.marcas) fMarcas = new Set(saved.marcas);
+    if (saved.cat) fCat = saved.cat;
+    if (saved.sortMode) _sortMode = saved.sortMode;
+    if (saved.sortDir) _sortDir = saved.sortDir;
+    // Atualizar chips de vendedora
+    document.querySelectorAll('#vend-row .chip').forEach(c => c.classList.remove('active'));
+    if (fVends.has('TODAS')) {
+      document.getElementById('chip-todas')?.classList.add('active');
+    } else {
+      fVends.forEach(v => {
+        document.querySelectorAll('#vend-row .chip').forEach(c => {
+          if (c.textContent.trim().toUpperCase() === v) c.classList.add('active');
+        });
+      });
+    }
+    // Atualizar chips de marca
+    document.querySelectorAll('#marca-row .chip').forEach(c => c.classList.remove('active'));
+    if (fMarcas.size === 0) {
+      document.getElementById('chip-all-marca')?.classList.add('active');
+    } else {
+      fMarcas.forEach(m => {
+        document.querySelectorAll('#marca-row .chip').forEach(c => {
+          if (c.textContent.trim() === m) c.classList.add('active');
+        });
+      });
+    }
+    // Atualizar chip de sort
+    const sortMap = {'marca-asc':'sort-marca','valor-asc':'sort-valor-asc','valor-desc':'sort-valor-desc','qty-asc':'sort-qty-asc','qty-desc':'sort-qty-desc'};
+    const sortKey = _sortMode + '-' + _sortDir;
+    document.querySelectorAll('#sort-row .chip').forEach(c => c.classList.remove('active'));
+    const sortChip = document.getElementById(sortMap[sortKey] || 'sort-marca');
+    if (sortChip) sortChip.classList.add('active');
+  } catch(e) {}
+}
+
 let fVends = new Set(['TODAS']), fMarcas = new Set(), fCat = '', fSearch = '';
 let modalId = null;
 const SEEN = new Set();
@@ -621,6 +687,15 @@ let fbUnsub = null;
 // ── Inactivity detector ──────────────────────────
 let _idleTimer = null;
 const IDLE_TIMEOUT = 5 * 60 * 1000; // 5 minutos
+
+// ── Usuário logado ──────────────────────────
+let _usuarioLogado = null;
+
+function getNomeUsuario() {
+  if (_usuarioLogado && _usuarioLogado.displayName) return _usuarioLogado.displayName;
+  if (_usuarioLogado && _usuarioLogado.email) return _usuarioLogado.email.split('@')[0];
+  return getNomeUsuario();
+}
 
 function resetIdleTimer() {
   if (_idleTimer) clearTimeout(_idleTimer);
@@ -656,7 +731,7 @@ function editarSubtitulo() {
     // Sync to Firebase with history
     if (window._db) {
       const now = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
-      const who = localStorage.getItem('chat_nome') || 'Anônimo';
+      const who = getNomeUsuario();
       window._db.collection('config').doc('app').set({subtitulo: val}, {merge: true});
       window._db.collection('config').doc('versoes').get().then(doc => {
         const hist = doc.exists ? (doc.data().lista || []) : [];
@@ -793,6 +868,7 @@ function setSort(mode, btn) {
   _sortDir  = mode.endsWith('desc') ? 'desc' : 'asc';
   document.querySelectorAll('#sort-row .chip').forEach(c => c.classList.remove('active'));
   btn.classList.add('active');
+  salvarFiltros();
   renderGrid();
 }
 function toggleGrid() {
@@ -914,9 +990,11 @@ function renderGrid() {
         ${p.nok ? '<div class="nok-overlay show"><div class="nok-bg"></div><div class="nok-content"><div class="nok-label">✕ NOK</div>' + (p.nokWho ? '<div style="font-size:9px;color:rgba(255,255,255,0.75);margin-top:2px">'+p.nokWho+'</div>' : '') + '</div></div>' : ''}
         ${p.em_compra ? '<div class="compra-overlay show"><div class="compra-bg"></div><div class="compra-content"><div class="compra-label">🛒 Em compra</div></div></div>' : ''}
         ${p.est_eua ? '<div class="eua-overlay show"><div class="eua-bg"></div><div class="eua-content"><div class="eua-label">🇺🇸 Est EUA</div></div></div>' : ''}
+        ${p.est_br ? '<div class="br-overlay show"><div class="br-bg"></div><div class="br-content"><div class="br-label">🇧🇷 Est BR</div></div></div>' : ''}
         <button class="btn-nok" onclick="event.stopPropagation();confirmNok(${p._id})">✕</button>
         <button class="btn-compra ${p.em_compra?'ativo':''}" onclick="event.stopPropagation();toggleEmCompraCard(${p._id})">🛒</button>
         <button class="btn-eua ${p.est_eua?'ativo':''}" onclick="event.stopPropagation();toggleEstEuaCard(${p._id})">🇺🇸</button>
+        <button class="btn-br ${p.est_br?'ativo':''}" onclick="event.stopPropagation();toggleEstBrCard(${p._id})">🇧🇷</button>
         ${unread>0 ? '<div style="position:absolute;top:6px;left:6px;background:rgba(122,11,30,0.85);border-radius:10px;padding:1px 6px;font-size:9px;font-weight:700;color:#fff">'+unread+'</div>' : ''}
       </div>
       <div class="card-body" onclick="openModal(${p._id})">
@@ -982,11 +1060,11 @@ function enviarComentarioRapido(id) {
   p.comments = p.comments || [];
   p.comments.push({
     text: txt,
-    who: localStorage.getItem('chat_nome') || 'Anônimo',
+    who: getNomeUsuario(),
     time: new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})
   });
   fbSave(id);
-  registrarAtividade('comentario', id, localStorage.getItem('chat_nome')||'Anônimo', new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}));
+  registrarAtividade('comentario', id, getNomeUsuario(), new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}));
   input.value = '';
   renderGrid();
   updateChatBadge();
@@ -996,15 +1074,15 @@ function confirmNok(id) {
   const p = PRODUTOS[id];
   if (!p) return;
   p.nok = !p.nok;
-  p.nokWho = p.nok ? (localStorage.getItem('chat_nome') || 'Anônimo') : '';
+  p.nokWho = p.nok ? (getNomeUsuario()) : '';
   if (p.nok) {
     p.nokHistory = p.nokHistory || [];
     p.nokHistory.push({
-      who: localStorage.getItem('chat_nome') || 'Anônimo',
+      who: getNomeUsuario(),
       time: new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})
     });
   }
-  const _quem = localStorage.getItem('chat_nome')||'Anônimo';
+  const _quem = getNomeUsuario();
   const _t = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
   registrarAtividade(p.nok ? 'nok_on' : 'nok_off', id, _quem, _t);
   fbSave(id);
@@ -1038,6 +1116,7 @@ function setVend(v, btn) {
     else { fVends.add(v); btn.classList.add('active'); }
     if (fVends.size === 0) { fVends.add('TODAS'); document.getElementById('chip-todas').classList.add('active'); }
   }
+  salvarFiltros();
   renderGrid();
 }
 
@@ -1069,6 +1148,7 @@ function setMarca(m, btn) {
     if (fMarcas.size === 0) document.getElementById('chip-all-marca').classList.add('active');
     resetCat();
   }
+  salvarFiltros();
   renderGrid();
 }
 
@@ -1342,6 +1422,11 @@ function openModal(id, focusComment=false) {
   if (btnEua) {
     btnEua.style.background = p.est_eua ? '#0a6648' : '#0f6b52';
     btnEua.textContent = p.est_eua ? '🇺🇸 Est EUA ✓' : '🇺🇸 Est EUA';
+  }
+  const btnBr = document.getElementById('btn-est-br');
+  if (btnBr) {
+    btnBr.style.background = p.est_br ? '#7a4615' : '#783c18';
+    btnBr.textContent = p.est_br ? '🇧🇷 Est BR ✓' : '🇧🇷 Est BR';
   }
   // Show compra history
   let compraHistEl = document.getElementById('compra-hist-modal');
@@ -1668,7 +1753,7 @@ function exportarRelatorioSemanalpDF() {
 function limparTodosNok() {
   const noks = PRODUTOS.filter(p => p.nok || (p.nokTams && Object.keys(p.nokTams).some(t=>p.nokTams[t])));
   if (!noks.length) { alert('Nenhum item NOK para limpar.'); return; }
-  const quem = localStorage.getItem('chat_nome') || 'Anônimo';
+  const quem = getNomeUsuario();
   document.getElementById('nok-clear-count').textContent = noks.length;
   document.getElementById('nok-clear-who').textContent = quem;
   document.getElementById('modal-clear-nok').style.display = 'flex';
@@ -1676,7 +1761,7 @@ function limparTodosNok() {
 
 function confirmarLimparNok() {
   document.getElementById('modal-clear-nok').style.display = 'none';
-  const quem = localStorage.getItem('chat_nome') || 'Anônimo';
+  const quem = getNomeUsuario();
   const agora = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
   PRODUTOS.forEach(p => {
     if (p.nok || (p.nokTams && Object.keys(p.nokTams).some(t=>p.nokTams[t]))) {
@@ -1920,7 +2005,7 @@ function toggleTamNok(prodId, tam) {
   const allNok = Object.keys(p.tams||{}).every(t => p.nokTams[t]);
   if (allNok && Object.keys(p.tams||{}).length > 0) {
     p.nok = true;
-    p.nokWho = localStorage.getItem('chat_nome') || 'Anônimo';
+    p.nokWho = getNomeUsuario();
   }
   fbSave(prodId);
   // Re-render tams inline
@@ -1931,7 +2016,7 @@ function toggleEstEuaCard(id) {
   const p = PRODUTOS[id];
   if (!p) return;
   p.est_eua = !p.est_eua;
-  registrarAtividade(p.est_eua ? 'eua_on' : 'eua_off', id, localStorage.getItem('chat_nome')||'Anônimo', new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}));
+  registrarAtividade(p.est_eua ? 'eua_on' : 'eua_off', id, getNomeUsuario(), new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}));
   fbSave(id);
   renderGrid();
   updateEstEuaBadge();
@@ -1943,14 +2028,41 @@ function toggleEstEua() {
   p.est_eua = !p.est_eua;
   const btn = document.getElementById('btn-est-eua');
   if (btn) { btn.style.background = p.est_eua ? '#0a6648' : '#0f6b52'; btn.textContent = p.est_eua ? '🇺🇸 Est EUA ✓' : '🇺🇸 Est EUA'; }
-  registrarAtividade(p.est_eua ? 'eua_on' : 'eua_off', modalId, localStorage.getItem('chat_nome')||'Anônimo', new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}));
+  registrarAtividade(p.est_eua ? 'eua_on' : 'eua_off', modalId, getNomeUsuario(), new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}));
   fbSave(modalId);
   renderGrid();
 }
 
 function updateEstEuaBadge() {
-  const count = PRODUTOS.filter(p => p.est_eua).length;
+  const count = PRODUTOS.filter(p => p.est_eua).length + PRODUTOS.filter(p => p.est_br).length;
   const badge = document.getElementById('eua-badge');
+  if (badge) { badge.textContent = count; badge.style.display = count > 0 ? 'flex' : 'none'; }
+}
+
+function toggleEstBrCard(id) {
+  const p = PRODUTOS[id];
+  if (!p) return;
+  p.est_br = !p.est_br;
+  registrarAtividade(p.est_br ? 'br_on' : 'br_off', id, getNomeUsuario(), new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}));
+  fbSave(id);
+  renderGrid();
+  updateEstBrBadge();
+}
+
+function toggleEstBr() {
+  if (modalId === null) return;
+  const p = PRODUTOS[modalId];
+  p.est_br = !p.est_br;
+  const btn = document.getElementById('btn-est-br');
+  if (btn) { btn.style.background = p.est_br ? '#7a4615' : '#783c18'; btn.textContent = p.est_br ? '🇧🇷 Est BR ✓' : '🇧🇷 Est BR'; }
+  registrarAtividade(p.est_br ? 'br_on' : 'br_off', modalId, getNomeUsuario(), new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}));
+  fbSave(modalId);
+  renderGrid();
+}
+
+function updateEstBrBadge() {
+  const count = PRODUTOS.filter(p => p.est_br).length;
+  const badge = document.getElementById('br-badge');
   if (badge) { badge.textContent = count; badge.style.display = count > 0 ? 'flex' : 'none'; }
 }
 
@@ -1962,10 +2074,10 @@ function toggleEmCompraCard(id) {
   p.compraHistory = p.compraHistory || [];
   p.compraHistory.push({
     action: p.em_compra ? 'marcou' : 'removeu',
-    who: localStorage.getItem('chat_nome') || 'Anônimo',
+    who: getNomeUsuario(),
     time: new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})
   });
-  const _quemC = localStorage.getItem('chat_nome')||'Anônimo';
+  const _quemC = getNomeUsuario();
   const _tC = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
   registrarAtividade(p.em_compra ? 'compra_on' : 'compra_off', id, _quemC, _tC);
   fbSave(id);
@@ -1989,11 +2101,11 @@ function toggleEmCompra() {
 function toggleNok() {
   const p = PRODUTOS[modalId];
   p.nok = !p.nok;
-  p.nokWho = p.nok ? (localStorage.getItem('chat_nome') || 'Anônimo') : '';
+  p.nokWho = p.nok ? (getNomeUsuario()) : '';
   if (p.nok) {
     p.nokHistory = p.nokHistory || [];
     p.nokHistory.push({
-      who: localStorage.getItem('chat_nome') || 'Anônimo',
+      who: getNomeUsuario(),
       time: new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})
     });
   }
@@ -2037,7 +2149,7 @@ function pedirPermissaoNotificacao() {
 
 function notificarComentario(produto, quem, texto) {
   if (!('Notification' in window) || Notification.permission !== 'granted') return;
-  const meuNome = localStorage.getItem('chat_nome') || '';
+  const meuNome = getNomeUsuario();
   if (quem === meuNome) return; // não notifica a si mesmo
   new Notification('💬 ' + quem, {
     body: produto.substring(0,40) + ': ' + texto.substring(0,60),
@@ -2048,7 +2160,7 @@ function notificarComentario(produto, quem, texto) {
 
 // Pede permissão quando firebase listener detecta novo comentário de outro usuário
 function mostrarNotificacao(titulo, texto, cor) {
-  const meuNome = localStorage.getItem('chat_nome') || '';
+  const meuNome = getNomeUsuario();
   if (meuNome && texto.startsWith(meuNome)) return;
   const toast = document.createElement('div');
   toast.style.cssText = `position:fixed;top:60px;left:50%;transform:translateX(-50%);z-index:9999;background:${cor||'#1a1a1a'};color:#fff;border-radius:14px;padding:10px 18px;font-size:12px;font-weight:600;pointer-events:none;box-shadow:0 4px 20px rgba(0,0,0,0.2);max-width:85vw;text-align:center;line-height:1.4`;
@@ -2060,7 +2172,7 @@ function mostrarNotificacao(titulo, texto, cor) {
 function notificarSeNovo(prodId, prevLen) {
   const p = PRODUTOS[prodId];
   if (!p || !p.comments) return;
-  const meuNome = localStorage.getItem('chat_nome') || '';
+  const meuNome = getNomeUsuario();
   const novos = p.comments.slice(prevLen);
   novos.forEach(c => {
     if (c.who !== meuNome) notificarComentario(p.n, c.who, c.text||c.msg||'');
@@ -2083,11 +2195,7 @@ function sendComment() {
   const text = inp.value.trim();
   if (!text) return;
   const p = PRODUTOS[modalId];
-  const who = localStorage.getItem('chat_nome') || (() => {
-    const n = prompt('Seu nome:');
-    if (n) localStorage.setItem('chat_nome', n);
-    return n || 'Anônimo';
-  })();
+  const who = getNomeUsuario();
   const time = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
   p.comments = p.comments || [];
   p.comments.push({who, text, time});
@@ -2108,70 +2216,81 @@ function updateEmCompraBadge() {
 }
 
 function renderEua() {
-  const list = document.getElementById('eua-list');
-  const prods = PRODUTOS.filter(p => p.est_eua);
-  prods.sort((a,b) => (parseFloat(b.vt||b.v)||0) - (parseFloat(a.vt||a.v)||0));
-  document.getElementById('eua-sub').textContent = prods.length + ' item(s) no estoque EUA';
-  if (!prods.length) { list.innerHTML = '<div style="text-align:center;padding:60px 20px;color:#c4a898;font-size:13px">Nenhum item marcado como Est EUA</div>'; return; }
-  list.innerHTML = '';
-  prods.forEach(p => {
-    const ab = abbrev(p.n, p.m);
-    const div = document.createElement('div');
-    div.style.cssText = 'display:flex;align-items:flex-start;gap:12px;padding:10px 16px;border-bottom:0.5px solid var(--border);cursor:pointer';
-    div.addEventListener('click', () => openModal(p._id));
-    const imgWrap = document.createElement('div');
-    if (p.f) {
-      const imgEl = document.createElement('img');
-      imgEl.src = p.f;
-      imgEl.style.cssText = 'width:52px;height:52px;object-fit:cover;border-radius:10px;flex-shrink:0;border:2px solid #0f6b52';
-      imgEl.addEventListener('error', function(){ this.style.display='none'; });
-      imgWrap.appendChild(imgEl);
-    } else {
-      imgWrap.innerHTML = '<div style="width:52px;height:52px;border-radius:10px;background:#e8f5f1;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#0f6b52;flex-shrink:0;border:2px solid #0f6b52">'+ab+'</div>';
-    }
-    const info = document.createElement('div');
-    info.style.cssText = 'flex:1;min-width:0';
-    info.innerHTML = '<div style="font-size:9px;color:#0f6b52;font-weight:600;letter-spacing:0.5px;margin-bottom:2px">' + (p.m||'') + '</div>' +
-      '<div style="font-size:12px;font-weight:600;color:var(--text);line-height:1.3;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + p.n + '</div>' +
-      '<div style="font-size:11px;color:#c4a898">' + (p.vs||[]).map(v=>v.charAt(0)+v.slice(1).toLowerCase()).join(', ') + '</div>';
-    const btn = document.createElement('button');
-    btn.style.cssText = 'background:#e8f5f1;border:0.5px solid #0f6b52;border-radius:8px;color:#0f6b52;font-size:10px;font-weight:600;padding:5px 10px;cursor:pointer;flex-shrink:0';
-    btn.textContent = 'Remover';
-    btn.addEventListener('click', e => { e.stopPropagation(); PRODUTOS[p._id].est_eua = false; fbSave(p._id); renderEua(); updateEstEuaBadge(); renderGrid(); });
-    div.appendChild(imgWrap); div.appendChild(info); div.appendChild(btn);
-    list.appendChild(div);
-  });
+  const euaProds = PRODUTOS.filter(p => p.est_eua).sort((a,b)=>(parseFloat(b.vt||b.v)||0)-(parseFloat(a.vt||a.v)||0));
+  const brProds  = PRODUTOS.filter(p => p.est_br).sort((a,b)=>(parseFloat(b.vt||b.v)||0)-(parseFloat(a.vt||a.v)||0));
+  document.getElementById('eua-sub').textContent = euaProds.length + ' EUA · ' + brProds.length + ' BR';
+  const euaCount = document.getElementById('eua-count'); if (euaCount) euaCount.textContent = euaProds.length;
+  const brCount  = document.getElementById('br-count');  if (brCount)  brCount.textContent  = brProds.length;
+
+  function renderList(prods, listId, cor, flag, toggleFn) {
+    const list = document.getElementById(listId);
+    if (!list) return;
+    if (!prods.length) { list.innerHTML = '<div style="text-align:center;padding:20px;color:#c4a898;font-size:12px">Nenhum item</div>'; return; }
+    list.innerHTML = '';
+    prods.forEach(p => {
+      const ab = abbrev(p.n, p.m);
+      const div = document.createElement('div');
+      div.style.cssText = 'display:flex;align-items:flex-start;gap:12px;padding:10px 16px;border-bottom:0.5px solid var(--border);cursor:pointer';
+      div.addEventListener('click', () => openModal(p._id));
+      const imgWrap = document.createElement('div');
+      if (p.f) {
+        const imgEl = document.createElement('img');
+        imgEl.src = p.f;
+        imgEl.style.cssText = `width:52px;height:52px;object-fit:cover;border-radius:10px;flex-shrink:0;border:2px solid ${cor}`;
+        imgEl.addEventListener('error', function(){ this.style.display='none'; });
+        imgWrap.appendChild(imgEl);
+      } else {
+        imgWrap.innerHTML = `<div style="width:52px;height:52px;border-radius:10px;background:#f5f0ec;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:${cor};flex-shrink:0;border:2px solid ${cor}">${ab}</div>`;
+      }
+      const info = document.createElement('div');
+      info.style.cssText = 'flex:1;min-width:0';
+      info.innerHTML = `<div style="font-size:9px;color:${cor};font-weight:600;letter-spacing:0.5px;margin-bottom:2px">${p.m||''}</div>` +
+        `<div style="font-size:12px;font-weight:600;color:var(--text);line-height:1.3;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.n}</div>` +
+        `<div style="font-size:11px;color:#c4a898">${(p.vs||[]).map(v=>v.charAt(0)+v.slice(1).toLowerCase()).join(', ')}</div>`;
+      const btn = document.createElement('button');
+      btn.style.cssText = `background:#f5f0ec;border:0.5px solid ${cor};border-radius:8px;color:${cor};font-size:10px;font-weight:600;padding:5px 10px;cursor:pointer;flex-shrink:0`;
+      btn.textContent = 'Remover';
+      btn.addEventListener('click', e => { e.stopPropagation(); toggleFn(p._id); });
+      div.appendChild(imgWrap); div.appendChild(info); div.appendChild(btn);
+      list.appendChild(div);
+    });
+  }
+
+  renderList(euaProds, 'eua-list', '#0f6b52', '🇺🇸', id => { PRODUTOS[id].est_eua=false; fbSave(id); renderEua(); updateEstEuaBadge(); renderGrid(); });
+  renderList(brProds,  'br-list',  '#783c18', '🇧🇷', id => { PRODUTOS[id].est_br=false;  fbSave(id); renderEua(); updateEstBrBadge();  renderGrid(); });
 }
 
-function exportarEuaPDF() {
-  const prods = PRODUTOS.filter(p => p.est_eua).sort((a,b)=>(parseFloat(b.vt||b.v)||0)-(parseFloat(a.vt||a.v)||0));
-  if (!prods.length) { alert('Nenhum item Est EUA para exportar.'); return; }
+function exportarEstoquesPDF() {
+  const eua = PRODUTOS.filter(p=>p.est_eua).sort((a,b)=>(parseFloat(b.vt||b.v)||0)-(parseFloat(a.vt||a.v)||0));
+  const br  = PRODUTOS.filter(p=>p.est_br).sort((a,b)=>(parseFloat(b.vt||b.v)||0)-(parseFloat(a.vt||a.v)||0));
+  if (!eua.length && !br.length) { alert('Nenhum item nos estoques.'); return; }
   const fmt = v => 'R$ ' + parseFloat(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
   const now = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
-  const rows = prods.map((p,i) => `<tr><td style="text-align:center;color:#888">${i+1}</td><td><strong>${p.n}</strong><br><span style="font-size:11px;color:#888">${p.m||'—'}</span></td><td>${fmt(p.vt||p.v)}</td><td>${p.qty||p.q} un</td><td>${(p.vs||[]).map(v=>v.charAt(0)+v.slice(1).toLowerCase()).join(', ')||'—'}</td></tr>`).join('');
-  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Est EUA — Bazaar</title><style>body{font-family:Arial,sans-serif;font-size:13px;padding:24px}h1{color:#0f6b52;font-size:18px;margin:0 0 4px}.sub{color:#888;font-size:12px;margin-bottom:20px}table{width:100%;border-collapse:collapse}th{background:#0f6b52;color:#fff;padding:8px 10px;text-align:left;font-size:12px}td{padding:8px 10px;border-bottom:0.5px solid #eee}tr:nth-child(even) td{background:#f0faf6}.footer{margin-top:16px;font-size:11px;color:#888;text-align:right}@media print{body{padding:0}}</style></head><body>
-  <h1>🇺🇸 Estoque EUA — Bazaar</h1><div class="sub">Gerado em ${now} · ${prods.length} item(s)</div>
-  <table><thead><tr><th>#</th><th>Produto</th><th>Valor</th><th>Qtd</th><th>Vendedora</th></tr></thead><tbody>${rows}</tbody></table>
-  <div class="footer">Bazaar Faltantes · ${now}</div><script>window.onload=()=>{window.print();}<\/script></body></html>`;
+  const makeRows = (prods, cor) => prods.map((p,i)=>`<tr><td style="text-align:center;color:#888">${i+1}</td><td><strong>${p.n}</strong><br><span style="font-size:11px;color:#888">${p.m||'—'}</span></td><td>${fmt(p.vt||p.v)}</td><td>${p.qty||p.q} un</td><td>${(p.vs||[]).map(v=>v.charAt(0)+v.slice(1).toLowerCase()).join(', ')||'—'}</td></tr>`).join('');
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Estoques — Bazaar</title><style>body{font-family:Arial,sans-serif;font-size:13px;padding:24px}h1{font-size:18px;margin:0 0 4px}h2{font-size:14px;margin:20px 0 8px;padding-bottom:4px;border-bottom:2px solid currentColor}.sub{color:#888;font-size:12px;margin-bottom:20px}table{width:100%;border-collapse:collapse;margin-bottom:8px}th{padding:8px 10px;text-align:left;font-size:12px;color:#fff}td{padding:8px 10px;border-bottom:0.5px solid #eee}@media print{body{padding:0}}</style></head><body>
+  <h1>🌎 Estoques — Bazaar</h1><div class="sub">Gerado em ${now}</div>
+  ${eua.length?`<h2 style="color:#0f6b52">🇺🇸 Estoque EUA — ${eua.length} item(s)</h2><table><thead><tr style="background:#0f6b52"><th>#</th><th>Produto</th><th>Valor</th><th>Qtd</th><th>Vendedora</th></tr></thead><tbody>${makeRows(eua,'#0f6b52')}</tbody></table>`:''}
+  ${br.length?`<h2 style="color:#783c18">🇧🇷 Estoque BR — ${br.length} item(s)</h2><table><thead><tr style="background:#783c18"><th>#</th><th>Produto</th><th>Valor</th><th>Qtd</th><th>Vendedora</th></tr></thead><tbody>${makeRows(br,'#783c18')}</tbody></table>`:''}
+  <script>window.onload=()=>{window.print();}<\/script></body></html>`;
   const blob = new Blob([html], {type:'text/html'});
   window.open(URL.createObjectURL(blob), '_blank');
 }
 
-function exportarEuaWhatsApp() {
-  const prods = PRODUTOS.filter(p => p.est_eua).sort((a,b)=>(parseFloat(b.vt||b.v)||0)-(parseFloat(a.vt||a.v)||0));
-  if (!prods.length) { alert('Nenhum item Est EUA para exportar.'); return; }
+function exportarEstoquesWhatsApp() {
+  const eua = PRODUTOS.filter(p=>p.est_eua).sort((a,b)=>(parseFloat(b.vt||b.v)||0)-(parseFloat(a.vt||a.v)||0));
+  const br  = PRODUTOS.filter(p=>p.est_br).sort((a,b)=>(parseFloat(b.vt||b.v)||0)-(parseFloat(a.vt||a.v)||0));
+  if (!eua.length && !br.length) { alert('Nenhum item nos estoques.'); return; }
   const fmt = v => 'R$ ' + parseFloat(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
   const nl = String.fromCharCode(10);
-  let lines = ['🇺🇸 *ESTOQUE EUA — BAZAAR*', ''];
-  prods.forEach((p,i) => {
-    lines.push(`*${i+1}. ${p.n}*`);
-    if (p.m) lines.push(`Marca: ${p.m}`);
-    lines.push(`Valor: ${fmt(p.vt||p.v)}`);
-    lines.push(`Qtd: ${p.qty||p.q} un`);
-    if ((p.vs||[]).length) lines.push(`Vend: ${p.vs.map(v=>v.charAt(0)+v.slice(1).toLowerCase()).join(', ')}`);
-    lines.push('');
-  });
-  lines.push(`Total: ${prods.length} item(s)`);
+  let lines = ['🌎 *ESTOQUES — BAZAAR*', ''];
+  if (eua.length) {
+    lines.push('🇺🇸 *Estoque EUA*', '');
+    eua.forEach((p,i) => { lines.push(`*${i+1}. ${p.n}*`); if(p.m) lines.push(`Marca: ${p.m}`); lines.push(`Valor: ${fmt(p.vt||p.v)}`, `Qtd: ${p.qty||p.q} un`, ''); });
+  }
+  if (br.length) {
+    lines.push('🇧🇷 *Estoque BR*', '');
+    br.forEach((p,i) => { lines.push(`*${i+1}. ${p.n}*`); if(p.m) lines.push(`Marca: ${p.m}`); lines.push(`Valor: ${fmt(p.vt||p.v)}`, `Qtd: ${p.qty||p.q} un`, ''); });
+  }
   window.open('https://wa.me/?text=' + encodeURIComponent(lines.join(nl)), '_blank');
 }
 
@@ -2402,6 +2521,7 @@ function fbRenderDebounced() {
     updateNokBadge();
     updateEmCompraBadge();
     updateEstEuaBadge();
+    updateEstBrBadge();
     if (document.getElementById('page-nok')?.classList.contains('active')) renderNok();
     if (document.getElementById('page-compra')?.classList.contains('active')) renderCompra();
     if (document.getElementById('page-eua')?.classList.contains('active')) renderEua();
@@ -2438,7 +2558,7 @@ function fbSave(id) {
   const dot = document.querySelector('.sync-dot');
   if (dot) { dot.style.background = '#f59e0b'; dot.title = 'Salvando…'; }
   window._db.collection('faltantes').doc(String(id)).set({
-    nok: p.nok, nokWho: p.nokWho||'', nokHistory: p.nokHistory||[], nokTams: p.nokTams||{}, comments: p.comments||[], qty: p.qty||p.q, em_compra: p.em_compra||false, compraHistory: p.compraHistory||[], est_eua: p.est_eua||false, updatedAt: new Date().toISOString()
+    nok: p.nok, nokWho: p.nokWho||'', nokHistory: p.nokHistory||[], nokTams: p.nokTams||{}, comments: p.comments||[], qty: p.qty||p.q, em_compra: p.em_compra||false, compraHistory: p.compraHistory||[], est_eua: p.est_eua||false, est_br: p.est_br||false, updatedAt: new Date().toISOString()
   }).then(() => {
     _pendingSaves.delete(id);
     if (dot) { dot.style.background = '#7a0b1e'; dot.title = 'Sincronizado'; }
@@ -2461,7 +2581,7 @@ function fbListen() {
         const raw = [];
         snap.forEach(doc => { raw.push({...doc.data(), _id: parseInt(doc.id)}); });
         raw.sort((a,b) => a._id - b._id);
-        PRODUTOS = raw.map(p => ({...p, nok:false, em_compra:false, est_eua:false, comments:[], qty:p.q}));
+        PRODUTOS = raw.map(p => ({...p, nok:false, em_compra:false, est_eua:false, est_br:false, comments:[], qty:p.q}));
         renderGrid();
         reconstruirCatChips();
         updateNokBadge();
@@ -2505,6 +2625,7 @@ function _fbListenCore() {
         PRODUTOS[id].em_compra = data.em_compra || false;
         PRODUTOS[id].compraHistory = data.compraHistory || [];
         PRODUTOS[id].est_eua = data.est_eua || false;
+        PRODUTOS[id].est_br  = data.est_br  || false;
         if (data.qty !== undefined) PRODUTOS[id].qty = data.qty;
         if ((data.comments||[]).length > prevLen) notificarSeNovo(id, prevLen);
         // Notificar mudança de NOK
@@ -2596,6 +2717,7 @@ function setCat(c, btn) {
     document.querySelectorAll('#cat-row .chip').forEach(x => x.classList.remove('active'));
     btn.classList.add('active');
   }
+  salvarFiltros();
   renderGrid();
 }
 
@@ -2858,7 +2980,7 @@ function salvarVersao() {
   // Sync to Firebase
   if (window._db) {
     const now = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
-    const who = localStorage.getItem('chat_nome') || 'Anônimo';
+    const who = getNomeUsuario();
     window._db.collection('config').doc('app').set({subtitulo: val}, {merge: true});
     window._db.collection('config').doc('versoes').get().then(doc => {
       const hist = doc.exists ? (doc.data().lista || []) : [];
@@ -2923,6 +3045,7 @@ if (typeof firebase !== 'undefined' && firebase.apps.length) {
     if (user) {
       overlay.style.display = 'none';
       userBar.style.display = 'flex';
+      _usuarioLogado = user;
       document.body.classList.add('user-bar-visible');
       const uName = user.displayName || user.email;
       document.getElementById('user-name').textContent = uName;
@@ -2995,6 +3118,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }, { passive: true });
 
   renderGrid();
+  restaurarFiltros();
+  renderGrid(); // re-render with restored filters
   fbListen();
   resetIdleTimer();
 });
