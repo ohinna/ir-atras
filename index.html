@@ -120,7 +120,8 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
 .tab-btn.active .tab-icon{color:var(--red)}
 .tab-badge{position:absolute;top:4px;right:calc(50% - 18px);background:#7a0b1e;color:#fff;font-size:8px;font-weight:700;min-width:14px;height:14px;border-radius:7px;display:none;align-items:center;justify-content:center;padding:0 3px}
 /* Chat page */
-.page{display:none;position:fixed;inset:0;background:var(--bg);overflow-y:auto;padding-top:60px;padding-bottom:70px}
+.page{display:none;position:fixed;inset:0;background:var(--bg);overflow-y:auto;padding-top:60px;padding-bottom:70px;opacity:0;transition:opacity 0.18s ease}
+.page.active{display:block;opacity:1}
 .page.active{display:block}
 .chat-header{position:fixed;top:0;left:0;right:0;z-index:100;background:var(--bg);border-bottom:0.5px solid var(--border);padding:14px 16px;transition:top 0.2s}
 .user-bar-visible .chat-header{top:38px}
@@ -276,6 +277,13 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
     <button class="chip" id="sort-qty-asc" onclick="setSort('qty-asc',this)">Qtd ↑</button>
     <button class="chip" id="sort-qty-desc" onclick="setSort('qty-desc',this)">Qtd ↓</button>
   </div>
+  <div class="filter-row" id="status-row">
+    <button class="chip active" id="status-todos" onclick="setStatus('',this)">Todos</button>
+    <button class="chip" id="status-nok" onclick="setStatus('nok',this)">✕ NOK</button>
+    <button class="chip" id="status-compra" onclick="setStatus('compra',this)">🛒 Em compra</button>
+    <button class="chip" id="status-eua" onclick="setStatus('eua',this)">🇺🇸 Est EUA</button>
+    <button class="chip" id="status-br" onclick="setStatus('br',this)">🇧🇷 Est BR</button>
+  </div>
   <div class="filter-row" id="marca-row">
     <button class="chip active" id="chip-all-marca" onclick="setMarca('',this)">Todas marcas</button>
     <button class="chip" onclick="setMarca('32 DEGREES',this)">32 DEGREES</button><button class="chip" onclick="setMarca('ADIDAS',this)">ADIDAS</button><button class="chip" onclick="setMarca('AERIE',this)">AERIE</button><button class="chip" onclick="setMarca('BABE LASH',this)">BABE LASH</button><button class="chip" onclick="setMarca('BALANCE',this)">BALANCE</button><button class="chip" onclick="setMarca('BANANA REPUBLIC',this)">BANANA REPUBLIC</button><button class="chip" onclick="setMarca('BB',this)">BB</button><button class="chip" onclick="setMarca('BBW',this)">BBW</button><button class="chip" onclick="setMarca('BENADRYL',this)">BENADRYL</button><button class="chip" onclick="setMarca('BI-FLEX',this)">BI-FLEX</button><button class="chip" onclick="setMarca('BIOPURE',this)">BIOPURE</button><button class="chip" onclick="setMarca('BLUE LOVE',this)">BLUE LOVE</button><button class="chip" onclick="setMarca('BOMBAY',this)">BOMBAY</button><button class="chip" onclick="setMarca('BOOGIE',this)">BOOGIE</button><button class="chip" onclick="setMarca('CALVIN KLEIN',this)">CALVIN KLEIN</button><button class="chip" onclick="setMarca('CARTERS',this)">CARTERS</button><button class="chip" onclick="setMarca('CENTELLA',this)">CENTELLA</button><button class="chip" onclick="setMarca('CHARLOTTE',this)">CHARLOTTE</button><button class="chip" onclick="setMarca('COLUMBIA',this)">COLUMBIA</button><button class="chip" onclick="setMarca('CONVERSE',this)">CONVERSE</button><button class="chip" onclick="setMarca('CORE KITCHEN',this)">CORE KITCHEN</button><button class="chip" onclick="setMarca('DERMASIL',this)">DERMASIL</button><button class="chip" onclick="setMarca('EGG TIMER',this)">EGG TIMER</button><button class="chip" onclick="setMarca('EPIELLE',this)">EPIELLE</button><button class="chip" onclick="setMarca('FASHION NOVA',this)">FASHION NOVA</button><button class="chip" onclick="setMarca('GAP',this)">GAP</button><button class="chip" onclick="setMarca('GLORIA VANDERBILT',this)">GLORIA VANDERBILT</button><button class="chip" onclick="setMarca('GREAT VALUE',this)">GREAT VALUE</button><button class="chip" onclick="setMarca('JESSICA SIMPSON',this)">JESSICA SIMPSON</button><button class="chip" onclick="setMarca('JOURNEE',this)">JOURNEE</button><button class="chip" onclick="setMarca('JUICY COUTURE',this)">JUICY COUTURE</button><button class="chip" onclick="setMarca('K18',this)">K18</button><button class="chip" onclick="setMarca('KEITH HARING',this)">KEITH HARING</button><button class="chip" onclick="setMarca('KITCHENAID',this)">KITCHENAID</button><button class="chip" onclick="setMarca('LA COLORS',this)">LA COLORS</button><button class="chip" onclick="setMarca('LAURA ASHLEY',this)">LAURA ASHLEY</button><button class="chip" onclick="setMarca('LOREAL',this)">LOREAL</button><button class="chip" onclick="setMarca('MARIE CLAIRE PARIS',this)">MARIE CLAIRE PARIS</button><button class="chip" onclick="setMarca('MARIO BADESCU',this)">MARIO BADESCU</button><button class="chip" onclick="setMarca('MELISSA E DOUG',this)">MELISSA E DOUG</button><button class="chip" onclick="setMarca('MONDAY',this)">MONDAY</button><button class="chip" onclick="setMarca('MONDETTA',this)">MONDETTA</button><button class="chip" onclick="setMarca('MR BUBBLE',this)">MR BUBBLE</button><button class="chip" onclick="setMarca('NATROL',this)">NATROL</button><button class="chip" onclick="setMarca('OLD NAVY',this)">OLD NAVY</button><button class="chip" onclick="setMarca('OLD NAVY X GAP',this)">OLD NAVY X GAP</button><button class="chip" onclick="setMarca('PARK LIFE',this)">PARK LIFE</button><button class="chip" onclick="setMarca('RALPH LAUREN',this)">RALPH LAUREN</button><button class="chip" onclick="setMarca('RUSSEL STOVER',this)">RUSSEL STOVER</button><button class="chip" onclick="setMarca('SINOPANT',this)">SINOPANT</button><button class="chip" onclick="setMarca('SKECHERS',this)">SKECHERS</button><button class="chip" onclick="setMarca('SMART CARE',this)">SMART CARE</button><button class="chip" onclick="setMarca('SNUGGLE',this)">SNUGGLE</button><button class="chip" onclick="setMarca('STEVE MADDEN',this)">STEVE MADDEN</button><button class="chip" onclick="setMarca('TOMMY',this)">TOMMY</button><button class="chip" onclick="setMarca('VASELINE',this)">VASELINE</button><button class="chip" onclick="setMarca(&quot;VICTORIA'S SECRET&quot;,this)">VICTORIA'S SECRET</button><button class="chip" onclick="setMarca('VOLCOM',this)">VOLCOM</button><button class="chip" onclick="setMarca('WALYFREI',this)">WALYFREI</button><button class="chip" onclick="setMarca('WET',this)">WET</button>
@@ -425,11 +433,6 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
   <button class="tab-btn active" id="tab-cat" onclick="goTab('cat')">
     <span class="tab-icon">⊞</span>
     <span class="tab-label">Catálogo</span>
-  </button>
-  <button class="tab-btn" id="tab-chat" onclick="goTab('chat')" style="position:relative">
-    <span class="tab-badge" id="chat-badge">0</span>
-    <span class="tab-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></span>
-    <span class="tab-label">Notificações</span>
   </button>
   <button class="tab-btn" id="tab-compra" onclick="goTab('compra')" style="position:relative">
     <span class="tab-badge" id="compra-badge" style="background:#f59e0b">0</span>
@@ -635,7 +638,7 @@ let PRODUTOS = RAW_DATA.map((p,i) => ({...p, _id:i, nok:false, em_compra:false, 
 // Restaurar filtros salvos
 function salvarFiltros() {
   localStorage.setItem('filtros', JSON.stringify({
-    vends: [...fVends], marcas: [...fMarcas], cat: fCat, sortMode: _sortMode, sortDir: _sortDir
+    vends: [...fVends], marcas: [...fMarcas], cat: fCat, sortMode: _sortMode, sortDir: _sortDir, status: fStatus
   }));
 }
 
@@ -670,7 +673,11 @@ function restaurarFiltros() {
         });
       });
     }
-    // Atualizar chip de sort
+    if (saved.status !== undefined) fStatus = saved.status;
+    // Atualizar chip de status
+    document.querySelectorAll('#status-row .chip').forEach(c => c.classList.remove('active'));
+    const statusId = saved.status ? 'status-'+saved.status : 'status-todos';
+    document.getElementById(statusId)?.classList.add('active');
     const sortMap = {'marca-asc':'sort-marca','valor-asc':'sort-valor-asc','valor-desc':'sort-valor-desc','qty-asc':'sort-qty-asc','qty-desc':'sort-qty-desc'};
     const sortKey = _sortMode + '-' + _sortDir;
     document.querySelectorAll('#sort-row .chip').forEach(c => c.classList.remove('active'));
@@ -679,7 +686,7 @@ function restaurarFiltros() {
   } catch(e) {}
 }
 
-let fVends = new Set(['TODAS']), fMarcas = new Set(), fCat = '', fSearch = '';
+let fVends = new Set(['TODAS']), fMarcas = new Set(), fCat = '', fSearch = '', fStatus = '';
 let modalId = null;
 const SEEN = new Set();
 let fbUnsub = null;
@@ -863,6 +870,14 @@ let _gridCols = 2;
 let _sortMode = 'marca';
 let _sortDir = 'asc';
 
+function setStatus(s, btn) {
+  fStatus = s;
+  document.querySelectorAll('#status-row .chip').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  salvarFiltros();
+  renderGrid();
+}
+
 function setSort(mode, btn) {
   _sortMode = mode.startsWith('valor') ? 'valor' : mode.startsWith('qty') ? 'qty' : 'marca';
   _sortDir  = mode.endsWith('desc') ? 'desc' : 'asc';
@@ -897,6 +912,10 @@ function getFiltered() {
     if (!fVends.has('TODAS') && !(p.vs||[]).some(v => fVends.has(v.toUpperCase()))) return false;
     if (fMarcas.size > 0 && !fMarcas.has((p.m||'').trim())) return false;
     if (fCat && (p.c||'').trim() !== fCat) return false;
+    if (fStatus === 'nok'    && !p.nok) return false;
+    if (fStatus === 'compra' && !p.em_compra) return false;
+    if (fStatus === 'eua'    && !p.est_eua) return false;
+    if (fStatus === 'br'     && !p.est_br) return false;
     if (q && !p.n.toLowerCase().includes(q) && !(p.m||'').toLowerCase().includes(q) && !(p.vs||[]).some(v=>v.toLowerCase().includes(q))) return false;
     if (minQty > 0 && (p.qty||p.q||0) < minQty) return false;
     return true;
@@ -1160,7 +1179,14 @@ function goTab(tab) {
   document.querySelector('.grid-wrap').style.display = tab==='cat' ? '' : 'none';
   ['chat','upload','nok','compra','hist','eua'].forEach(t => {
     const pg = document.getElementById('page-'+t);
-    if (pg) pg.classList.toggle('active', t===tab);
+    if (!pg) return;
+    if (t === tab) {
+      pg.style.display = 'block';
+      requestAnimationFrame(() => pg.classList.add('active'));
+    } else {
+      pg.classList.remove('active');
+      setTimeout(() => { if (!pg.classList.contains('active')) pg.style.display = 'none'; }, 180);
+    }
   });
   if (tab==='chat') renderChat();
   if (tab==='nok') renderNok();
@@ -1499,7 +1525,7 @@ function baixarPdfProduto() {
     '</div>' +
     fotoHtml +
     '<div style="font-size:10px;font-weight:700;color:#7a0b1e;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">' + (p.m||'') + '</div>' +
-    '<div style="font-size:17px;font-weight:700;color:#1a1a1a;line-height:1.3;margin-bottom:10px">' + p.n + '</div>' +
+    '<div style="font-size:17px;font-weight:700;color:#1a1a1a;line-height:1.3;margin-bottom:10px;word-break:break-word;white-space:normal">' + p.n + '</div>' +
     '<div style="display:flex;gap:12px;margin-bottom:10px">' +
       '<div style="background:#fdf2f3;border:0.5px solid #f5c4c4;border-radius:10px;padding:8px 14px;text-align:center">' +
         '<div style="font-size:9px;color:#c4a898;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px">Valor</div>' +
@@ -2304,168 +2330,164 @@ function renderCompra() {
     return;
   }
   list.innerHTML = '';
+
+  // Agrupar por vendedora
+  const grupos = {};
   prods.forEach(p => {
-    const ab = abbrev(p.n, p.m);
-    const div = document.createElement('div');
-    div.style.cssText = 'display:flex;align-items:flex-start;gap:12px;padding:10px 16px;border-bottom:0.5px solid var(--border);cursor:pointer';
-    div.addEventListener('click', () => openModal(p._id));
-    const imgWrap = document.createElement('div');
-    if (p.f) {
-      const imgEl = document.createElement('img');
-      imgEl.src = p.f;
-      imgEl.style.cssText = 'width:52px;height:52px;object-fit:cover;border-radius:10px;flex-shrink:0;border:2px solid #f59e0b';
-      imgEl.addEventListener('error', function(){ this.style.display='none'; });
-      imgWrap.appendChild(imgEl);
-    } else {
-      imgWrap.innerHTML = '<div style="width:52px;height:52px;border-radius:10px;background:#fff8e8;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#d97706;flex-shrink:0;border:2px solid #f59e0b">'+ab+'</div>';
-    }
-    const info = document.createElement('div');
-    info.style.cssText = 'flex:1;min-width:0';
-    info.innerHTML = '<div style="font-size:9px;color:#f59e0b;font-weight:600;letter-spacing:0.5px;margin-bottom:2px">' + (p.m||'') + '</div>' +
-      '<div style="font-size:12px;font-weight:600;color:var(--text);line-height:1.3;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + p.n + '</div>' +
-      '<div style="font-size:11px;color:#c4a898">' + (p.vs||[]).map(v=>v.charAt(0)+v.slice(1).toLowerCase()).join(', ') + '</div>';
-    const btn = document.createElement('button');
-    btn.style.cssText = 'background:#fff8e8;border:0.5px solid #f59e0b;border-radius:8px;color:#d97706;font-size:10px;font-weight:600;padding:5px 10px;cursor:pointer;flex-shrink:0';
-    btn.textContent = 'Remover';
-    btn.addEventListener('click', e => {
-      e.stopPropagation();
-      PRODUTOS[p._id].em_compra = false;
-      fbSave(p._id);
-      renderCompra();
-      updateEmCompraBadge();
-      renderGrid();
+    const vends = (p.vs||[]).length ? p.vs : ['—'];
+    vends.forEach(v => {
+      if (!grupos[v]) grupos[v] = [];
+      grupos[v].push(p);
     });
-    div.appendChild(imgWrap);
-    div.appendChild(info);
-    div.appendChild(btn);
-    list.appendChild(div);
+  });
+
+  Object.entries(grupos).sort((a,b)=>a[0].localeCompare(b[0],'pt-BR')).forEach(([vend, items]) => {
+    // Header da vendedora
+    const totalVal = items.reduce((a,p)=>(a+(parseFloat(p.vt||p.v)||0)),0);
+    const header = document.createElement('div');
+    header.style.cssText = 'padding:10px 16px 6px;font-size:11px;font-weight:700;color:#f59e0b;letter-spacing:0.5px;background:var(--bg);border-bottom:0.5px solid var(--border2);display:flex;align-items:center;justify-content:space-between';
+    header.innerHTML = `<div style="display:flex;align-items:center;gap:6px">🛒 ${vend === '—' ? 'Sem vendedora' : vend.charAt(0)+vend.slice(1).toLowerCase()} <span style="background:#fff8e8;border-radius:8px;padding:1px 8px;font-size:10px;color:#d97706">${items.length}</span></div>
+      <div style="font-size:10px;font-weight:600;color:#d97706">R$ ${totalVal.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>`;
+    list.appendChild(header);
+
+    items.forEach(p => {
+      const ab = abbrev(p.n, p.m);
+      // Pegar quando foi marcado em compra
+      const hist = (p.compraHistory||[]).filter(h=>h.action==='marcou');
+      const quando = hist.length ? hist[hist.length-1].time : '';
+      const quem = hist.length ? hist[hist.length-1].who : '';
+
+      const div = document.createElement('div');
+      div.style.cssText = 'display:flex;align-items:flex-start;gap:12px;padding:10px 16px;border-bottom:0.5px solid var(--border);cursor:pointer';
+      div.addEventListener('click', () => openModal(p._id));
+
+      const imgWrap = document.createElement('div');
+      if (p.f) {
+        const imgEl = document.createElement('img');
+        imgEl.src = p.f;
+        imgEl.style.cssText = 'width:52px;height:52px;object-fit:cover;border-radius:10px;flex-shrink:0;border:2px solid #f59e0b';
+        imgEl.addEventListener('error', function(){ this.style.display='none'; });
+        imgWrap.appendChild(imgEl);
+      } else {
+        imgWrap.innerHTML = `<div style="width:52px;height:52px;border-radius:10px;background:#fff8e8;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#d97706;flex-shrink:0;border:2px solid #f59e0b">${ab}</div>`;
+      }
+
+      const info = document.createElement('div');
+      info.style.cssText = 'flex:1;min-width:0';
+      info.innerHTML = `<div style="font-size:9px;color:#f59e0b;font-weight:600;letter-spacing:0.5px;margin-bottom:2px">${p.m||''}</div>
+        <div style="font-size:12px;font-weight:600;color:var(--text);line-height:1.3;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.n}</div>
+        ${quando ? `<div style="font-size:10px;color:var(--text4)">🕐 ${quando}${quem ? ' · '+quem : ''}</div>` : ''}`;
+
+      const btn = document.createElement('button');
+      btn.style.cssText = 'background:#fff8e8;border:0.5px solid #f59e0b;border-radius:8px;color:#d97706;font-size:10px;font-weight:600;padding:5px 10px;cursor:pointer;flex-shrink:0';
+      btn.textContent = 'Remover';
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        PRODUTOS[p._id].em_compra = false;
+        fbSave(p._id);
+        renderCompra();
+        updateEmCompraBadge();
+        renderGrid();
+      });
+
+      div.appendChild(imgWrap);
+      div.appendChild(info);
+      div.appendChild(btn);
+      list.appendChild(div);
+    });
   });
 }
 
 function renderNok() {
   const list = document.getElementById('nok-list');
-
-  // Include products with full NOK or with nokTams
-  // Deduplicate: if product has both full NOK and nokTams, show only once
   const prods = PRODUTOS.filter(p => p.nok || (p.nokTams && Object.keys(p.nokTams).some(t => p.nokTams[t])));
   prods.sort((a,b) => (parseFloat(b.vt||b.v)||0) - (parseFloat(a.vt||a.v)||0));
-  const totalNok = prods.length;
-  document.getElementById('nok-sub').textContent = totalNok + ' item(s) marcado(s)';
-
-  if (!totalNok) {
-    list.innerHTML = '<div style="text-align:center;padding:60px 20px;color:#c4a898;font-size:13px">Nenhum item marcado como NOK</div>';
-    return;
-  }
-
+  document.getElementById('nok-sub').textContent = prods.length + ' item(s) marcado(s)';
+  if (!prods.length) { list.innerHTML = '<div style="text-align:center;padding:60px 20px;color:#c4a898;font-size:13px">Nenhum item marcado como NOK</div>'; return; }
   list.innerHTML = '';
+
+  // Agrupar por vendedora
+  const grupos = {};
   prods.forEach(p => {
-    const ab = abbrev(p.n, p.m);
-    const nokTams = p.nokTams || {};
-    const hasNokTams = Object.keys(nokTams).length > 0;
+    const vends = (p.vs||[]).length ? p.vs : ['—'];
+    vends.forEach(v => { if (!grupos[v]) grupos[v] = []; grupos[v].push(p); });
+  });
 
-    const div = document.createElement('div');
-    div.style.cssText = 'display:flex;align-items:flex-start;gap:12px;padding:10px 16px;border-bottom:0.5px solid var(--border);cursor:pointer';
-    div.addEventListener('click', () => openModal(p._id));
+  Object.entries(grupos).sort((a,b)=>a[0].localeCompare(b[0],'pt-BR')).forEach(([vend, items]) => {
+    const totalVal = items.reduce((a,p)=>(a+parseFloat(p.vt||p.v)||0),0);
+    const header = document.createElement('div');
+    header.style.cssText = 'padding:10px 16px 6px;font-size:11px;font-weight:700;color:var(--red);letter-spacing:0.5px;background:var(--bg);border-bottom:0.5px solid var(--border2);display:flex;align-items:center;justify-content:space-between';
+    header.innerHTML = `<div style="display:flex;align-items:center;gap:6px">🚫 ${vend==='—'?'Sem vendedora':vend.charAt(0)+vend.slice(1).toLowerCase()} <span style="background:#fdf2f3;border-radius:8px;padding:1px 8px;font-size:10px;color:var(--red)">${items.length}</span></div>
+      <div style="font-size:10px;font-weight:600;color:var(--red)">R$ ${totalVal.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>`;
+    list.appendChild(header);
 
-    // Foto
-    const imgWrap = document.createElement('div');
-    if (p.f) {
-      const imgEl = document.createElement('img');
-      imgEl.src = p.f;
-      imgEl.style.cssText = 'width:52px;height:52px;object-fit:cover;border-radius:10px;flex-shrink:0';
-      imgEl.addEventListener('error', function(){ this.style.display='none'; });
-      imgWrap.appendChild(imgEl);
-    } else {
-      imgWrap.innerHTML = '<div style="width:52px;height:52px;border-radius:10px;background:#f5ede8;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#d4b8a8;flex-shrink:0">'+ab+'</div>';
-    }
+    items.forEach(p => {
+      const ab = abbrev(p.n, p.m);
+      const nokTams = p.nokTams || {};
+      const hasNokTams = Object.keys(nokTams).length > 0;
+      const hist = (p.nokHistory||[]).slice(-1);
 
-    // Info
-    const info = document.createElement('div');
-    info.style.cssText = 'flex:1;min-width:0';
+      const div = document.createElement('div');
+      div.style.cssText = 'display:flex;align-items:flex-start;gap:12px;padding:10px 16px;border-bottom:0.5px solid var(--border);cursor:pointer';
+      div.addEventListener('click', () => openModal(p._id));
 
-    const brand = document.createElement('div');
-    brand.style.cssText = 'font-size:9px;color:var(--red);font-weight:600;letter-spacing:0.5px;margin-bottom:2px';
-    brand.textContent = p.m || '';
+      const imgWrap = document.createElement('div');
+      if (p.f) {
+        const imgEl = document.createElement('img');
+        imgEl.src = p.f;
+        imgEl.style.cssText = 'width:52px;height:52px;object-fit:cover;border-radius:10px;flex-shrink:0';
+        imgEl.addEventListener('error', function(){ this.style.display='none'; });
+        imgWrap.appendChild(imgEl);
+      } else {
+        imgWrap.innerHTML = `<div style="width:52px;height:52px;border-radius:10px;background:#f5ede8;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#d4b8a8;flex-shrink:0">${ab}</div>`;
+      }
 
-    const name = document.createElement('div');
-    name.style.cssText = 'font-size:12px;font-weight:600;color:var(--text);line-height:1.3;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
-    name.textContent = p.n;
+      const info = document.createElement('div');
+      info.style.cssText = 'flex:1;min-width:0';
+      info.innerHTML = `<div style="font-size:9px;color:var(--red);font-weight:600;letter-spacing:0.5px;margin-bottom:2px">${p.m||''}</div>
+        <div style="font-size:12px;font-weight:600;color:var(--text);line-height:1.3;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.n}</div>
+        ${hist.length ? `<div style="font-size:10px;color:rgba(122,11,30,0.6)">🕐 ${hist[0].time}${hist[0].who?' · '+hist[0].who:''}</div>` : ''}`;
 
-    // Tams NOK
-    let tamsEl = null;
-    if (hasNokTams && !p.nok) {
-      tamsEl = document.createElement('div');
-      tamsEl.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;margin-bottom:4px';
-      Object.entries(nokTams).forEach(([t, isNok]) => {
-        if (!isNok) return;
-        const pill = document.createElement('span');
-        pill.style.cssText = 'background:#fff0f0;border:0.5px solid rgba(192,57,43,0.3);border-radius:6px;padding:2px 7px;font-size:10px;font-weight:700;color:#c0392b;text-decoration:line-through';
-        pill.textContent = t === '??? (a definir)' ? '???' : t;
-        tamsEl.appendChild(pill);
-      });
-    }
-
-    const meta = document.createElement('div');
-    meta.style.cssText = 'font-size:11px;color:#c4a898';
-    meta.innerHTML = (p.vs||[]).map(v=>v.charAt(0)+v.slice(1).toLowerCase()).join(', ') +
-      (p.nokWho && p.nok ? ' · <span style="color:#f5c4c4">NOK: '+p.nokWho+'</span>' : '');
-
-    info.appendChild(brand);
-    info.appendChild(name);
-    if (tamsEl) info.appendChild(tamsEl);
-    info.appendChild(meta);
-
-    // Actions
-    const actions = document.createElement('div');
-    actions.style.cssText = 'display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0';
-
-    const hist = (p.nokHistory||[]).slice(-1);
-    if (hist.length) {
-      const hEl = document.createElement('div');
-      hEl.style.cssText = 'font-size:9px;color:rgba(122,11,30,0.6)';
-      hEl.textContent = hist[0].who + ' · ' + hist[0].time;
-      actions.appendChild(hEl);
-    }
-
-    const btn = document.createElement('button');
-    btn.style.cssText = 'background:#fdf2f3;border:0.5px solid #f5c4c4;border-radius:8px;color:#7a0b1e;font-size:10px;font-weight:600;padding:5px 10px;cursor:pointer';
-    btn.textContent = p.nok ? 'Desfazer tudo' : 'Limpar';
-    btn.addEventListener('click', e => {
-      e.stopPropagation();
-      PRODUTOS[p._id].nok = false;
-      PRODUTOS[p._id].nokWho = '';
-      PRODUTOS[p._id].nokTams = {};
-      fbSave(p._id);
-      renderNok();
-      updateNokBadge();
-      renderGrid();
-    });
-    actions.appendChild(btn);
-
-    // Per-size undo buttons
-    if (hasNokTams && Object.keys(nokTams).length > 0) {
-      Object.entries(nokTams).forEach(([t, isNok]) => {
-        if (!isNok) return;
-        const tamBtn = document.createElement('button');
-        tamBtn.style.cssText = 'background:transparent;border:0.5px solid rgba(192,57,43,0.2);border-radius:6px;color:#c0392b;font-size:9px;padding:2px 7px;cursor:pointer;text-decoration:line-through';
-        tamBtn.textContent = t === '??? (a definir)' ? '???' : t;
-        tamBtn.title = 'Desfazer NOK de ' + t;
-        tamBtn.addEventListener('click', e => {
-          e.stopPropagation();
-          delete PRODUTOS[p._id].nokTams[t];
-          fbSave(p._id);
-          renderNok();
-          updateNokBadge();
-          renderGrid();
+      if (hasNokTams && !p.nok) {
+        const tamsEl = document.createElement('div');
+        tamsEl.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;margin-top:4px';
+        Object.entries(nokTams).forEach(([t, isNok]) => {
+          if (!isNok) return;
+          const pill = document.createElement('span');
+          pill.style.cssText = 'background:#fff0f0;border:0.5px solid rgba(192,57,43,0.3);border-radius:6px;padding:2px 7px;font-size:10px;font-weight:700;color:#c0392b;text-decoration:line-through';
+          pill.textContent = t === '??? (a definir)' ? '???' : t;
+          tamsEl.appendChild(pill);
         });
-        actions.appendChild(tamBtn);
-      });
-    }
+        info.appendChild(tamsEl);
+      }
 
-    div.appendChild(imgWrap);
-    div.appendChild(info);
-    div.appendChild(actions);
-    list.appendChild(div);
+      const actions = document.createElement('div');
+      actions.style.cssText = 'display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0';
+
+      const btn = document.createElement('button');
+      btn.style.cssText = 'background:#fdf2f3;border:0.5px solid #f5c4c4;border-radius:8px;color:#7a0b1e;font-size:10px;font-weight:600;padding:5px 10px;cursor:pointer';
+      btn.textContent = p.nok ? 'Desfazer' : 'Limpar';
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        PRODUTOS[p._id].nok = false; PRODUTOS[p._id].nokWho = ''; PRODUTOS[p._id].nokTams = {};
+        fbSave(p._id); renderNok(); updateNokBadge(); renderGrid();
+      });
+      actions.appendChild(btn);
+
+      if (hasNokTams) {
+        Object.entries(nokTams).forEach(([t, isNok]) => {
+          if (!isNok) return;
+          const tamBtn = document.createElement('button');
+          tamBtn.style.cssText = 'background:transparent;border:0.5px solid rgba(192,57,43,0.2);border-radius:6px;color:#c0392b;font-size:9px;padding:2px 7px;cursor:pointer;text-decoration:line-through';
+          tamBtn.textContent = t === '??? (a definir)' ? '???' : t;
+          tamBtn.addEventListener('click', e => { e.stopPropagation(); delete PRODUTOS[p._id].nokTams[t]; fbSave(p._id); renderNok(); updateNokBadge(); renderGrid(); });
+          actions.appendChild(tamBtn);
+        });
+      }
+
+      div.appendChild(imgWrap); div.appendChild(info); div.appendChild(actions);
+      list.appendChild(div);
+    });
   });
 }
 
