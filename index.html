@@ -940,11 +940,11 @@ function renderGrid() {
   });
   // Atualizar contadores nas categorias
   document.querySelectorAll('#cat-row .chip:not(#chip-all-cat)').forEach(btn => {
-    const cat = btn.getAttribute('onclick')?.match(/setCat\('([^']+)'/)?.[1] || '';
-    if (!cat) return;
+    const match = btn.getAttribute('onclick')?.match(/setCat\('([^']+)'/);
+    if (!match) return;
+    const cat = match[1];
     const count = PRODUTOS.filter(p => (p.c||'').trim() === cat).length;
-    const base = cat;
-    btn.textContent = count > 0 ? `${base} ${count}` : base;
+    btn.textContent = count > 0 ? `${cat} ${count}` : cat;
   });
   const empty = document.getElementById('empty');
   document.getElementById('count-num').textContent = prods.length;
