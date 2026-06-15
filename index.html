@@ -947,7 +947,8 @@ function renderGrid() {
     btn.textContent = count > 0 ? `${cat} ${count}` : cat;
   });
   const empty = document.getElementById('empty');
-  document.getElementById('count-num').textContent = prods.length;
+  const countNum = document.getElementById('count-num');
+  if (countNum) countNum.textContent = prods.length;
   const totalV = prods.filter(p => !p.nok).reduce((a,p) => {
     const val = parseFloat(p.vmin||p.vt||p.v)||0;
     // Count only non-NOK tams
