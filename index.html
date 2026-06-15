@@ -866,7 +866,7 @@ let _isDark = localStorage.getItem('dark_mode') === '1';
 function toggleDark() {
   _isDark = !_isDark;
   document.body.classList.toggle('dark', _isDark);
-  document.getElementById('btn-dark').textContent = _isDark ? '☀️' : '🌙';
+  (document.getElementById('btn-dark')||{}).textContent = _isDark ? '☀️' : '🌙';
   localStorage.setItem('dark_mode', _isDark ? '1' : '0');
 }
 
@@ -894,7 +894,7 @@ function toggleGrid() {
   const cols = [2, 3, 1];
   const icons = ['⊞', '⊟', '▤'];
   _gridCols = cols[(cols.indexOf(_gridCols) + 1) % cols.length];
-  document.getElementById('btn-grid').textContent = icons[cols.indexOf(_gridCols)];
+  (document.getElementById('btn-grid')||{}).textContent = icons[cols.indexOf(_gridCols)];
   document.getElementById('grid').style.gridTemplateColumns = `repeat(${_gridCols}, 1fr)`;
 }
 
@@ -928,6 +928,7 @@ function getFiltered() {
 
 
 function renderGrid() {
+  try {
   const searchEl = document.getElementById('search-input');
   const grid = document.getElementById('grid');
   const empty = document.getElementById('empty');
@@ -1067,13 +1068,17 @@ function renderGrid() {
   }).join('');
   updateChatBadge();
   updateNokBadge();
+  } catch(e) {
+    console.error('renderGrid error:', e.message, e.stack);
+    mostrarSyncToast(false);
+  }
 }
 
 function abrirFotoCheia(src, nome, marca) {
   const m = document.getElementById('modal-foto');
   document.getElementById('modal-foto-img').src = src;
-  document.getElementById('modal-foto-nome').textContent = nome;
-  document.getElementById('modal-foto-marca').textContent = marca;
+  (document.getElementById('modal-foto-nome')||{}).textContent = nome;
+  (document.getElementById('modal-foto-marca')||{}).textContent = marca;
   m.style.display = 'flex';
 }
 
@@ -1210,7 +1215,7 @@ function goTab(tab) {
   if (tab==='eua') renderEua();
   if (tab==='upload') {
     const ua = localStorage.getItem('ultima_atualizacao');
-    document.getElementById('ultima-atualizacao').textContent = ua ? 'Última atualização: ' + ua : '';
+    (document.getElementById('ultima-atualizacao')||{}).textContent = ua ? 'Última atualização: ' + ua : '';
     updateFbUsage();
     // Load version history
     if (window._db) {
@@ -1383,10 +1388,10 @@ function openModal(id, focusComment=false) {
   }
   const brandEl = document.getElementById('modal-brand');
   brandEl.innerHTML = (p.m||'') + (p.c ? ' <span style="font-size:10px;font-weight:400;color:var(--text2)">· ' + p.c + '</span>' : '');
-  document.getElementById('modal-name').textContent = p.n;
+  (document.getElementById('modal-name')||{}).textContent = p.n;
   document.getElementById('modal-name').style.display = '';
   const valStr = p.vmin && p.vmax && p.vmin !== p.vmax ? fmtVal(p.vmin) + ' – ' + fmtVal(p.vmax) : fmtVal(p.vt||p.v);
-  document.getElementById('modal-val').textContent = valStr + ' · ' + (p.qty||p.q) + ' un';
+  (document.getElementById('modal-val')||{}).textContent = valStr + ' · ' + (p.qty||p.q) + ' un';
   const totalQty = p.qty||p.q;
   const hasTams = p.tams && Object.keys(p.tams).length > 0 && !(Object.keys(p.tams).length === 1 && Object.keys(p.tams)[0] === 'Único');
   const tamsInline = document.getElementById('modal-tams-inline');
@@ -1445,8 +1450,8 @@ function openModal(id, focusComment=false) {
   }
   const tamsEl = document.getElementById('modal-tams');
   if (tamsEl) { tamsEl.style.display = 'none'; }
-  document.getElementById('modal-vend').textContent = (p.vs||[]).map(v=>v.charAt(0)+v.slice(1).toLowerCase()).join(', ') || '—';
-  document.getElementById('modal-marca').textContent = p.m || '—';
+  (document.getElementById('modal-vend')||{}).textContent = (p.vs||[]).map(v=>v.charAt(0)+v.slice(1).toLowerCase()).join(', ') || '—';
+  (document.getElementById('modal-marca')||{}).textContent = p.m || '—';
   // Cor
   const corWrap = document.getElementById('modal-cor-wrap');
   const corEl = document.getElementById('modal-cor');
@@ -1639,7 +1644,7 @@ function limparHistorico() {
     snap.docs.forEach(doc => batch.delete(doc.ref));
     return batch.commit();
   }).then(() => {
-    document.getElementById('hist-sub').textContent = '0 evento(s)';
+    (document.getElementById('hist-sub')||{}).textContent = '0 evento(s)';
     el.innerHTML = '<div style="text-align:center;padding:40px;color:#c4a898;font-size:13px">Histórico limpo</div>';
     mostrarSyncToast(true);
   }).catch(() => mostrarSyncToast(false));
@@ -1669,7 +1674,7 @@ function renderTimeline() {
     const icons = { nok_on:'🚫', nok_off:'✅', compra_on:'🛒', compra_off:'↩️', comentario:'💬', nok_clear:'🗑' };
     const labels = { nok_on:'marcou NOK', nok_off:'removeu NOK', compra_on:'colocou em compra', compra_off:'removeu de compra', comentario:'comentou em', nok_clear:'limpou NOK em' };
     const colors = { nok_on:'#7a0b1e', nok_off:'#1D9E75', compra_on:'#d97706', compra_off:'#888', comentario:'#6366f1', nok_clear:'#888' };
-    document.getElementById('hist-sub').textContent = snap.size + ' evento(s)';
+    (document.getElementById('hist-sub')||{}).textContent = snap.size + ' evento(s)';
     el.innerHTML = snap.docs.map(doc => {
       const d = doc.data();
       const icon = icons[d.tipo] || '•';
@@ -1795,8 +1800,8 @@ function limparTodosNok() {
   const noks = PRODUTOS.filter(p => p.nok || (p.nokTams && Object.keys(p.nokTams).some(t=>p.nokTams[t])));
   if (!noks.length) { alert('Nenhum item NOK para limpar.'); return; }
   const quem = getNomeUsuario();
-  document.getElementById('nok-clear-count').textContent = noks.length;
-  document.getElementById('nok-clear-who').textContent = quem;
+  (document.getElementById('nok-clear-count')||{}).textContent = noks.length;
+  (document.getElementById('nok-clear-who')||{}).textContent = quem;
   document.getElementById('modal-clear-nok').style.display = 'flex';
 }
 
@@ -2282,7 +2287,7 @@ function updateEmCompraBadge() {
 function renderEua() {
   const euaProds = PRODUTOS.filter(p => p.est_eua).sort((a,b)=>(parseFloat(b.vt||b.v)||0)-(parseFloat(a.vt||a.v)||0));
   const brProds  = PRODUTOS.filter(p => p.est_br).sort((a,b)=>(parseFloat(b.vt||b.v)||0)-(parseFloat(a.vt||a.v)||0));
-  document.getElementById('eua-sub').textContent = euaProds.length + ' EUA · ' + brProds.length + ' BR';
+  (document.getElementById('eua-sub')||{}).textContent = euaProds.length + ' EUA · ' + brProds.length + ' BR';
   const euaCount = document.getElementById('eua-count'); if (euaCount) euaCount.textContent = euaProds.length;
   const brCount  = document.getElementById('br-count');  if (brCount)  brCount.textContent  = brProds.length;
 
@@ -2362,7 +2367,7 @@ function renderCompra() {
   const list = document.getElementById('compra-list');
   const prods = PRODUTOS.filter(p => p.em_compra);
   prods.sort((a,b) => (parseFloat(b.vt||b.v)||0) - (parseFloat(a.vt||a.v)||0));
-  document.getElementById('compra-sub').textContent = prods.length + ' item(s) em processo';
+  (document.getElementById('compra-sub')||{}).textContent = prods.length + ' item(s) em processo';
   if (!prods.length) {
     list.innerHTML = '<div style="text-align:center;padding:60px 20px;color:#c4a898;font-size:13px">Nenhum item em processo de compra</div>';
     return;
@@ -2440,7 +2445,7 @@ function renderNok() {
   const list = document.getElementById('nok-list');
   const prods = PRODUTOS.filter(p => p.nok || (p.nokTams && Object.keys(p.nokTams).some(t => p.nokTams[t])));
   prods.sort((a,b) => (parseFloat(b.vt||b.v)||0) - (parseFloat(a.vt||a.v)||0));
-  document.getElementById('nok-sub').textContent = prods.length + ' item(s) marcado(s)';
+  (document.getElementById('nok-sub')||{}).textContent = prods.length + ' item(s) marcado(s)';
   if (!prods.length) { list.innerHTML = '<div style="text-align:center;padding:60px 20px;color:#c4a898;font-size:13px">Nenhum item marcado como NOK</div>'; return; }
   list.innerHTML = '';
 
@@ -2538,7 +2543,7 @@ function updateNokBadge() {
 function renderChat() {
   const list = document.getElementById('chat-list');
   const prods = PRODUTOS.filter(p => p.comments && p.comments.length > 0);
-  document.getElementById('chat-sub').textContent = prods.length + ' produto(s) com comentários';
+  (document.getElementById('chat-sub')||{}).textContent = prods.length + ' produto(s) com comentários';
   if (!prods.length) {
     list.innerHTML = '<div style="text-align:center;padding:60px 20px;color:#c4a898;font-size:13px">Nenhum comentário ainda</div>';
     return;
@@ -2855,7 +2860,7 @@ function handleCSV(input) {
   if (!file) return;
   document.getElementById('csv-progress').style.display = '';
   document.getElementById('csv-fill').style.width = '30%';
-  document.getElementById('csv-status').textContent = 'Lendo arquivo...';
+  (document.getElementById('csv-status')||{}).textContent = 'Lendo arquivo...';
   const reader = new FileReader();
   reader.onload = e => {
     try {
@@ -2969,7 +2974,7 @@ function handleCSV(input) {
       document.getElementById('csv-fill').style.width = '100%';
       const now = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
       localStorage.setItem('ultima_atualizacao', now);
-      document.getElementById('csv-status').textContent = '⬆️ Salvando produtos no Firebase...';
+      (document.getElementById('csv-status')||{}).textContent = '⬆️ Salvando produtos no Firebase...';
       setTimeout(() => { document.getElementById('csv-progress').style.display='none'; }, 3000);
       renderGrid();
       if (fbUnsub) { fbUnsub(); fbUnsub=null; }
@@ -3005,18 +3010,18 @@ function handleCSV(input) {
             });
           }, Promise.resolve());
         }).then(() => {
-          document.getElementById('csv-status').textContent = '✅ ' + PRODUTOS.length + ' produtos salvos · ' + now;
+          (document.getElementById('csv-status')||{}).textContent = '✅ ' + PRODUTOS.length + ' produtos salvos · ' + now;
           fbListen();
         }).catch(e => {
-          document.getElementById('csv-status').textContent = '❌ Erro ao salvar: ' + e.message;
+          (document.getElementById('csv-status')||{}).textContent = '❌ Erro ao salvar: ' + e.message;
           fbListen();
         });
       } else {
-        document.getElementById('csv-status').textContent = '✅ ' + PRODUTOS.length + ' produtos importados · ' + now;
+        (document.getElementById('csv-status')||{}).textContent = '✅ ' + PRODUTOS.length + ' produtos importados · ' + now;
         fbListen();
       }
     } catch(err) {
-      document.getElementById('csv-status').textContent = '❌ Erro: ' + err.message;
+      (document.getElementById('csv-status')||{}).textContent = '❌ Erro: ' + err.message;
     }
   };
   reader.onerror = () => {
@@ -3062,7 +3067,7 @@ function salvarVersao() {
 function handleFotos(input) {
   const file = input.files[0];
   if (!file) return;
-  document.getElementById('foto-status').textContent = 'Lendo...';
+  (document.getElementById('foto-status')||{}).textContent = 'Lendo...';
   const reader = new FileReader();
   reader.onload = e => {
     const lines = e.target.result.split(/\r?\n/).slice(1);
@@ -3074,7 +3079,7 @@ function handleFotos(input) {
     localStorage.setItem('foto_map', JSON.stringify(map));
     // Apply to current produtos
     PRODUTOS.forEach(p => { if (p.f && map[p.f]) p.f = map[p.f]; });
-    document.getElementById('foto-status').textContent = '✅ ' + Object.keys(map).length + ' fotos mapeadas';
+    (document.getElementById('foto-status')||{}).textContent = '✅ ' + Object.keys(map).length + ' fotos mapeadas';
     renderGrid();
   };
   reader.readAsText(file);
@@ -3085,7 +3090,7 @@ function handleFotos(input) {
 function loginGoogle() {
   const provider = new firebase.auth.GoogleAuthProvider();
   firebase.auth().signInWithPopup(provider).catch(err => {
-    document.getElementById('login-error').textContent = 'Erro ao entrar: ' + err.message;
+    (document.getElementById('login-error')||{}).textContent = 'Erro ao entrar: ' + err.message;
   });
 }
 
@@ -3109,7 +3114,7 @@ if (typeof firebase !== 'undefined' && firebase.apps.length) {
       _usuarioLogado = user;
       document.body.classList.add('user-bar-visible');
       const uName = user.displayName || user.email;
-      document.getElementById('user-name').textContent = uName;
+      (document.getElementById('user-name')||{}).textContent = uName;
       const avatarImg = document.getElementById('user-avatar');
       const avatarInit = document.getElementById('user-avatar-init');
       if (user.photoURL) {
@@ -3162,7 +3167,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btn) btn.textContent = '☀️';
   }
   const savedSub = localStorage.getItem('app_subtitulo');
-  if (savedSub) document.getElementById('subtitulo').textContent = savedSub;
+  if (savedSub) (document.getElementById('subtitulo')||{}).textContent = savedSub;
 
   // Header hide on scroll down, show on scroll up
   let _lastScroll = 0;
