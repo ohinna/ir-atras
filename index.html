@@ -928,7 +928,11 @@ function getFiltered() {
 
 
 function renderGrid() {
-  fSearch = document.getElementById('search-input').value;
+  const searchEl = document.getElementById('search-input');
+  const grid = document.getElementById('grid');
+  const empty = document.getElementById('empty');
+  if (!searchEl || !grid || !empty) return; // DOM não pronto ainda
+  fSearch = searchEl.value;
   let prods = getFiltered();
   prods.sort((a,b) => {
     const dir = _sortDir === 'asc' ? 1 : -1;
@@ -946,7 +950,6 @@ function renderGrid() {
     const count = PRODUTOS.filter(p => (p.c||'').trim() === cat).length;
     btn.textContent = count > 0 ? `${cat} ${count}` : cat;
   });
-  const empty = document.getElementById('empty');
   const countNum = document.getElementById('count-num');
   if (countNum) countNum.textContent = prods.length;
   const totalV = prods.filter(p => !p.nok).reduce((a,p) => {
