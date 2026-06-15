@@ -1070,7 +1070,6 @@ function renderGrid() {
   updateNokBadge();
   } catch(e) {
     console.error('renderGrid error:', e.message, e.stack);
-    mostrarSyncToast(false);
   }
 }
 
@@ -1333,7 +1332,7 @@ window.addEventListener('beforeunload', encerrarPresenca);
 
 // Modal
 // ── Swipe no modal ──────────────────────────
-let _swipeStartX = 0, _swipeStartY = 0, _swipeDeltaX = 0, _isSwiping = false;
+let _swipeStartX = 0, _swipeStartY = 0, _swipeDeltaX = 0, _swipeDeltaY = 0, _isSwiping = false;
 
 function initModalSwipe() {
   const modal = document.getElementById('modal');
@@ -1342,23 +1341,43 @@ function initModalSwipe() {
   modal.addEventListener('touchstart', e => {
     _swipeStartX = e.touches[0].clientX;
     _swipeStartY = e.touches[0].clientY;
-    _swipeDeltaX = 0; _isSwiping = false;
+    _swipeDeltaX = 0; _swipeDeltaY = 0; _isSwiping = false;
   }, { passive: true });
   modal.addEventListener('touchmove', e => {
     const dx = e.touches[0].clientX - _swipeStartX;
     const dy = e.touches[0].clientY - _swipeStartY;
-    if (!_isSwiping && Math.abs(dy) > Math.abs(dx)) return;
-    _isSwiping = true; _swipeDeltaX = dx;
-    modal.style.transform = `translateX(${dx * 0.3}px)`;
-    modal.style.opacity = String(1 - Math.abs(dx) / 500);
+    // Pull down to close — só quando scroll está no topo
+    if (!_isSwiping && dy > 20 && Math.abs(dy) > Math.abs(dx) && modal.scrollTop === 0) {
+      _isSwiping = 'down';
+    }
+    if (_isSwiping === 'down') {
+      modal.style.transform = `translateY(${Math.max(0, dy)}px)`;
+      modal.style.opacity = String(Math.max(0, 1 - dy / 300));
+      return;
+    }
+    // Swipe horizontal para navegar
+    if (!_isSwiping && Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 10) _isSwiping = 'horiz';
+    if (_isSwiping === 'horiz') {
+      _swipeDeltaX = dx;
+      modal.style.transform = `translateX(${dx * 0.3}px)`;
+      modal.style.opacity = String(1 - Math.abs(dx) / 500);
+    }
   }, { passive: true });
   modal.addEventListener('touchend', () => {
-    modal.style.transform = ''; modal.style.opacity = '';
-    if (!_isSwiping) return;
-    const filtered = getFiltered();
-    const idx = filtered.findIndex(p => p._id === modalId);
-    if (_swipeDeltaX < -60 && idx < filtered.length - 1) openModal(filtered[idx + 1]._id);
-    else if (_swipeDeltaX > 60 && idx > 0) openModal(filtered[idx - 1]._id);
+    const dy = parseFloat(modal.style.transform?.match(/translateY\(([^p]+)/)?.[1] || 0);
+    if (_isSwiping === 'down') {
+      if (dy > 80) {
+        closeModalBtn();
+      } else {
+        modal.style.transform = ''; modal.style.opacity = '';
+      }
+    } else if (_isSwiping === 'horiz') {
+      modal.style.transform = ''; modal.style.opacity = '';
+      const filtered = getFiltered();
+      const idx = filtered.findIndex(p => p._id === modalId);
+      if (_swipeDeltaX < -60 && idx < filtered.length - 1) openModal(filtered[idx + 1]._id);
+      else if (_swipeDeltaX > 60 && idx > 0) openModal(filtered[idx - 1]._id);
+    }
     _isSwiping = false;
   });
 }
