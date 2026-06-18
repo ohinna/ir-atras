@@ -903,10 +903,13 @@ function converterLinkDrive(url) {
   url = url.trim();
   // Formato: https://drive.google.com/file/d/ID/view?...
   const m1 = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
-  if (m1) return `https://drive.google.com/uc?export=view&id=${m1[1]}`;
+  if (m1) return `https://drive.google.com/thumbnail?id=${m1[1]}&sz=w1000`;
   // Formato: https://drive.google.com/open?id=ID
   const m2 = url.match(/drive\.google\.com\/open\?id=([a-zA-Z0-9_-]+)/);
-  if (m2) return `https://drive.google.com/uc?export=view&id=${m2[1]}`;
+  if (m2) return `https://drive.google.com/thumbnail?id=${m2[1]}&sz=w1000`;
+  // Já no formato uc?id= (de versões antigas) -> também converte pra thumbnail
+  const m3 = url.match(/drive\.google\.com\/uc\?(?:export=view&)?id=([a-zA-Z0-9_-]+)/);
+  if (m3) return `https://drive.google.com/thumbnail?id=${m3[1]}&sz=w1000`;
   return url;
 }
 
