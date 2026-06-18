@@ -898,6 +898,18 @@ function toggleGrid() {
   document.getElementById('grid').style.gridTemplateColumns = `repeat(${_gridCols}, 1fr)`;
 }
 
+function converterLinkDrive(url) {
+  if (!url) return url;
+  url = url.trim();
+  // Formato: https://drive.google.com/file/d/ID/view?...
+  const m1 = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if (m1) return `https://drive.google.com/uc?export=view&id=${m1[1]}`;
+  // Formato: https://drive.google.com/open?id=ID
+  const m2 = url.match(/drive\.google\.com\/open\?id=([a-zA-Z0-9_-]+)/);
+  if (m2) return `https://drive.google.com/uc?export=view&id=${m2[1]}`;
+  return url;
+}
+
 function abbrev(n, marca) {
   if (marca && marca.trim()) return marca.trim().charAt(0).toUpperCase();
   const w = (n||'').split(' ').filter(x => x.length > 2 && !/^(de|da|do|em|com|para|a|e|o|as|os)$/i.test(x));
@@ -2678,7 +2690,7 @@ function fbListen() {
         const raw = [];
         snap.forEach(doc => { raw.push({...doc.data(), _id: parseInt(doc.id)}); });
         raw.sort((a,b) => a._id - b._id);
-        PRODUTOS = raw.map(p => ({...p, nok:false, em_compra:false, est_eua:false, est_br:false, comments:[], qty:p.q}));
+        PRODUTOS = raw.map(p => ({...p, f: converterLinkDrive(p.f), nok:false, em_compra:false, est_eua:false, est_br:false, comments:[], qty:p.q}));
         renderGrid();
         reconstruirCatChips();
         updateNokBadge();
@@ -2952,11 +2964,11 @@ function handleCSV(input) {
         const valTotal = pv(row[iVal]);
         const valUnit = (mult > 1 && valTotal > 0) ? Math.round(valTotal/mult*100)/100 : valTotal;
         const key = base.toLowerCase().trim() + '||' + (row[iMarca]?.trim()||'').toLowerCase();
-        if (!groups[key]) groups[key] = {n:base,m:row[iMarca]?.trim()||'',c:row[iCat]?.trim()||'',cor:row[iCor]?.trim()||'',vs:[],v:valUnit,q:0,_vals:[],f:row[iFoto]?.trim()||'',tams:{},tams_por_vend:{}};
+        if (!groups[key]) groups[key] = {n:base,m:row[iMarca]?.trim()||'',c:row[iCat]?.trim()||'',cor:row[iCor]?.trim()||'',vs:[],v:valUnit,q:0,_vals:[],f:converterLinkDrive(row[iFoto]?.trim()||''),tams:{},tams_por_vend:{}};
         const g = groups[key];
         const vend = row[iVend]?.trim()||'';
         if (vend && !g.vs.includes(vend)) g.vs.push(vend);
-        if (!g.f && row[iFoto]?.trim()) g.f = row[iFoto].trim();
+        if (!g.f && row[iFoto]?.trim()) g.f = converterLinkDrive(row[iFoto].trim());
         const tamKey = tam || 'Único';
         g.tams[tamKey] = (g.tams[tamKey]||0) + mult;
         // Track per-vendedora tams
