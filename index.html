@@ -939,7 +939,19 @@ function renderGrid() {
     const dir = _sortDir === 'asc' ? 1 : -1;
     if (_sortMode === 'valor') return ((parseFloat(a.vt||a.v)||0) - (parseFloat(b.vt||b.v)||0)) * dir;
     if (_sortMode === 'qty')   return ((a.qty||a.q||0) - (b.qty||b.q||0)) * dir;
-    const mc = (a.m||'').localeCompare(b.m||'','pt-BR');
+    // Ordenação por marca: números primeiro, depois A-Z, sem marca por último
+    const ma = (a.m||'').trim();
+    const mb = (b.m||'').trim();
+    const semMarcaA = ma === '';
+    const semMarcaB = mb === '';
+    if (semMarcaA && !semMarcaB) return 1;
+    if (!semMarcaA && semMarcaB) return -1;
+    if (semMarcaA && semMarcaB) return a.n.localeCompare(b.n,'pt-BR') * dir;
+    const numA = /^\d/.test(ma);
+    const numB = /^\d/.test(mb);
+    if (numA && !numB) return -1 * dir;
+    if (!numA && numB) return 1 * dir;
+    const mc = ma.localeCompare(mb,'pt-BR',{numeric:true});
     if (mc !== 0) return mc * dir;
     return a.n.localeCompare(b.n,'pt-BR') * dir;
   });
