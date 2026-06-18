@@ -927,19 +927,12 @@ function getFiltered() {
 }
 
 
-function renderGrid() {
-  try {
-  const searchEl = document.getElementById('search-input');
-  const grid = document.getElementById('grid');
-  const empty = document.getElementById('empty');
-  if (!searchEl || !grid || !empty) return; // DOM não pronto ainda
-  fSearch = searchEl.value;
+function getFiltradosOrdenados() {
   let prods = getFiltered();
   prods.sort((a,b) => {
     const dir = _sortDir === 'asc' ? 1 : -1;
     if (_sortMode === 'valor') return ((parseFloat(a.vt||a.v)||0) - (parseFloat(b.vt||b.v)||0)) * dir;
     if (_sortMode === 'qty')   return ((a.qty||a.q||0) - (b.qty||b.q||0)) * dir;
-    // Ordenação por marca: números primeiro, depois A-Z, sem marca por último
     const ma = (a.m||'').trim();
     const mb = (b.m||'').trim();
     const semMarcaA = ma === '';
@@ -955,6 +948,17 @@ function renderGrid() {
     if (mc !== 0) return mc * dir;
     return a.n.localeCompare(b.n,'pt-BR') * dir;
   });
+  return prods;
+}
+
+function renderGrid() {
+  try {
+  const searchEl = document.getElementById('search-input');
+  const grid = document.getElementById('grid');
+  const empty = document.getElementById('empty');
+  if (!searchEl || !grid || !empty) return; // DOM não pronto ainda
+  fSearch = searchEl.value;
+  let prods = getFiltradosOrdenados();
   // Atualizar contadores nas categorias
   document.querySelectorAll('#cat-row .chip:not(#chip-all-cat)').forEach(btn => {
     const match = btn.getAttribute('onclick')?.match(/setCat\('([^']+)'/);
@@ -1377,7 +1381,7 @@ function initModalSwipe() {
       }
     } else if (_isSwiping === 'horiz') {
       modal.style.transform = ''; modal.style.opacity = '';
-      const filtered = getFiltered();
+      const filtered = getFiltradosOrdenados();
       const idx = filtered.findIndex(p => p._id === modalId);
       if (_swipeDeltaX < -60 && idx < filtered.length - 1) openModal(filtered[idx + 1]._id);
       else if (_swipeDeltaX > 60 && idx > 0) openModal(filtered[idx - 1]._id);
