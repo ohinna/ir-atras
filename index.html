@@ -2081,15 +2081,20 @@ function toggleTamNok(prodId, tam) {
   } else {
     p.nokTams[tam] = true;
   }
-  // If all tams are NOK, mark whole product as NOK
-  const allNok = Object.keys(p.tams||{}).every(t => p.nokTams[t]);
-  if (allNok && Object.keys(p.tams||{}).length > 0) {
+  // If all tams are NOK, mark whole product as NOK; otherwise unmark
+  const allNok = Object.keys(p.tams||{}).length > 0 && Object.keys(p.tams||{}).every(t => p.nokTams[t]);
+  if (allNok) {
     p.nok = true;
     p.nokWho = getNomeUsuario();
+  } else {
+    p.nok = false;
+    p.nokWho = '';
   }
   fbSave(prodId);
   // Re-render tams inline
   openModal(prodId);
+  renderGrid();
+  updateNokBadge();
 }
 
 function toggleEstEuaCard(id) {
