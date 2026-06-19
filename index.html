@@ -253,6 +253,11 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
     <span class="search-icon">🔍</span>
     <input class="search-input" id="search-input" type="text" placeholder="Buscar produto, marca, vendedora..." oninput="renderGrid()" autocomplete="off">
   </div>
+  <div class="filter-row" id="origem-row">
+    <button class="chip active" id="chip-origem-todos" onclick="setOrigem('',this)">Todos</button>
+    <button class="chip" id="chip-origem-br" onclick="setOrigem('br',this)">🇧🇷 <span id="label-mes-br" onclick="event.stopPropagation();editarMesLabel('br')">Mês BR</span></button>
+    <button class="chip" id="chip-origem-usa" onclick="setOrigem('usa',this)">🇺🇸 <span id="label-mes-usa" onclick="event.stopPropagation();editarMesLabel('usa')">Mês USA</span></button>
+  </div>
   <div class="filter-row" id="vend-row">
     <button class="chip active" id="chip-todas" onclick="setVend('TODAS',this)">Todas</button>
     <button class="chip" onclick="setVend('FABIANA',this)">Fabiana</button><button class="chip" onclick="setVend('JÉSSICA',this)">Jéssica</button><button class="chip" onclick="setVend('SABRINA',this)">Sabrina</button><button class="chip" onclick="setVend('THAIS',this)">Thais</button>
@@ -314,15 +319,24 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
 <div class="page" id="page-upload">
   <div class="upload-page">
     <div class="upload-card">
-      <div class="upload-title">📋 Atualizar planilha</div>
-      <div class="upload-sub">Importe o CSV da planilha para atualizar os produtos faltantes.</div>
+      <div class="upload-title">🇺🇸 Importar Planilha USA</div>
+      <div class="upload-sub">Importe o CSV da planilha EUA para atualizar os produtos faltantes dessa origem.</div>
       <label class="upload-btn">
-        ⬆ Selecionar CSV
-        <input type="file" accept=".csv" style="display:none" onchange="handleCSV(this)">
+        ⬆ Selecionar CSV USA
+        <input type="file" accept=".csv" style="display:none" onchange="processarCSVUSA(this)">
       </label>
       <div class="progress-bar" id="csv-progress"><div class="progress-fill" id="csv-fill"></div></div>
       <div id="csv-status" style="font-size:11px;color:#b08070;margin-top:8px"></div>
-
+    </div>
+    <div class="upload-card">
+      <div class="upload-title">🇧🇷 Importar Planilha BR</div>
+      <div class="upload-sub">Importe o CSV da planilha BR (itens marcados como "IA" — Ir Atrás) para atualizar os produtos dessa origem.</div>
+      <label class="upload-btn">
+        ⬆ Selecionar CSV BR
+        <input type="file" accept=".csv" style="display:none" onchange="processarCSVBR(this)">
+      </label>
+      <div class="progress-bar" id="csv-progress-br"><div class="progress-fill" id="csv-fill-br"></div></div>
+      <div id="csv-status-br" style="font-size:11px;color:#b08070;margin-top:8px"></div>
     </div>
     <div class="upload-card">
       <div class="upload-title">🖼 Atualizar fotos</div>
@@ -642,7 +656,7 @@ let PRODUTOS = RAW_DATA.map((p,i) => ({...p, _id:i, nok:false, em_compra:false, 
 // Restaurar filtros salvos
 function salvarFiltros() {
   localStorage.setItem('filtros', JSON.stringify({
-    vends: [...fVends], marcas: [...fMarcas], cat: fCat, sortMode: _sortMode, sortDir: _sortDir, status: fStatus
+    vends: [...fVends], marcas: [...fMarcas], cat: fCat, sortMode: _sortMode, sortDir: _sortDir, status: fStatus, origem: fOrigem
   }));
 }
 
@@ -682,6 +696,10 @@ function restaurarFiltros() {
     document.querySelectorAll('#status-row .chip').forEach(c => c.classList.remove('active'));
     const statusId = saved.status ? 'status-'+saved.status : 'status-todos';
     document.getElementById(statusId)?.classList.add('active');
+    if (saved.origem !== undefined) fOrigem = saved.origem;
+    document.querySelectorAll('#origem-row .chip').forEach(c => c.classList.remove('active'));
+    const origemId = saved.origem ? 'chip-origem-'+saved.origem : 'chip-origem-todos';
+    document.getElementById(origemId)?.classList.add('active');
     const sortMap = {'marca-asc':'sort-marca','valor-asc':'sort-valor-asc','valor-desc':'sort-valor-desc','qty-asc':'sort-qty-asc','qty-desc':'sort-qty-desc'};
     const sortKey = _sortMode + '-' + _sortDir;
     document.querySelectorAll('#sort-row .chip').forEach(c => c.classList.remove('active'));
@@ -690,7 +708,7 @@ function restaurarFiltros() {
   } catch(e) {}
 }
 
-let fVends = new Set(['TODAS']), fMarcas = new Set(), fCat = '', fSearch = '', fStatus = '';
+let fVends = new Set(['TODAS']), fMarcas = new Set(), fCat = '', fSearch = '', fStatus = '', fOrigem = '';
 let modalId = null;
 const SEEN = new Set();
 let fbUnsub = null;
@@ -724,6 +742,37 @@ function resetIdleTimer() {
   document.addEventListener(ev, resetIdleTimer, { passive: true });
 });
 window._pdfMarcasSel = new Set();
+
+function setOrigem(o, btn) {
+  fOrigem = o;
+  document.querySelectorAll('#origem-row .chip').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  salvarFiltros();
+  renderGrid();
+}
+
+function editarMesLabel(tipo) {
+  const elId = 'label-mes-' + tipo;
+  const el = document.getElementById(elId);
+  const atual = el.textContent;
+  const inp = document.createElement('input');
+  inp.value = atual;
+  inp.style.cssText = 'font-size:11px;border:none;border-bottom:0.5px solid currentColor;background:transparent;outline:none;width:70px;font-family:inherit;color:inherit';
+  el.innerHTML = '';
+  el.appendChild(inp);
+  inp.focus();
+  inp.select();
+  const save = () => {
+    const val = inp.value.trim() || (tipo === 'br' ? 'Mês BR' : 'Mês USA');
+    el.textContent = val;
+    localStorage.setItem('mes_label_' + tipo, val);
+    if (window._db) {
+      window._db.collection('config').doc('app').set({['mesLabel_'+tipo]: val}, {merge: true});
+    }
+  };
+  inp.addEventListener('blur', save);
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter') inp.blur(); });
+}
 
 function editarSubtitulo() {
   const el = document.getElementById('subtitulo');
@@ -936,6 +985,7 @@ function getFiltered() {
     if (fStatus === 'compra' && !p.em_compra) return false;
     if (fStatus === 'eua'    && !p.est_eua) return false;
     if (fStatus === 'br'     && !p.est_br) return false;
+    if (fOrigem && p.origem !== fOrigem) return false;
     if (q && !p.n.toLowerCase().includes(q) && !(p.m||'').toLowerCase().includes(q) && !(p.vs||[]).some(v=>v.toLowerCase().includes(q))) return false;
     if (minQty > 0 && (p.qty||p.q||0) < minQty) return false;
     return true;
@@ -1056,6 +1106,7 @@ function renderGrid() {
     return `<div class="card ${p.nok?'is-nok':''}" id="card-${p._id}">
       <div class="card-img" onclick="openModal(${p._id})">
         ${img}
+        ${p.origem ? `<div style="position:absolute;bottom:6px;right:30px;background:rgba(0,0,0,0.55);border-radius:6px;padding:1px 6px;font-size:9px;font-weight:700;color:#fff;z-index:2">${p.origem === 'br' ? '🇧🇷' : '🇺🇸'}</div>` : ''}
         ${p.nok ? '<div class="nok-overlay show"><div class="nok-bg"></div><div class="nok-content"><div class="nok-label">✕ NOK</div>' + (p.nokWho ? '<div style="font-size:9px;color:rgba(255,255,255,0.75);margin-top:2px">'+p.nokWho+'</div>' : '') + '</div></div>' : ''}
         ${p.em_compra ? '<div class="compra-overlay show"><div class="compra-bg"></div><div class="compra-content"><div class="compra-label">🛒 Em compra</div></div></div>' : ''}
         ${p.est_eua ? '<div class="eua-overlay show"><div class="eua-bg"></div><div class="eua-content"><div class="eua-label">🇺🇸 Est EUA</div></div></div>' : ''}
@@ -2681,7 +2732,7 @@ function fbSave(id) {
   const dot = document.querySelector('.sync-dot');
   if (dot) { dot.style.background = '#f59e0b'; dot.title = 'Salvando…'; }
   window._db.collection('faltantes').doc(String(id)).set({
-    nok: p.nok, nokWho: p.nokWho||'', nokHistory: p.nokHistory||[], nokTams: p.nokTams||{}, comments: p.comments||[], qty: p.qty||p.q, em_compra: p.em_compra||false, compraHistory: p.compraHistory||[], est_eua: p.est_eua||false, est_br: p.est_br||false, updatedAt: new Date().toISOString()
+    nok: p.nok, nokWho: p.nokWho||'', nokHistory: p.nokHistory||[], nokTams: p.nokTams||{}, comments: p.comments||[], qty: p.qty||p.q, em_compra: p.em_compra||false, compraHistory: p.compraHistory||[], est_eua: p.est_eua||false, est_br: p.est_br||false, origem: p.origem||'', updatedAt: new Date().toISOString()
   }).then(() => {
     _pendingSaves.delete(id);
     if (dot) { dot.style.background = '#7a0b1e'; dot.title = 'Sincronizado'; }
@@ -2731,6 +2782,16 @@ function _fbListenCore() {
           localStorage.setItem('app_subtitulo', data.subtitulo);
         }
       }
+      ['br','usa'].forEach(tipo => {
+        const key = 'mesLabel_' + tipo;
+        if (data[key]) {
+          const el = document.getElementById('label-mes-' + tipo);
+          if (el && !el.querySelector('input')) {
+            el.textContent = data[key];
+            localStorage.setItem('mes_label_' + tipo, data[key]);
+          }
+        }
+      });
     }
   });
   fbUnsub = window._db.collection('faltantes').onSnapshot(snap => {
@@ -2914,6 +2975,10 @@ function gerarPDF() {
 }
 
 function handleCSV(input) {
+  processarCSVUSA(input);
+}
+
+function processarCSVUSA(input) {
   const file = input.files[0];
   if (!file) return;
   document.getElementById('csv-progress').style.display = '';
@@ -2978,7 +3043,7 @@ function handleCSV(input) {
         const valTotal = pv(row[iVal]);
         const valUnit = (mult > 1 && valTotal > 0) ? Math.round(valTotal/mult*100)/100 : valTotal;
         const key = base.toLowerCase().trim() + '||' + (row[iMarca]?.trim()||'').toLowerCase();
-        if (!groups[key]) groups[key] = {n:base,m:row[iMarca]?.trim()||'',c:row[iCat]?.trim()||'',cor:row[iCor]?.trim()||'',vs:[],v:valUnit,q:0,_vals:[],f:converterLinkDrive(row[iFoto]?.trim()||''),tams:{},tams_por_vend:{}};
+        if (!groups[key]) groups[key] = {n:base,m:row[iMarca]?.trim()||'',c:row[iCat]?.trim()||'',cor:row[iCor]?.trim()||'',vs:[],v:valUnit,q:0,_vals:[],f:converterLinkDrive(row[iFoto]?.trim()||''),tams:{},tams_por_vend:{},origem:'usa'};
         const g = groups[key];
         const vend = row[iVend]?.trim()||'';
         if (vend && !g.vs.includes(vend)) g.vs.push(vend);
@@ -2994,7 +3059,6 @@ function handleCSV(input) {
         if (valUnit > 0 && !temDesconto) g._vals.push(valUnit);
       });
 
-      // Merge foto IDs
       const fotoMap = JSON.parse(localStorage.getItem('foto_map')||'{}');
       const newData = Object.values(groups).map((p,i) => {
         const vals = p._vals;
@@ -3004,10 +3068,8 @@ function handleCSV(input) {
         p.vmax = (vals.length && !isBazaar) ? Math.round(Math.max(...vals)*100)/100 : p.vt;
         delete p._vals;
         if (p.f && fotoMap[p.f]) p.f = fotoMap[p.f];
-        // Build tams_str
         const tams = p.tams || {};
         p.tams_str = Object.entries(tams).map(([t,q]) => t==='???' ? '??? (a definir)' : q>1 ? t+'('+q+')' : t).join(' · ');
-        // Normalize tams keys
         const newTams = {};
         Object.entries(tams).forEach(([t,q]) => { newTams[t==='???' ? '??? (a definir)' : t] = q; });
         p.tams = newTams;
@@ -3015,75 +3077,181 @@ function handleCSV(input) {
       });
       newData.sort((a,b)=>a.n.localeCompare(b.n,'pt-BR'));
 
-      PRODUTOS = newData.map((p,i) => {
-        const key = p.n.toLowerCase() + '||' + (p.m||'').toLowerCase();
-        const existing = PRODUTOS.find(x => x.n.toLowerCase() + '||' + (x.m||'').toLowerCase() === key);
-        return {
-          ...p, _id:i,
-          nok:      existing?.nok      || false,
-          nokWho:   existing?.nokWho   || '',
-          nokHistory: existing?.nokHistory || [],
-          nokTams:  existing?.nokTams  || {},
-          comments: existing?.comments || [],
-          qty:      p.q
-        };
+      salvarOrigemNoFirebase(newData, 'usa', () => {
+        const now = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+        localStorage.setItem('ultima_atualizacao', now);
+        document.getElementById('csv-fill').style.width = '100%';
+        setTimeout(() => { document.getElementById('csv-progress').style.display='none'; }, 3000);
       });
-
-      document.getElementById('csv-fill').style.width = '100%';
-      const now = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
-      localStorage.setItem('ultima_atualizacao', now);
-      (document.getElementById('csv-status')||{}).textContent = '⬆️ Salvando produtos no Firebase...';
-      setTimeout(() => { document.getElementById('csv-progress').style.display='none'; }, 3000);
-      renderGrid();
-      if (fbUnsub) { fbUnsub(); fbUnsub=null; }
-
-      if (window._db) {
-        // 1. Apaga catálogo antigo
-        const deleteOldCatalogo = window._db.collection('catalogo').get().then(snap => {
-          if (snap.empty) return;
-          const batch = window._db.batch();
-          snap.docs.forEach(doc => batch.delete(doc.ref));
-          return batch.commit();
-        });
-        // 2. Apaga faltantes antigos
-        const deleteOldFaltantes = window._db.collection('faltantes').get().then(snap => {
-          if (snap.empty) return;
-          const batch = window._db.batch();
-          snap.docs.forEach(doc => batch.delete(doc.ref));
-          return batch.commit();
-        });
-
-        Promise.all([deleteOldCatalogo, deleteOldFaltantes]).then(() => {
-          // 3. Salva novos produtos no catálogo em batches de 500
-          const chunks = [];
-          for (let i = 0; i < PRODUTOS.length; i += 400) chunks.push(PRODUTOS.slice(i, i+400));
-          return chunks.reduce((promise, chunk) => {
-            return promise.then(() => {
-              const batch = window._db.batch();
-              chunk.forEach(p => {
-                const ref = window._db.collection('catalogo').doc(String(p._id));
-                batch.set(ref, {n:p.n,m:p.m||'',c:p.c||'',cor:p.cor||'',vs:p.vs||[],v:p.v||0,q:p.q||0,vt:p.vt||0,vmin:p.vmin||0,vmax:p.vmax||0,f:p.f||'',tams:p.tams||{},tams_str:p.tams_str||'',tams_por_vend:p.tams_por_vend||{}});
-              });
-              return batch.commit();
-            });
-          }, Promise.resolve());
-        }).then(() => {
-          (document.getElementById('csv-status')||{}).textContent = '✅ ' + PRODUTOS.length + ' produtos salvos · ' + now;
-          fbListen();
-        }).catch(e => {
-          (document.getElementById('csv-status')||{}).textContent = '❌ Erro ao salvar: ' + e.message;
-          fbListen();
-        });
-      } else {
-        (document.getElementById('csv-status')||{}).textContent = '✅ ' + PRODUTOS.length + ' produtos importados · ' + now;
-        fbListen();
-      }
     } catch(err) {
       (document.getElementById('csv-status')||{}).textContent = '❌ Erro: ' + err.message;
     }
   };
   reader.onerror = () => {
-    // Try latin1 fallback
+    const r2 = new FileReader();
+    r2.onload = reader.onload;
+    r2.readAsText(file, 'latin1');
+  };
+  reader.readAsText(file, 'utf-8');
+}
+
+// Apaga só os produtos da origem informada e salva os novos, sem mexer na outra origem
+function salvarOrigemNoFirebase(newData, origem, onDone) {
+  const statusId = origem === 'br' ? 'csv-status-br' : 'csv-status';
+  const setStatus = (msg) => { const el = document.getElementById(statusId); if (el) el.textContent = msg; };
+  if (!window._db) {
+    // Sem Firebase: atualiza local mesmo assim
+    const outros = PRODUTOS.filter(p => p.origem !== origem);
+    const maxId = outros.reduce((m,p)=>Math.max(m,p._id||0), -1);
+    const novosComId = newData.map((p,i) => ({...p, _id: maxId+1+i, nok:false,nokWho:'',nokHistory:[],nokTams:{},comments:[],qty:p.q,em_compra:false,est_eua:false,est_br:false}));
+    PRODUTOS = [...outros, ...novosComId];
+    renderGrid();
+    setStatus('✅ ' + newData.length + ' produtos importados (' + origem.toUpperCase() + ')');
+    if (onDone) onDone();
+    return;
+  }
+  if (fbUnsub) { fbUnsub(); fbUnsub = null; }
+  setStatus('🧹 Limpando produtos antigos (' + origem.toUpperCase() + ')...');
+  window._db.collection('catalogo').where('origem','==',origem).get().then(snap => {
+    if (snap.empty) return;
+    const batch = window._db.batch();
+    snap.docs.forEach(doc => batch.delete(doc.ref));
+    return batch.commit();
+  }).then(() => {
+    // Também limpar faltantes (status) dos produtos dessa origem
+    return window._db.collection('faltantes').where('origem','==',origem).get().then(snap => {
+      if (snap.empty) return;
+      const batch = window._db.batch();
+      snap.docs.forEach(doc => batch.delete(doc.ref));
+      return batch.commit();
+    });
+  }).then(() => {
+    // Gerar novos IDs únicos não conflitantes com a outra origem
+    return window._db.collection('catalogo').get();
+  }).then(snap => {
+    let maxId = -1;
+    snap.forEach(doc => { const n = parseInt(doc.id); if (!isNaN(n) && n > maxId) maxId = n; });
+    const novosComId = newData.map((p,i) => ({...p, _id: maxId+1+i}));
+    const chunks = [];
+    for (let i = 0; i < novosComId.length; i += 400) chunks.push(novosComId.slice(i, i+400));
+    return chunks.reduce((promise, chunk) => {
+      return promise.then(() => {
+        const batch = window._db.batch();
+        chunk.forEach(p => {
+          const ref = window._db.collection('catalogo').doc(String(p._id));
+          batch.set(ref, {n:p.n,m:p.m||'',c:p.c||'',cor:p.cor||'',vs:p.vs||[],v:p.v||0,q:p.q||0,vt:p.vt||0,vmin:p.vmin||0,vmax:p.vmax||0,f:p.f||'',tams:p.tams||{},tams_str:p.tams_str||'',tams_por_vend:p.tams_por_vend||{},origem:p.origem||origem});
+        });
+        return batch.commit();
+      });
+    }, Promise.resolve());
+  }).then(() => {
+    setStatus('✅ ' + newData.length + ' produtos salvos (' + origem.toUpperCase() + ')');
+    fbListen();
+    if (onDone) onDone();
+  }).catch(e => {
+    setStatus('❌ Erro ao salvar: ' + e.message);
+    fbListen();
+    if (onDone) onDone();
+  });
+}
+
+function processarCSVBR(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const progEl = document.getElementById('csv-progress-br');
+  const fillEl = document.getElementById('csv-fill-br');
+  const statusEl = document.getElementById('csv-status-br');
+  if (progEl) progEl.style.display = '';
+  if (fillEl) fillEl.style.width = '30%';
+  if (statusEl) statusEl.textContent = 'Lendo arquivo...';
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      if (fillEl) fillEl.style.width = '60%';
+      let text = e.target.result;
+      if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+      text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+      const rows = text.split('\n').map(r => {
+        const cells = []; let cur='', inQ=false;
+        for (const ch of r) {
+          if (ch==='"') inQ=!inQ;
+          else if (ch===','&&!inQ) { cells.push(cur.trim()); cur=''; }
+          else cur+=ch;
+        }
+        cells.push(cur.trim()); return cells;
+      });
+
+      // Header dinâmico: procura linha que contenha CLIENTE, CONF e ITEM
+      let headerIdx = -1;
+      rows.forEach((r,i) => { if (r.includes('CLIENTE') && r.includes('CONF') && r.includes('ITEM')) headerIdx = i; });
+      if (headerIdx === -1) throw new Error('Cabeçalho não encontrado. Verifique se o arquivo é CSV com colunas: CLIENTE, ITEM, VALOR, CONF, MARCA, TAM, COR, CATEGORIA, FOTO');
+
+      const h = rows[headerIdx];
+      const iCliente=h.indexOf('CLIENTE'), iItem=h.indexOf('ITEM'), iVal=h.indexOf('VALOR'), iConf=h.indexOf('CONF');
+      const iMarca=h.indexOf('MARCA'), iCat=h.lastIndexOf('CATEGORIA'), iVend=h.indexOf('VENDEDORA'), iFoto=h.indexOf('FOTO');
+      const iTam=h.indexOf('TAM'), iCor=h.indexOf('COR');
+
+      const pv = (v) => { v=String(v).replace(/R\$|,/g,'').trim(); try{return parseFloat(v)||0;}catch{return 0;} };
+
+      const groups = {};
+      rows.slice(headerIdx+1).forEach(row => {
+        const item = (row[iItem]||'').trim();
+        const cliente = (row[iCliente]||'').trim();
+        if (!item || item.toUpperCase() === 'PARCIAL') return;
+        if (cliente.toLowerCase().endsWith('total')) return;
+        const conf = (row[iConf]||'').trim().toUpperCase();
+        if (conf !== 'IA') return; // só itens marcados como "Ir Atrás"
+
+        const marca = row[iMarca]?.trim() || '';
+        const cat = row[iCat]?.trim() || '';
+        const tam = row[iTam]?.trim() || '';
+        const cor = row[iCor]?.trim() || '';
+        const vend = row[iVend]?.trim() || '';
+        const valUnit = pv(row[iVal]);
+        const foto = converterLinkDrive(row[iFoto]?.trim() || '');
+
+        const key = item.toLowerCase() + '||' + marca.toLowerCase();
+        if (!groups[key]) groups[key] = {n:item,m:marca,c:cat,cor:cor,vs:[],v:valUnit,q:0,_vals:[],f:foto,tams:{},tams_por_vend:{},origem:'br'};
+        const g = groups[key];
+        if (vend && !g.vs.includes(vend)) g.vs.push(vend);
+        if (!g.f && foto) g.f = foto;
+        const tamKey = tam || 'Único';
+        const mult = 1; // QTDA sempre considerado 1 por linha
+        g.tams[tamKey] = (g.tams[tamKey]||0) + mult;
+        if (vend) {
+          if (!g.tams_por_vend[vend]) g.tams_por_vend[vend] = {};
+          g.tams_por_vend[vend][tamKey] = (g.tams_por_vend[vend][tamKey]||0) + mult;
+        }
+        g.q += mult;
+        if (valUnit > 0) g._vals.push(valUnit);
+      });
+
+      const fotoMap = JSON.parse(localStorage.getItem('foto_map')||'{}');
+      const newData = Object.values(groups).map(p => {
+        const vals = p._vals;
+        p.vt = vals.length ? Math.round(vals.reduce((a,b)=>a+b,0)/vals.length*100)/100 : p.v;
+        p.vmin = vals.length ? Math.round(Math.min(...vals)*100)/100 : p.vt;
+        p.vmax = vals.length ? Math.round(Math.max(...vals)*100)/100 : p.vt;
+        delete p._vals;
+        if (p.f && fotoMap[p.f]) p.f = fotoMap[p.f];
+        const tams = p.tams || {};
+        p.tams_str = Object.entries(tams).map(([t,q]) => q>1 ? t+'('+q+')' : t).join(' · ');
+        return p;
+      });
+      newData.sort((a,b)=>a.n.localeCompare(b.n,'pt-BR'));
+
+      if (fillEl) fillEl.style.width = '100%';
+      const now = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+
+      salvarOrigemNoFirebase(newData, 'br', () => {
+        localStorage.setItem('ultima_atualizacao_br', now);
+        setTimeout(() => { if (progEl) progEl.style.display='none'; }, 3000);
+      });
+    } catch(err) {
+      if (statusEl) statusEl.textContent = '❌ Erro: ' + err.message;
+    }
+  };
+  reader.onerror = () => {
     const r2 = new FileReader();
     r2.onload = reader.onload;
     r2.readAsText(file, 'latin1');
@@ -3226,6 +3394,10 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   const savedSub = localStorage.getItem('app_subtitulo');
   if (savedSub) (document.getElementById('subtitulo')||{}).textContent = savedSub;
+  const savedBr = localStorage.getItem('mes_label_br');
+  if (savedBr) (document.getElementById('label-mes-br')||{}).textContent = savedBr;
+  const savedUsa = localStorage.getItem('mes_label_usa');
+  if (savedUsa) (document.getElementById('label-mes-usa')||{}).textContent = savedUsa;
 
   // Header hide on scroll down, show on scroll up
   let _lastScroll = 0;
