@@ -3288,17 +3288,26 @@ function salvarOrigemNoFirebase(newData, origem, onDone) {
   }
   if (fbUnsub) { fbUnsub(); fbUnsub = null; }
   setStatus('🧹 Limpando produtos antigos (' + origem.toUpperCase() + ')...');
-  window._db.collection('catalogo').where('origem','==',origem).get().then(snap => {
-    if (snap.empty) return;
+  window._db.collection('catalogo').get().then(snap => {
+    // Se importando USA: deleta TUDO (produtos sem origem são todos USA legados)
+    // Se importando BR: deleta só os que têm origem == 'br'
+    const docsToDelete = origem === 'usa'
+      ? snap.docs
+      : snap.docs.filter(doc => doc.data().origem === 'br');
+    if (!docsToDelete.length) return;
     const batch = window._db.batch();
-    snap.docs.forEach(doc => batch.delete(doc.ref));
+    docsToDelete.forEach(doc => batch.delete(doc.ref));
     return batch.commit();
   }).then(() => {
-    // Também limpar faltantes (status) dos produtos dessa origem
-    return window._db.collection('faltantes').where('origem','==',origem).get().then(snap => {
-      if (snap.empty) return;
+    // Limpar faltantes da origem — se USA, também limpar legados sem origem
+    return window._db.collection('faltantes').get().then(snap => {
+      const toDelete = snap.docs.filter(doc => {
+        const o = doc.data().origem;
+        return origem === 'usa' ? (!o || o === 'usa') : o === 'br';
+      });
+      if (!toDelete.length) return;
       const batch = window._db.batch();
-      snap.docs.forEach(doc => batch.delete(doc.ref));
+      toDelete.forEach(doc => batch.delete(doc.ref));
       return batch.commit();
     });
   }).then(() => {
