@@ -397,6 +397,18 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
       <div id="fb-usage" style="font-size:11px;color:var(--text3)">Calculando...</div>
       <a href="https://console.firebase.google.com" target="_blank" style="font-size:10px;color:var(--text4);text-decoration:none;display:block;margin-top:6px">Ver console completo ↗</a>
     </div>
+    <div style="margin-top:12px;border-top:0.5px solid var(--border)">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px 6px">
+        <div style="font-size:10px;color:var(--text4);font-weight:600;letter-spacing:0.5px">HISTÓRICO</div>
+        <div style="display:flex;gap:6px">
+          <button onclick="limparHistorico()" style="background:none;border:0.5px solid var(--border);border-radius:8px;padding:4px 10px;color:var(--text3);font-size:10px;font-weight:600;cursor:pointer;font-family:inherit">🗑 Limpar</button>
+          <button onclick="setHistView('timeline')" id="hist-btn-timeline" class="chip active" style="font-size:9px;padding:4px 10px">Timeline</button>
+          <button onclick="setHistView('relatorio')" id="hist-btn-relatorio" class="chip" style="font-size:9px;padding:4px 10px">Semanal</button>
+        </div>
+      </div>
+      <div id="hist-timeline" style="padding:4px 0"></div>
+      <div id="hist-relatorio" style="padding:8px 16px;display:none"></div>
+    </div>
   </div>
 </div>
 
@@ -467,8 +479,8 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
     <span class="tab-label">NOK</span>
   </button>
   <button class="tab-btn" id="tab-hist" onclick="goTab('hist')" style="position:relative">
-    <span class="tab-icon">📊</span>
-    <span class="tab-label">Histórico</span>
+    <span class="tab-icon">🎯</span>
+    <span class="tab-label">Meta</span>
   </button>
   <button class="tab-btn" id="tab-upload" onclick="goTab('upload')">
     <span class="tab-icon">⬆</span>
@@ -522,18 +534,14 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
   <div class="chat-header">
     <div style="display:flex;align-items:center;justify-content:space-between;width:100%">
       <div>
-        <div class="chat-title">📊 Histórico</div>
-        <div class="chat-sub" id="hist-sub">Atividade recente</div>
-      </div>
-      <div style="display:flex;gap:6px">
-        <button onclick="limparHistorico()" style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:8px 14px;color:var(--text3);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;flex-shrink:0">🗑 Limpar</button>
-        <button onclick="setHistView('timeline')" id="hist-btn-timeline" class="chip active" style="font-size:10px">Timeline</button>
-        <button onclick="setHistView('relatorio')" id="hist-btn-relatorio" class="chip" style="font-size:10px">Semanal</button>
+        <div class="chat-title">🎯 Meta</div>
+        <div class="chat-sub" id="meta-sub">Desempenho por vendedora</div>
       </div>
     </div>
   </div>
-  <div id="hist-timeline" style="padding:12px 0"></div>
-  <div id="hist-relatorio" style="padding:12px 16px;display:none"></div>
+  <div id="meta-content" style="padding:12px 16px">
+    <div style="text-align:center;padding:40px 20px;color:#c4a898;font-size:13px">Importe a planilha USA para ver as metas</div>
+  </div>
 </div>
 
 <div class="page" id="page-eua">
@@ -2550,6 +2558,122 @@ function renderCompra() {
   });
 }
 
+function renderMeta() {
+  const container = document.getElementById('meta-content');
+  if (!container) return;
+  let data;
+  try { data = JSON.parse(localStorage.getItem('meta_vendedoras')||'[]'); } catch(e) { data=[]; }
+  if (!data.length) {
+    container.innerHTML = '<div style="text-align:center;padding:40px 20px;color:#c4a898;font-size:13px">Importe a planilha USA para ver as metas</div>';
+    return;
+  }
+
+  const fmt = v => 'R$ ' + (v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const cores = ['#7a0b1e','#f59e0b','#0f6b52','#6366f1','#783c18','#ea580c'];
+
+  // Calcular % atingido de cada vendedora
+  const vendedoras = data.map((v,i) => ({
+    ...v,
+    pct: v.meta > 0 ? Math.round(v.oks / v.meta * 100) : 0,
+    cor: cores[i % cores.length]
+  }));
+
+  // --- Pizza ---
+  const total = vendedoras.reduce((s,v) => s + v.oks, 0);
+  let pizzaSlices = '';
+  let legendaItems = '';
+  let angle = -Math.PI/2;
+  const cx=100, cy=100, r=80, ri=45;
+
+  vendedoras.forEach((v,i) => {
+    const slice = total > 0 ? (v.oks / total) * 2 * Math.PI : 0;
+    const x1 = cx + r * Math.cos(angle);
+    const y1 = cy + r * Math.sin(angle);
+    const x2 = cx + r * Math.cos(angle + slice);
+    const y2 = cy + r * Math.sin(angle + slice);
+    const xi1 = cx + ri * Math.cos(angle);
+    const yi1 = cy + ri * Math.sin(angle);
+    const xi2 = cx + ri * Math.cos(angle + slice);
+    const yi2 = cy + ri * Math.sin(angle + slice);
+    const large = slice > Math.PI ? 1 : 0;
+    if (slice > 0.01) {
+      pizzaSlices += `<path d="M${xi1.toFixed(1)},${yi1.toFixed(1)} L${x1.toFixed(1)},${y1.toFixed(1)} A${r},${r} 0 ${large},1 ${x2.toFixed(1)},${y2.toFixed(1)} L${xi2.toFixed(1)},${yi2.toFixed(1)} A${ri},${ri} 0 ${large},0 ${xi1.toFixed(1)},${yi1.toFixed(1)} Z" fill="${v.cor}" stroke="#fff" stroke-width="1.5"/>`;
+      // Rótulo %
+      const midAngle = angle + slice/2;
+      const lx = cx + (r+ri)/2 * Math.cos(midAngle);
+      const ly = cy + (r+ri)/2 * Math.sin(midAngle);
+      if (slice > 0.3) pizzaSlices += `<text x="${lx.toFixed(1)}" y="${(ly+3).toFixed(1)}" text-anchor="middle" font-size="9" font-weight="700" fill="#fff">${v.pct}%</text>`;
+    }
+    legendaItems += `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+      <div style="width:10px;height:10px;border-radius:2px;background:${v.cor};flex-shrink:0"></div>
+      <span style="font-size:11px;color:var(--text)">${v.nome.charAt(0)+v.nome.slice(1).toLowerCase()}</span>
+      <span style="font-size:10px;color:var(--text4);margin-left:auto">${v.pct}%</span>
+    </div>`;
+    angle += slice;
+  });
+
+  // Texto central
+  const totalMeta = vendedoras.reduce((s,v) => s+v.meta, 0);
+  const totalOks = vendedoras.reduce((s,v) => s+v.oks, 0);
+  const pctTotal = totalMeta > 0 ? Math.round(totalOks/totalMeta*100) : 0;
+  pizzaSlices += `<text x="${cx}" y="${cy-6}" text-anchor="middle" font-size="18" font-weight="700" fill="var(--text)">${pctTotal}%</text>`;
+  pizzaSlices += `<text x="${cx}" y="${cy+10}" text-anchor="middle" font-size="8" fill="#b08070">da meta</text>`;
+
+  // --- Tabela ---
+  let linhas = vendedoras.map(v => `
+    <tr>
+      <td style="padding:8px 10px;font-weight:600;color:var(--text)">${v.nome.charAt(0)+v.nome.slice(1).toLowerCase()}</td>
+      <td style="padding:8px 10px;text-align:right;color:#0f6b52;font-weight:600">${fmt(v.oks)}</td>
+      <td style="padding:8px 10px;text-align:right;color:var(--red);font-weight:600">${fmt(v.faltantes)}</td>
+      <td style="padding:8px 10px;text-align:right;color:var(--text3)">${fmt(v.estGeral)}</td>
+      <td style="padding:8px 10px;text-align:right;color:#783c18">${fmt(v.estBR)}</td>
+      <td style="padding:8px 10px;text-align:right;color:var(--text4)">${fmt(v.meta)}</td>
+      <td style="padding:8px 10px;text-align:right">
+        <span style="background:${v.pct>=100?'#e8f5f1':v.pct>=70?'#fff8e8':'#fdf2f3'};color:${v.pct>=100?'#0f6b52':v.pct>=70?'#d97706':'#7a0b1e'};border-radius:8px;padding:2px 8px;font-size:10px;font-weight:700">${v.pct}%</span>
+      </td>
+    </tr>`).join('');
+
+  // Total row
+  const tFalt = vendedoras.reduce((s,v)=>s+v.faltantes,0);
+  const tEstG = vendedoras.reduce((s,v)=>s+v.estGeral,0);
+  const tEstBR = vendedoras.reduce((s,v)=>s+v.estBR,0);
+  linhas += `<tr style="border-top:1.5px solid var(--border)">
+    <td style="padding:8px 10px;font-weight:700;color:var(--text)">Total</td>
+    <td style="padding:8px 10px;text-align:right;font-weight:700;color:#0f6b52">${fmt(totalOks)}</td>
+    <td style="padding:8px 10px;text-align:right;font-weight:700;color:var(--red)">${fmt(tFalt)}</td>
+    <td style="padding:8px 10px;text-align:right;font-weight:700">${fmt(tEstG)}</td>
+    <td style="padding:8px 10px;text-align:right;font-weight:700;color:#783c18">${fmt(tEstBR)}</td>
+    <td style="padding:8px 10px;text-align:right;font-weight:700">${fmt(totalMeta)}</td>
+    <td style="padding:8px 10px;text-align:right"><span style="background:#e8f5f1;color:#0f6b52;border-radius:8px;padding:2px 8px;font-size:10px;font-weight:700">${pctTotal}%</span></td>
+  </tr>`;
+
+  container.innerHTML = `
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;flex-wrap:wrap">
+      <svg viewBox="0 0 200 200" width="180" height="180" style="flex-shrink:0">${pizzaSlices}</svg>
+      <div style="flex:1;min-width:120px">${legendaItems}</div>
+    </div>
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:11px">
+        <thead>
+          <tr style="background:var(--red)">
+            <th style="padding:8px 10px;text-align:left;color:#fff;font-size:10px">Vendedora</th>
+            <th style="padding:8px 10px;text-align:right;color:#fff;font-size:10px">OKs</th>
+            <th style="padding:8px 10px;text-align:right;color:#fff;font-size:10px">Faltantes</th>
+            <th style="padding:8px 10px;text-align:right;color:#fff;font-size:10px">Est. Geral</th>
+            <th style="padding:8px 10px;text-align:right;color:#fff;font-size:10px">Est. BR</th>
+            <th style="padding:8px 10px;text-align:right;color:#fff;font-size:10px">Meta</th>
+            <th style="padding:8px 10px;text-align:right;color:#fff;font-size:10px">%</th>
+          </tr>
+        </thead>
+        <tbody>${linhas}</tbody>
+      </table>
+    </div>`;
+
+  // Atualizar subtítulo da aba
+  const sub = document.getElementById('meta-sub');
+  if (sub) sub.textContent = `${vendedoras.length} vendedoras · ${pctTotal}% da meta geral`;
+}
+
 function renderNok() {
   const list = document.getElementById('nok-list');
   const prods = PRODUTOS.filter(p => p.nok || (p.nokTams && Object.keys(p.nokTams).some(t => p.nokTams[t])));
@@ -2989,9 +3113,7 @@ function processarCSVUSA(input) {
     try {
       document.getElementById('csv-fill').style.width = '60%';
       let text = e.target.result;
-      // Remove BOM if present
       if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
-      // Normalize line endings
       text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
       const rows = text.split('\n').map(r => {
         const cells = []; let cur='', inQ=false;
@@ -3003,26 +3125,61 @@ function processarCSVUSA(input) {
         cells.push(cur.trim()); return cells;
       });
 
-      // Read resumo from header
+      const pv = (v) => { const n=parseFloat(String(v||'').replace(/R\$|\./g,'').replace(',','.').trim()); return isNaN(n)?0:n; };
+
+      // Ler resumo global (linhas 1-9, coluna 5)
       const resumoKeys = ['META','FALTA META','VALOR CONFERIDO','NOK','ONLINE','SP/SOS/DAN','FALTANTE','TOTAL','JÁ CHEGOU NO BRASIL'];
       const resumoVals = {};
       rows.slice(0,9).forEach((row,i) => {
-        const raw = (row[4]||'').replace(/R\$|,/g,'').trim();
-        const num = parseFloat(raw);
-        if (!isNaN(num)) resumoVals[resumoKeys[i]] = num;
+        const num = pv(row[4]);
+        if (num !== 0) resumoVals[resumoKeys[i]] = num;
       });
-      if (Object.keys(resumoVals).length > 0) localStorage.setItem('resumo_planilha', JSON.stringify(resumoVals));
 
+      // Ler tabela de meta por vendedora (linhas 3-7, colunas 12-22)
+      // Linha 2 (idx 1): cabeçalho das colunas (OKS/ONLINES, FALTANTES, etc) começa na col 15
+      // Linhas 3-6 (idx 2-5): dados por vendedora
+      // Linha 7 (idx 6): Total
+      const metaVendedoras = [];
+      const metaCabecalho = rows[1]; // linha 2
+      // Encontrar posição das colunas de meta
+      const colOks = metaCabecalho.indexOf('OKS/ONLINES');
+      const colFalt = metaCabecalho.indexOf('FALTANTES');
+      const colEstGeral = metaCabecalho.indexOf('ESTOQUE GERAL');
+      const colEstBR = metaCabecalho.indexOf('ESTOQUE BR');
+      const colMeta = metaCabecalho.indexOf('META');
+      const colFaltaMeta = metaCabecalho.lastIndexOf('FALTA META');
+
+      if (colOks > -1) {
+        for (let i = 2; i <= 6; i++) {
+          const row = rows[i];
+          const nome = (row[12]||'').trim();
+          if (!nome || nome.toLowerCase() === 'total') continue;
+          metaVendedoras.push({
+            nome,
+            oks:       pv(row[colOks]),
+            faltantes: pv(row[colFalt]),
+            estGeral:  pv(row[colEstGeral]),
+            estBR:     pv(row[colEstBR]),
+            meta:      pv(row[colMeta]),
+            faltaMeta: pv(row[colFaltaMeta]),
+          });
+        }
+      }
+      if (metaVendedoras.length > 0) {
+        localStorage.setItem('meta_vendedoras', JSON.stringify(metaVendedoras));
+        localStorage.setItem('resumo_planilha', JSON.stringify(resumoVals));
+        renderMeta();
+      }
+
+      // Cabeçalho de produtos: procura linha com ITEM e CONF
       let headerIdx = -1;
       rows.forEach((r,i) => { if (r.includes('ITEM')&&r.includes('CONF')) headerIdx=i; });
       if (headerIdx === -1) throw new Error('Cabeçalho não encontrado. Verifique se o arquivo é CSV com colunas: ITEM, CONF, VALOR, MARCA, CATEGORIA, VENDEDORA, FOTO');
 
       const h = rows[headerIdx];
       const iItem=h.indexOf('ITEM'), iVal=h.indexOf('VALOR'), iConf=h.indexOf('CONF');
-      const iMarca=h.indexOf('MARCA'), iCat=h.indexOf('CATEGORIA'), iVend=h.indexOf('VENDEDORA'), iFoto=h.indexOf('FOTO'), iCor=h.indexOf('COR');
+      const iMarca=h.indexOf('MARCA'), iCat=h.indexOf('CATEGORIA'), iVend=h.indexOf('VENDEDORA'), iFoto=h.indexOf('FOTO'), iCor=h.indexOf('COR'), iTam=h.indexOf('TAM');
 
-      const pv = (v) => { v=String(v).replace(/R\$|,/g,'').trim(); try{return parseFloat(v);}catch{return 0;} };
-      // Helper: extract size and multiplier from name
       function extrairTamMult(nome) {
         var m = nome.match(/\s+tam\s+(.+?)(\s+(\d+)x)?\s*$/i);
         if (m) return {base: nome.slice(0,m.index).trim(), tam: m[1].trim(), mult: m[3]?parseInt(m[3]):1};
@@ -3037,20 +3194,22 @@ function processarCSVUSA(input) {
         const item = row[iItem].trim();
         const conf = (row[iConf]||'').trim().toUpperCase();
         if (conf !== '') return;
-        const obs = (row[10]||'').trim().toUpperCase();
+        const obs = (row[iItem+2]||'').trim().toUpperCase();
         const temDesconto = obs.includes('COM DESCONTO');
-        const {base, tam, mult} = extrairTamMult(item);
+        // TAM pode vir como coluna separada ou embutido no nome
+        const tamCol = iTam > -1 ? (row[iTam]||'').trim() : '';
+        const {base, tam: tamNome, mult} = extrairTamMult(item);
+        const tam = tamCol || tamNome;
         const valTotal = pv(row[iVal]);
         const valUnit = (mult > 1 && valTotal > 0) ? Math.round(valTotal/mult*100)/100 : valTotal;
         const key = base.toLowerCase().trim() + '||' + (row[iMarca]?.trim()||'').toLowerCase();
-        if (!groups[key]) groups[key] = {n:base,m:row[iMarca]?.trim()||'',c:row[iCat]?.trim()||'',cor:row[iCor]?.trim()||'',vs:[],v:valUnit,q:0,_vals:[],f:converterLinkDrive(row[iFoto]?.trim()||''),tams:{},tams_por_vend:{},origem:'usa'};
+        if (!groups[key]) groups[key] = {n:base,m:row[iMarca]?.trim()||'',c:row[iCat]?.trim()||'',cor:(iCor>-1?row[iCor]?.trim():'')||'',vs:[],v:valUnit,q:0,_vals:[],f:converterLinkDrive(row[iFoto]?.trim()||''),tams:{},tams_por_vend:{},origem:'usa'};
         const g = groups[key];
         const vend = row[iVend]?.trim()||'';
         if (vend && !g.vs.includes(vend)) g.vs.push(vend);
         if (!g.f && row[iFoto]?.trim()) g.f = converterLinkDrive(row[iFoto].trim());
         const tamKey = tam || 'Único';
         g.tams[tamKey] = (g.tams[tamKey]||0) + mult;
-        // Track per-vendedora tams
         if (vend) {
           if (!g.tams_por_vend[vend]) g.tams_por_vend[vend] = {};
           g.tams_por_vend[vend][tamKey] = (g.tams_por_vend[vend][tamKey]||0) + mult;
@@ -3060,7 +3219,7 @@ function processarCSVUSA(input) {
       });
 
       const fotoMap = JSON.parse(localStorage.getItem('foto_map')||'{}');
-      const newData = Object.values(groups).map((p,i) => {
+      const newData = Object.values(groups).map(p => {
         const vals = p._vals;
         p.vt = vals.length ? Math.round(vals.reduce((a,b)=>a+b,0)/vals.length*100)/100 : p.v;
         const isBazaar = (p.n+' '+p.m).toLowerCase().includes('bazaar');
@@ -3415,7 +3574,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   renderGrid();
   restaurarFiltros();
-  renderGrid(); // re-render with restored filters
+  renderGrid();
+  renderMeta();
   fbListen();
   resetIdleTimer();
 });
