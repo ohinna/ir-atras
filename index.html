@@ -284,9 +284,9 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
   <div class="filter-row" id="status-row">
     <button class="chip active" id="status-todos" onclick="setStatus('',this)">Todos</button>
     <button class="chip" id="status-nok" onclick="setStatus('nok',this)">✕ NOK</button>
-    <button class="chip" id="status-compra" onclick="setStatus('compra',this)">🛒 Em compra</button>
-    <button class="chip" id="status-eua" onclick="setStatus('eua',this)">🇺🇸 Est EUA</button>
-    <button class="chip" id="status-br" onclick="setStatus('br',this)">🇧🇷 Est BR</button>
+    <button class="chip" id="status-compra" onclick="setStatus('compra',this)">🛒 Compra</button>
+    <button class="chip" id="status-eua" onclick="setStatus('eua',this)">🇺🇸 EUA</button>
+    <button class="chip" id="status-br" onclick="setStatus('br',this)">🇧🇷 BR</button>
   </div>
   <div class="filter-row" id="marca-row">
     <button class="chip active" id="chip-all-marca" onclick="setMarca('',this)">Todas marcas</button>
@@ -1114,7 +1114,7 @@ function renderGrid() {
     return `<div class="card ${p.nok?'is-nok':''}" id="card-${p._id}">
       <div class="card-img" onclick="openModal(${p._id})">
         ${img}
-        ${p.origem ? `<div style="position:absolute;bottom:6px;right:30px;background:rgba(0,0,0,0.55);border-radius:6px;padding:1px 6px;font-size:9px;font-weight:700;color:#fff;z-index:2">${p.origem === 'br' ? '🇧🇷' : '🇺🇸'}</div>` : ''}
+        ${p.origem ? `<div style="position:absolute;bottom:6px;left:6px;background:rgba(0,0,0,0.55);border-radius:6px;padding:1px 6px;font-size:9px;font-weight:700;color:#fff;z-index:2">${p.origem === 'br' ? '🇧🇷' : '🇺🇸'}</div>` : ''}
         ${p.nok ? '<div class="nok-overlay show"><div class="nok-bg"></div><div class="nok-content"><div class="nok-label">✕ NOK</div>' + (p.nokWho ? '<div style="font-size:9px;color:rgba(255,255,255,0.75);margin-top:2px">'+p.nokWho+'</div>' : '') + '</div></div>' : ''}
         ${p.em_compra ? '<div class="compra-overlay show"><div class="compra-bg"></div><div class="compra-content"><div class="compra-label">🛒 Em compra</div></div></div>' : ''}
         ${p.est_eua ? '<div class="eua-overlay show"><div class="eua-bg"></div><div class="eua-content"><div class="eua-label">🇺🇸 Est EUA</div></div></div>' : ''}
