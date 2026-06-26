@@ -955,6 +955,17 @@ function toggleGrid() {
   document.getElementById('grid').style.gridTemplateColumns = `repeat(${_gridCols}, 1fr)`;
 }
 
+function resolverFoto(raw) {
+  if (!raw) return '';
+  const s = raw.trim();
+  if (!s) return '';
+  // Se for um link do Drive, converter normalmente
+  if (s.startsWith('http')) return converterLinkDrive(s);
+  // Se for nome de arquivo, buscar no foto_map
+  const fotoMap = JSON.parse(localStorage.getItem('foto_map')||'{}');
+  return fotoMap[s] || fotoMap[s.toLowerCase()] || '';
+}
+
 function converterLinkDrive(url) {
   if (!url) return url;
   url = url.trim();
@@ -2879,7 +2890,7 @@ function fbListen() {
         const raw = [];
         snap.forEach(doc => { raw.push({...doc.data(), _id: parseInt(doc.id)}); });
         raw.sort((a,b) => a._id - b._id);
-        PRODUTOS = raw.map(p => ({...p, f: converterLinkDrive(p.f), origem: p.origem||'usa', nok:false, em_compra:false, est_eua:false, est_br:false, comments:[], qty:p.q}));
+        PRODUTOS = raw.map(p => ({...p, f: resolverFoto(p.f) || converterLinkDrive(p.f), origem: p.origem||'usa', nok:false, em_compra:false, est_eua:false, est_br:false, comments:[], qty:p.q}));
         renderGrid();
         reconstruirCatChips();
         updateNokBadge();
@@ -3220,11 +3231,11 @@ function processarCSVUSA(input) {
         const valTotal = pv(row[iVal]);
         const valUnit = (mult > 1 && valTotal > 0) ? Math.round(valTotal/mult*100)/100 : valTotal;
         const key = base.toLowerCase().trim() + '||' + (row[iMarca]?.trim()||'').toLowerCase();
-        if (!groups[key]) groups[key] = {n:base,m:row[iMarca]?.trim()||'',c:row[iCat]?.trim()||'',cor:(iCor>-1?row[iCor]?.trim():'')||'',vs:[],v:valUnit,q:0,_vals:[],f:converterLinkDrive(row[iFoto]?.trim()||''),tams:{},tams_por_vend:{},origem:'usa'};
+        if (!groups[key]) groups[key] = {n:base,m:row[iMarca]?.trim()||'',c:row[iCat]?.trim()||'',cor:(iCor>-1?row[iCor]?.trim():'')||'',vs:[],v:valUnit,q:0,_vals:[],f:resolverFoto(row[iFoto]?.trim()||''),tams:{},tams_por_vend:{},origem:'usa'};
         const g = groups[key];
         const vend = row[iVend]?.trim()||'';
         if (vend && !g.vs.includes(vend)) g.vs.push(vend);
-        if (!g.f && row[iFoto]?.trim()) g.f = converterLinkDrive(row[iFoto].trim());
+        if (!g.f && row[iFoto]?.trim()) g.f = resolverFoto(row[iFoto].trim());
         const tamKey = tam || 'Único';
         g.tams[tamKey] = (g.tams[tamKey]||0) + mult;
         if (vend) {
@@ -3398,7 +3409,7 @@ function processarCSVBR(input) {
         const cor = row[iCor]?.trim() || '';
         const vend = row[iVend]?.trim() || '';
         const valUnit = pv(row[iVal]);
-        const foto = converterLinkDrive(row[iFoto]?.trim() || '');
+        const foto = resolverFoto(row[iFoto]?.trim() || '');
 
         const key = item.toLowerCase() + '||' + marca.toLowerCase();
         if (!groups[key]) groups[key] = {n:item,m:marca,c:cat,cor:cor,vs:[],v:valUnit,q:0,_vals:[],f:foto,tams:{},tams_por_vend:{},origem:'br'};
