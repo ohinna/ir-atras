@@ -2927,8 +2927,21 @@ function _fbListenCore() {
           }
         }
       });
+      if (data.meta_vendedoras) {
+        localStorage.setItem('meta_vendedoras', data.meta_vendedoras);
+        renderMeta();
+      }
     }
   });
+  // Load foto_map from Firebase
+  window._db.collection('config').doc('fotos').get().then(doc => {
+    if (doc.exists && doc.data().map) {
+      const map = JSON.parse(doc.data().map);
+      localStorage.setItem('foto_map', JSON.stringify(map));
+      PRODUTOS.forEach(p => { if (p.f && map[p.f]) p.f = map[p.f]; });
+      renderGrid();
+    }
+  }).catch(()=>{});
   fbUnsub = window._db.collection('faltantes').onSnapshot(snap => {
     snap.forEach(doc => {
       const id = parseInt(doc.id);
@@ -3196,6 +3209,12 @@ function processarCSVUSA(input) {
       if (metaVendedoras.length > 0) {
         localStorage.setItem('meta_vendedoras', JSON.stringify(metaVendedoras));
         localStorage.setItem('resumo_planilha', JSON.stringify(resumoVals));
+        if (window._db) {
+          window._db.collection('config').doc('app').set({
+            meta_vendedoras: JSON.stringify(metaVendedoras),
+            resumo_planilha: JSON.stringify(resumoVals)
+          }, {merge: true});
+        }
         renderMeta();
       }
 
@@ -3504,6 +3523,10 @@ function handleFotos(input) {
       if (nome&&id) map[nome.trim()] = 'https://drive.google.com/thumbnail?id='+id.trim()+'&sz=w400';
     });
     localStorage.setItem('foto_map', JSON.stringify(map));
+    // Sync to Firebase so all devices get the foto map
+    if (window._db) {
+      window._db.collection('config').doc('fotos').set({map: JSON.stringify(map), updatedAt: new Date().toISOString()});
+    }
     // Apply to current produtos
     PRODUTOS.forEach(p => { if (p.f && map[p.f]) p.f = map[p.f]; });
     (document.getElementById('foto-status')||{}).textContent = '✅ ' + Object.keys(map).length + ' fotos mapeadas';
