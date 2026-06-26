@@ -2888,25 +2888,35 @@ function fbSave(id) {
 function fbListen() {
   if (!window._db) return;
 
-  // Carregar catálogo do Firebase se PRODUTOS estiver vazio
-  if (PRODUTOS.length === 0) {
-    window._db.collection('catalogo').get().then(snap => {
-      if (!snap.empty) {
-        const raw = [];
-        snap.forEach(doc => { raw.push({...doc.data(), _id: parseInt(doc.id)}); });
-        raw.sort((a,b) => a._id - b._id);
-        PRODUTOS = raw.map(p => ({...p, f: resolverFoto(p.f) || converterLinkDrive(p.f), origem: p.origem||'usa', nok:false, em_compra:false, est_eua:false, est_br:false, comments:[], qty:p.q}));
-        renderGrid();
-        reconstruirCatChips();
-        updateNokBadge();
-        updateEmCompraBadge();
-        abrirProdutoPorHash();
-      }
+  // Carregar foto_map PRIMEIRO, depois o catálogo
+  const carregarCatalogo = () => {
+    if (PRODUTOS.length === 0) {
+      window._db.collection('catalogo').get().then(snap => {
+        if (!snap.empty) {
+          const raw = [];
+          snap.forEach(doc => { raw.push({...doc.data(), _id: parseInt(doc.id)}); });
+          raw.sort((a,b) => a._id - b._id);
+          PRODUTOS = raw.map(p => ({...p, f: resolverFoto(p.f) || converterLinkDrive(p.f), origem: p.origem||'usa', nok:false, em_compra:false, est_eua:false, est_br:false, comments:[], qty:p.q}));
+          renderGrid();
+          reconstruirCatChips();
+          updateNokBadge();
+          updateEmCompraBadge();
+          abrirProdutoPorHash();
+        }
+        _fbListenCore();
+      }).catch(() => _fbListenCore());
+    } else {
       _fbListenCore();
-    }).catch(() => _fbListenCore());
-  } else {
-    _fbListenCore();
-  }
+    }
+  };
+
+  // Carregar foto_map do Firebase antes de tudo
+  window._db.collection('config').doc('fotos').get().then(doc => {
+    if (doc.exists && doc.data().map) {
+      const map = JSON.parse(doc.data().map);
+      localStorage.setItem('foto_map', JSON.stringify(map));
+    }
+  }).catch(()=>{}).finally(() => carregarCatalogo());
 }
 
 function _fbListenCore() {
@@ -2938,20 +2948,6 @@ function _fbListenCore() {
       }
     }
   });
-  // Load foto_map from Firebase
-  window._db.collection('config').doc('fotos').get().then(doc => {
-    if (doc.exists && doc.data().map) {
-      const map = JSON.parse(doc.data().map);
-      localStorage.setItem('foto_map', JSON.stringify(map));
-      // Reaplicar nas fotos que são nomes de arquivo (não links)
-      let changed = false;
-      PRODUTOS.forEach(p => {
-        if (p.f && !p.f.startsWith('http') && map[p.f]) { p.f = map[p.f]; changed = true; }
-        else if (p.f && !p.f.startsWith('http') && map[p.f.toLowerCase()]) { p.f = map[p.f.toLowerCase()]; changed = true; }
-      });
-      if (changed) renderGrid();
-    }
-  }).catch(()=>{});
   fbUnsub = window._db.collection('faltantes').onSnapshot(snap => {
     snap.forEach(doc => {
       const id = parseInt(doc.id);
