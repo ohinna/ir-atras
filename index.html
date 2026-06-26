@@ -962,8 +962,13 @@ function resolverFoto(raw) {
   // Se for um link do Drive, converter normalmente
   if (s.startsWith('http')) return converterLinkDrive(s);
   // Se for nome de arquivo, buscar no foto_map
-  const fotoMap = JSON.parse(localStorage.getItem('foto_map')||'{}');
-  return fotoMap[s] || fotoMap[s.toLowerCase()] || '';
+  try {
+    const fotoMap = JSON.parse(localStorage.getItem('foto_map')||'{}');
+    if (fotoMap[s]) return fotoMap[s];
+    if (fotoMap[s.toLowerCase()]) return fotoMap[s.toLowerCase()];
+  } catch(e) {}
+  // Fallback: tentar como ID do Drive direto
+  return s.length > 10 ? `https://drive.google.com/thumbnail?id=${s}&sz=w1000` : '';
 }
 
 function converterLinkDrive(url) {
@@ -2938,8 +2943,13 @@ function _fbListenCore() {
     if (doc.exists && doc.data().map) {
       const map = JSON.parse(doc.data().map);
       localStorage.setItem('foto_map', JSON.stringify(map));
-      PRODUTOS.forEach(p => { if (p.f && map[p.f]) p.f = map[p.f]; });
-      renderGrid();
+      // Reaplicar nas fotos que são nomes de arquivo (não links)
+      let changed = false;
+      PRODUTOS.forEach(p => {
+        if (p.f && !p.f.startsWith('http') && map[p.f]) { p.f = map[p.f]; changed = true; }
+        else if (p.f && !p.f.startsWith('http') && map[p.f.toLowerCase()]) { p.f = map[p.f.toLowerCase()]; changed = true; }
+      });
+      if (changed) renderGrid();
     }
   }).catch(()=>{});
   fbUnsub = window._db.collection('faltantes').onSnapshot(snap => {
