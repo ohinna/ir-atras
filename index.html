@@ -966,6 +966,10 @@ function resolverFoto(raw) {
     const fotoMap = JSON.parse(localStorage.getItem('foto_map')||'{}');
     if (fotoMap[s]) return fotoMap[s];
     if (fotoMap[s.toLowerCase()]) return fotoMap[s.toLowerCase()];
+    // Tentar sem extensão
+    const semExt = s.replace(/\.[^/.]+$/, '');
+    if (fotoMap[semExt]) return fotoMap[semExt];
+    if (fotoMap[semExt.toLowerCase()]) return fotoMap[semExt.toLowerCase()];
   } catch(e) {}
   // Fallback: tentar como ID do Drive direto
   return s.length > 10 ? `https://drive.google.com/thumbnail?id=${s}&sz=w1000` : '';
