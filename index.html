@@ -2900,7 +2900,11 @@ function fbListen() {
           const raw = [];
           snap.forEach(doc => { raw.push({...doc.data(), _id: parseInt(doc.id)}); });
           raw.sort((a,b) => a._id - b._id);
-          PRODUTOS = raw.map(p => ({...p, f: resolverFoto(p.f) || converterLinkDrive(p.f), origem: p.origem||'usa', nok:false, em_compra:false, est_eua:false, est_br:false, comments:[], qty:p.q}));
+          PRODUTOS = raw.map(p => {
+            const fOriginal = p.f || '';
+            const fResolved = resolverFoto(fOriginal) || converterLinkDrive(fOriginal);
+            return {...p, f: fResolved, _fOriginal: fOriginal, origem: p.origem||'usa', nok:false, em_compra:false, est_eua:false, est_br:false, comments:[], qty:p.q};
+          });
           renderGrid();
           reconstruirCatChips();
           updateNokBadge();
@@ -3537,8 +3541,16 @@ function handleFotos(input) {
     if (window._db) {
       window._db.collection('config').doc('fotos').set({map: JSON.stringify(map), updatedAt: new Date().toISOString()});
     }
-    // Apply to current produtos
-    PRODUTOS.forEach(p => { if (p.f && map[p.f]) p.f = map[p.f]; });
+    // Reimportar CSV pra resolver as fotos com o mapa novo
+    // (produtos já em memória precisam ser recarregados do Firebase)
+    if (PRODUTOS.length > 0) {
+      PRODUTOS.forEach(p => {
+        // p._fOriginal é o nome original do arquivo (se foi preservado)
+        const fOriginal = p._fOriginal || p.f;
+        const resolved = resolverFoto(fOriginal);
+        if (resolved) { p._fOriginal = fOriginal; p.f = resolved; }
+      });
+    }
     (document.getElementById('foto-status')||{}).textContent = '✅ ' + Object.keys(map).length + ' fotos mapeadas';
     renderGrid();
   };
