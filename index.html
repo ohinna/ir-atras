@@ -3255,9 +3255,17 @@ function processarCSVUSA(input) {
         const item = row[iItem].trim();
         const conf = (row[iConf]||'').trim().toUpperCase();
         // Ignorar: resolvidos completamente (sem número na frente)
-        // Incluir: vazio (falta tudo) ou número na frente (1 ok, 2 br, 1 online = falta parcial)
+        // Incluir: vazio (falta tudo) ou número na frente (1 ok, 2 br = falta parcial)
         const confIgnorar = ['OK','BR','ONLINE','ENT','NOK','SOS','DAN','EST','EST USA'];
-        if (conf !== '' && !(/^\d+\s+(OK|BR|ONLINE|ENT)$/i.test(conf))) return;
+        const confParcialMatch = conf.match(/^(\d+)\s+(OK|BR|ONLINE|ENT)$/i);
+        if (conf !== '' && !confParcialMatch) return;
+        // Se parcial, subtrair quantos já foram resolvidos do mult
+        let multFinal = mult;
+        if (confParcialMatch) {
+          const resolvidos = parseInt(confParcialMatch[1]);
+          multFinal = Math.max(0, mult - resolvidos);
+          if (multFinal === 0) return; // tudo resolvido
+        }
         const obs = (row[iItem+2]||'').trim().toUpperCase();
         const temDesconto = obs.includes('COM DESCONTO');
         // TAM pode vir como coluna separada ou embutido no nome
@@ -3273,12 +3281,12 @@ function processarCSVUSA(input) {
         if (vend && !g.vs.includes(vend)) g.vs.push(vend);
         if (!g.f && row[iFoto]?.trim()) g.f = resolverFoto(row[iFoto].trim());
         const tamKey = tam || 'Único';
-        g.tams[tamKey] = (g.tams[tamKey]||0) + mult;
+        g.tams[tamKey] = (g.tams[tamKey]||0) + multFinal;
         if (vend) {
           if (!g.tams_por_vend[vend]) g.tams_por_vend[vend] = {};
-          g.tams_por_vend[vend][tamKey] = (g.tams_por_vend[vend][tamKey]||0) + mult;
+          g.tams_por_vend[vend][tamKey] = (g.tams_por_vend[vend][tamKey]||0) + multFinal;
         }
-        g.q += mult;
+        g.q += multFinal;
         if (valUnit > 0 && !temDesconto) g._vals.push(valUnit);
       });
 
