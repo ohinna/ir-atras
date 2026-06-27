@@ -1076,7 +1076,7 @@ function renderGrid() {
   const totalEl = document.getElementById('header-total');
   if (totalEl) totalEl.textContent = '';
   const tv = prods.reduce((a,p)=>{
-    const val = parseFloat(p.vt||p.v)||0;
+    const val = parseFloat(p.vmin||p.vt||p.v)||0;
     return a + val * (p.qty||p.q||0);
   }, 0);
   const cvEl = document.getElementById('count-val'); if (cvEl) cvEl.textContent = fmtVal(tv);
@@ -1089,7 +1089,13 @@ function renderGrid() {
     if (soUmaVend) {
       const vend = [...fVends][0];
       const prodsDaVend = PRODUTOS.filter(p => (p.vs||[]).includes(vend));
-      const totalVend = prodsDaVend.filter(p => !p.nok).reduce((a,p) => a + (parseFloat(p.vt||p.v)||0) * (p.qty||p.q||0), 0);
+      const totalVend = prodsDaVend.filter(p => !p.nok).reduce((a,p) => {
+        const val = parseFloat(p.vmin||p.vt||p.v)||0;
+        const nokT = p.nokTams || {};
+        const tams = p.tams ? Object.entries(p.tams) : null;
+        const qty = tams ? tams.filter(([t])=>!nokT[t]).reduce((s,[,q])=>s+q,0) : (p.qty||p.q||0);
+        return a + val * qty;
+      }, 0);
       vendTotal.textContent = vend.charAt(0) + vend.slice(1).toLowerCase() + ': R$ ' + totalVend.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
       vendTotal.style.display = '';
     } else {
@@ -3096,7 +3102,7 @@ function gerarPDF() {
   const marcaFiltroLabel = window._pdfMarcasSel && window._pdfMarcasSel.size > 0 ? [...window._pdfMarcasSel].join(', ') : '';
   const subtit = [vendFiltro, marcaFiltroLabel].filter(Boolean).join(' · ') || 'Todos';
   const totalUn  = prods.reduce((a,p)=>a+(p.qty||p.q||0),0);
-  const totalVal = prods.reduce((a,p)=>a+(parseFloat(p.vt||p.v)||0)*(p.qty||p.q||0),0);
+  const totalVal = prods.reduce((a,p)=>a+(parseFloat(p.vmin||p.vt||p.v)||0)*(p.qty||p.q||0),0);
 
   // Group by marca
   const byMarca = {};
