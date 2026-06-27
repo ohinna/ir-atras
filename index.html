@@ -253,10 +253,10 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
     <span class="search-icon">🔍</span>
     <input class="search-input" id="search-input" type="text" placeholder="Buscar produto, marca, vendedora..." oninput="renderGrid()" autocomplete="off">
   </div>
-  <div class="filter-row" id="origem-row">
-    <button class="chip active" id="chip-origem-todos" onclick="setOrigem('',this)">Todos</button>
-    <button class="chip" id="chip-origem-br" onclick="setOrigem('br',this)">🇧🇷 <span id="label-mes-br" onclick="event.stopPropagation();editarMesLabel('br')">Mês BR</span></button>
-    <button class="chip" id="chip-origem-usa" onclick="setOrigem('usa',this)">🇺🇸 <span id="label-mes-usa" onclick="event.stopPropagation();editarMesLabel('usa')">Mês USA</span></button>
+  <div style="display:flex;gap:8px;padding:8px 12px 4px">
+    <button class="chip active" id="chip-origem-todos" onclick="setOrigem('',this)" style="flex:1;justify-content:center">Todos</button>
+    <button class="chip" id="chip-origem-br" onclick="setOrigem('br',this)" style="flex:1;justify-content:center">🇧🇷 <span id="label-mes-br" onclick="event.stopPropagation();editarMesLabel('br')">Mês BR</span></button>
+    <button class="chip" id="chip-origem-usa" onclick="setOrigem('usa',this)" style="flex:1;justify-content:center">🇺🇸 <span id="label-mes-usa" onclick="event.stopPropagation();editarMesLabel('usa')">Mês USA</span></button>
   </div>
   <div class="filter-row" id="vend-row">
     <button class="chip active" id="chip-todas" onclick="setVend('TODAS',this)">Todas</button>
@@ -705,7 +705,7 @@ function restaurarFiltros() {
     const statusId = saved.status ? 'status-'+saved.status : 'status-todos';
     document.getElementById(statusId)?.classList.add('active');
     if (saved.origem !== undefined) fOrigem = saved.origem;
-    document.querySelectorAll('#origem-row .chip').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('#chip-origem-todos, #chip-origem-br, #chip-origem-usa').forEach(c => c.classList.remove('active'));
     const origemId = saved.origem ? 'chip-origem-'+saved.origem : 'chip-origem-todos';
     document.getElementById(origemId)?.classList.add('active');
     const sortMap = {'marca-asc':'sort-marca','valor-asc':'sort-valor-asc','valor-desc':'sort-valor-desc','qty-asc':'sort-qty-asc','qty-desc':'sort-qty-desc'};
@@ -753,7 +753,7 @@ window._pdfMarcasSel = new Set();
 
 function setOrigem(o, btn) {
   fOrigem = o;
-  document.querySelectorAll('#origem-row .chip').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('#chip-origem-todos, #chip-origem-br, #chip-origem-usa').forEach(c => c.classList.remove('active'));
   btn.classList.add('active');
   salvarFiltros();
   renderGrid();
@@ -1074,7 +1074,7 @@ function renderGrid() {
     return a + val * qty;
   }, 0);
   const totalEl = document.getElementById('header-total');
-  if (totalEl) totalEl.textContent = 'R$ ' + totalV.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  if (totalEl) totalEl.textContent = '';
   const tv = prods.reduce((a,p)=>{
     const val = parseFloat(p.vt||p.v)||0;
     return a + val * (p.qty||p.q||0);
@@ -3254,7 +3254,10 @@ function processarCSVUSA(input) {
         if (!row[iItem]?.trim()) return;
         const item = row[iItem].trim();
         const conf = (row[iConf]||'').trim().toUpperCase();
-        if (conf !== '') return;
+        // Ignorar: resolvidos completamente (sem número na frente)
+        // Incluir: vazio (falta tudo) ou número na frente (1 ok, 2 br, 1 online = falta parcial)
+        const confIgnorar = ['OK','BR','ONLINE','ENT','NOK','SOS','DAN','EST','EST USA'];
+        if (conf !== '' && !(/^\d+\s+(OK|BR|ONLINE|ENT)$/i.test(conf))) return;
         const obs = (row[iItem+2]||'').trim().toUpperCase();
         const temDesconto = obs.includes('COM DESCONTO');
         // TAM pode vir como coluna separada ou embutido no nome
