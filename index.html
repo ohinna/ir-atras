@@ -3261,7 +3261,9 @@ function processarCSVUSA(input) {
         const item = row[iItem].trim();
         const conf = (row[iConf]||'').trim().toUpperCase();
         const confParcialMatch = conf.match(/^(\d+)\s+(OK|BR|ONLINE|ENT)$/i);
-        if (conf !== '' && !confParcialMatch) return;
+        const isEstEua = conf === 'EST' || conf === 'EST EUA';
+        const isEstBr  = conf === 'EST BR';
+        if (conf !== '' && !confParcialMatch && !isEstEua && !isEstBr) return;
         const obs = (row[iItem+2]||'').trim().toUpperCase();
         const temDesconto = obs.includes('COM DESCONTO');
         const tamCol = iTam > -1 ? (row[iTam]||'').trim() : '';
@@ -3277,8 +3279,10 @@ function processarCSVUSA(input) {
         const valTotal = pv(row[iVal]);
         const valUnit = (mult > 1 && valTotal > 0) ? Math.round(valTotal/mult*100)/100 : valTotal;
         const key = base.toLowerCase().trim() + '||' + (row[iMarca]?.trim()||'').toLowerCase();
-        if (!groups[key]) groups[key] = {n:base,m:row[iMarca]?.trim()||'',c:row[iCat]?.trim()||'',cor:(iCor>-1?row[iCor]?.trim():'')||'',vs:[],v:valUnit,q:0,_vals:[],f:resolverFoto(row[iFoto]?.trim()||''),tams:{},tams_por_vend:{},origem:'usa'};
+        if (!groups[key]) groups[key] = {n:base,m:row[iMarca]?.trim()||'',c:row[iCat]?.trim()||'',cor:(iCor>-1?row[iCor]?.trim():'')||'',vs:[],v:valUnit,q:0,_vals:[],f:resolverFoto(row[iFoto]?.trim()||''),tams:{},tams_por_vend:{},est_eua:false,est_br:false,origem:'usa'};
         const g = groups[key];
+        if (isEstEua) g.est_eua = true;
+        if (isEstBr)  g.est_br  = true;
         const vend = row[iVend]?.trim()||'';
         if (vend && !g.vs.includes(vend)) g.vs.push(vend);
         if (!g.f && row[iFoto]?.trim()) g.f = resolverFoto(row[iFoto].trim());
