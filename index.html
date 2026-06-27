@@ -3254,23 +3254,19 @@ function processarCSVUSA(input) {
         if (!row[iItem]?.trim()) return;
         const item = row[iItem].trim();
         const conf = (row[iConf]||'').trim().toUpperCase();
-        // Ignorar: resolvidos completamente (sem número na frente)
-        // Incluir: vazio (falta tudo) ou número na frente (1 ok, 2 br = falta parcial)
-        const confIgnorar = ['OK','BR','ONLINE','ENT','NOK','SOS','DAN','EST','EST USA'];
         const confParcialMatch = conf.match(/^(\d+)\s+(OK|BR|ONLINE|ENT)$/i);
         if (conf !== '' && !confParcialMatch) return;
-        // Se parcial, subtrair quantos já foram resolvidos do mult
+        const obs = (row[iItem+2]||'').trim().toUpperCase();
+        const temDesconto = obs.includes('COM DESCONTO');
+        const tamCol = iTam > -1 ? (row[iTam]||'').trim() : '';
+        const {base, tam: tamNome, mult} = extrairTamMult(item);
+        // Calcular multFinal: subtrair resolvidos se parcial
         let multFinal = mult;
         if (confParcialMatch) {
           const resolvidos = parseInt(confParcialMatch[1]);
           multFinal = Math.max(0, mult - resolvidos);
-          if (multFinal === 0) return; // tudo resolvido
+          if (multFinal === 0) return;
         }
-        const obs = (row[iItem+2]||'').trim().toUpperCase();
-        const temDesconto = obs.includes('COM DESCONTO');
-        // TAM pode vir como coluna separada ou embutido no nome
-        const tamCol = iTam > -1 ? (row[iTam]||'').trim() : '';
-        const {base, tam: tamNome, mult} = extrairTamMult(item);
         const tam = tamCol || tamNome;
         const valTotal = pv(row[iVal]);
         const valUnit = (mult > 1 && valTotal > 0) ? Math.round(valTotal/mult*100)/100 : valTotal;
