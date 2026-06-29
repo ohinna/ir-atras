@@ -255,8 +255,8 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
   </div>
   <div style="display:flex;gap:8px;padding:8px 12px 4px">
     <button class="chip active" id="chip-origem-todos" onclick="setOrigem('',this)" style="flex:1;justify-content:center">Todos</button>
-    <button class="chip" id="chip-origem-br" onclick="setOrigem('br',this)" style="flex:1;justify-content:center">🇧🇷 <span id="label-mes-br" onclick="event.stopPropagation();editarMesLabel('br')">Mês BR</span></button>
-    <button class="chip" id="chip-origem-usa" onclick="setOrigem('usa',this)" style="flex:1;justify-content:center">🇺🇸 <span id="label-mes-usa" onclick="event.stopPropagation();editarMesLabel('usa')">Mês USA</span></button>
+    <button class="chip" id="chip-origem-br" onclick="setOrigem('br',this)" style="flex:1;justify-content:center">🇧🇷 <span id="label-mes-br">Mês BR</span></button>
+    <button class="chip" id="chip-origem-usa" onclick="setOrigem('usa',this)" style="flex:1;justify-content:center">🇺🇸 <span id="label-mes-usa">Mês USA</span></button>
   </div>
   <div class="filter-row" id="vend-row">
     <button class="chip active" id="chip-todas" onclick="setVend('TODAS',this)">Todas</button>
@@ -321,6 +321,10 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
     <div class="upload-card">
       <div class="upload-title">🇺🇸 Importar Planilha USA</div>
       <div class="upload-sub">Importe o CSV da planilha EUA para atualizar os produtos faltantes dessa origem.</div>
+      <div style="margin-bottom:10px">
+        <div style="font-size:11px;color:var(--text4);margin-bottom:4px">Nome do mês (aparece no filtro)</div>
+        <input id="input-label-usa" type="text" placeholder="ex: Julho USA" style="width:100%;box-sizing:border-box;padding:8px 12px;border-radius:10px;border:0.5px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;font-family:inherit">
+      </div>
       <label class="upload-btn">
         ⬆ Selecionar CSV USA
         <input type="file" accept=".csv" style="display:none" onchange="processarCSVUSA(this)">
@@ -331,6 +335,10 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
     <div class="upload-card">
       <div class="upload-title">🇧🇷 Importar Planilha BR</div>
       <div class="upload-sub">Importe o CSV da planilha BR (itens marcados como "IA" — Ir Atrás) para atualizar os produtos dessa origem.</div>
+      <div style="margin-bottom:10px">
+        <div style="font-size:11px;color:var(--text4);margin-bottom:4px">Nome do mês (aparece no filtro)</div>
+        <input id="input-label-br" type="text" placeholder="ex: Julho BR" style="width:100%;box-sizing:border-box;padding:8px 12px;border-radius:10px;border:0.5px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;font-family:inherit">
+      </div>
       <label class="upload-btn">
         ⬆ Selecionar CSV BR
         <input type="file" accept=".csv" style="display:none" onchange="processarCSVBR(this)">
@@ -1140,15 +1148,12 @@ function renderGrid() {
     return `<div class="card ${p.nok?'is-nok':''}" id="card-${p._id}">
       <div class="card-img" onclick="openModal(${p._id})">
         ${img}
-        ${p.origem ? `<div style="position:absolute;bottom:6px;left:6px;background:rgba(0,0,0,0.55);border-radius:6px;padding:1px 6px;font-size:9px;font-weight:700;color:#fff;z-index:2">${p.origem === 'br' ? '🇧🇷' : '🇺🇸'}</div>` : ''}
+        ${p.origem ? `<div style="position:absolute;bottom:6px;left:32px;background:rgba(0,0,0,0.55);border-radius:6px;padding:1px 6px;font-size:9px;font-weight:700;color:#fff;z-index:2">${p.origem === 'br' ? '🇧🇷' : '🇺🇸'}</div>` : ''}
         ${p.nok ? '<div class="nok-overlay show"><div class="nok-bg"></div><div class="nok-content"><div class="nok-label">✕ NOK</div>' + (p.nokWho ? '<div style="font-size:9px;color:rgba(255,255,255,0.75);margin-top:2px">'+p.nokWho+'</div>' : '') + '</div></div>' : ''}
         ${p.em_compra ? '<div class="compra-overlay show"><div class="compra-bg"></div><div class="compra-content"><div class="compra-label">🛒 Em compra</div></div></div>' : ''}
         ${p.est_eua ? '<div class="eua-overlay show"><div class="eua-bg"></div><div class="eua-content"><div class="eua-label">🇺🇸 Est EUA</div></div></div>' : ''}
         ${p.est_br ? '<div class="br-overlay show"><div class="br-bg"></div><div class="br-content"><div class="br-label">🇧🇷 Est BR</div></div></div>' : ''}
         <button class="btn-nok" onclick="event.stopPropagation();confirmNok(${p._id})">✕</button>
-        <button class="btn-compra ${p.em_compra?'ativo':''}" onclick="event.stopPropagation();toggleEmCompraCard(${p._id})">🛒</button>
-        <button class="btn-eua ${p.est_eua?'ativo':''}" onclick="event.stopPropagation();toggleEstEuaCard(${p._id})">🇺🇸</button>
-        <button class="btn-br ${p.est_br?'ativo':''}" onclick="event.stopPropagation();toggleEstBrCard(${p._id})">🇧🇷</button>
         ${unread>0 ? '' : ''}
       </div>
       <div class="card-body" onclick="openModal(${p._id})">
@@ -2717,6 +2722,134 @@ function renderMeta() {
   // Atualizar subtítulo da aba
   const sub = document.getElementById('meta-sub');
   if (sub) sub.textContent = `${vendedoras.length} vendedoras · ${pctTotal}% da meta geral`;
+
+  // --- Cards mobile por vendedora ---
+  let vendasResumo = {};
+  try { vendasResumo = JSON.parse(localStorage.getItem('vendas_resumo')||'{}'); } catch(e) {}
+
+  const barCores = [
+    {fill:'#b8860b', text:'#7a5c00', medal:'🥇'},
+    {fill:'#c45b1a', text:'#7a3310', medal:'🥈'},
+    {fill:'#7a0b1e', text:'#4a0812', medal:'🥉'},
+  ];
+  const turnoIcons = {MANHA:'🌅', TARDE:'☀️', NOITE:'🌙'};
+  const turnoLabel = {MANHA:'Manhã', TARDE:'Tarde', NOITE:'Noite'};
+
+  const cardsHtml = vendedoras.map(v => {
+    const pctOk = v.pct >= 100;
+    const pctBg = pctOk ? '#e8f5f1' : '#fdf2f3';
+    const pctCor = pctOk ? '#085041' : '#7a0b1e';
+    const falt = faltantesApp[v.nome.toUpperCase()]||0;
+    const vr = vendasResumo[v.nome.toUpperCase()] || null;
+
+    let marcasHtml = '';
+    if (vr && vr.top3marcas && vr.top3marcas.length) {
+      const maxQt = vr.top3marcas[0].qt;
+      marcasHtml = `
+        <div style="height:0.5px;background:var(--border);margin:10px 0"></div>
+        <div style="font-size:10px;color:var(--text4);margin-bottom:7px">Top 3 marcas mais vendidas</div>
+        ${vr.top3marcas.map((m,i) => {
+          const cor = barCores[i];
+          const fotoHtml = m.itemFoto
+            ? `<img src="${resolverFotoMeta(m.itemFoto)}" style="width:32px;height:32px;border-radius:6px;object-fit:cover;border:0.5px solid var(--border);flex-shrink:0" onerror="this.style.display='none'">`
+            : `<div style="width:32px;height:32px;border-radius:6px;background:var(--bg2);border:0.5px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--text4)">?</div>`;
+          return `<div style="margin-bottom:8px">
+            <div style="display:flex;align-items:center;gap:7px;margin-bottom:3px">
+              <div style="font-size:11px;width:75px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:${cor.text};font-weight:600">${cor.medal} ${m.nome}</div>
+              <div style="flex:1;background:var(--bg2);border-radius:4px;height:8px;overflow:hidden"><div style="height:100%;border-radius:4px;background:${cor.fill};width:${Math.round(m.qt/maxQt*100)}%"></div></div>
+              <div style="font-size:10px;width:20px;text-align:right;color:${cor.text};font-weight:600">${m.qt}</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:7px;cursor:pointer" onclick="abrirPopupMeta('${m.nome.replace(/'/g,"\'")}','${m.item.replace(/'/g,"\'")}','${m.itemFoto.replace(/'/g,"\'")}',${m.itemQt},'${v.nome}')">
+              ${fotoHtml}
+              <div style="flex:1;min-width:0">
+                <div style="font-size:10px;color:${cor.text};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.item||'—'}</div>
+                <div style="font-size:9px;color:var(--text4)">toque para ver →</div>
+              </div>
+            </div>
+          </div>`;
+        }).join('')}`;
+    }
+
+    let turnosHtml = '';
+    if (vr && vr.periodos) {
+      const periodos = vr.periodos;
+      const maxTurno = Math.max(periodos.MANHA, periodos.TARDE, periodos.NOITE);
+      turnosHtml = `
+        <div style="height:0.5px;background:var(--border);margin:10px 0"></div>
+        <div style="font-size:10px;color:var(--text4);margin-bottom:7px">Turno de mais vendas</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-bottom:10px">
+          ${['MANHA','TARDE','NOITE'].map(t => {
+            const isMax = periodos[t] === maxTurno && maxTurno > 0;
+            return `<div style="background:${isMax?'var(--bg2)':'var(--bg2)'};border-radius:8px;padding:6px 8px;text-align:center;${isMax?'border:1.5px solid #185fa5;':'border:0.5px solid var(--border);'}">
+              <div style="font-size:14px;margin-bottom:2px">${turnoIcons[t]}</div>
+              <div style="font-size:9px;color:var(--text4)">${turnoLabel[t]}</div>
+              <div style="font-size:12px;font-weight:500;color:${isMax?'#185fa5':'var(--text)'}">${periodos[t]}</div>
+            </div>`;
+          }).join('')}
+        </div>
+        <div style="height:0.5px;background:var(--border);margin:10px 0"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:11px;color:var(--text3)">Dia com mais vendas</span>
+          <span style="font-size:12px;font-weight:500;color:var(--text)">${vr.diaMais||'—'}</span>
+        </div>`;
+    }
+
+    return `<div style="background:var(--bg2);border:0.5px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <span style="font-size:14px;font-weight:500;color:var(--text)">${v.nome.charAt(0)+v.nome.slice(1).toLowerCase()}</span>
+        <span style="font-size:10px;font-weight:500;padding:3px 9px;border-radius:20px;background:${pctBg};color:${pctCor}">${v.pct}%</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:0">
+        <div style="background:var(--bg);border-radius:8px;padding:7px 9px"><div style="font-size:9px;color:var(--text4);margin-bottom:2px">Faltantes</div><div style="font-size:12px;font-weight:500;color:#a32d2d">${fmt(falt)}</div></div>
+        <div style="background:var(--bg);border-radius:8px;padding:7px 9px"><div style="font-size:9px;color:var(--text4);margin-bottom:2px">OKs</div><div style="font-size:12px;font-weight:500;color:#0f6b52">${fmt(v.oks)}</div></div>
+        <div style="background:var(--bg);border-radius:8px;padding:7px 9px"><div style="font-size:9px;color:var(--text4);margin-bottom:2px">Est. Geral</div><div style="font-size:12px;font-weight:500;color:var(--text)">${fmt(v.estGeral)}</div></div>
+        <div style="background:var(--bg);border-radius:8px;padding:7px 9px"><div style="font-size:9px;color:var(--text4);margin-bottom:2px">Meta</div><div style="font-size:12px;font-weight:500;color:var(--text)">${fmt(v.meta)}</div></div>
+      </div>
+      ${marcasHtml}
+      ${turnosHtml}
+    </div>`;
+  }).join('');
+
+  container.innerHTML += `<div style="margin-top:16px">${cardsHtml}</div>
+  <div id="popup-meta-bg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:999;align-items:flex-end;justify-content:center" onclick="if(event.target===this)fecharPopupMeta()">
+    <div style="background:var(--bg2);border-radius:16px 16px 0 0;padding:16px;width:100%;max-width:480px">
+      <img id="popup-meta-foto" src="" style="width:100%;height:200px;object-fit:cover;border-radius:10px;background:var(--bg);margin-bottom:12px;display:block" onerror="this.style.display='none'">
+      <div id="popup-meta-nome" style="font-size:15px;font-weight:500;color:var(--text);margin-bottom:4px"></div>
+      <div id="popup-meta-marca" style="font-size:12px;color:var(--text4);margin-bottom:12px"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px">
+        <div style="background:var(--bg);border-radius:8px;padding:7px 9px"><div style="font-size:9px;color:var(--text4);margin-bottom:2px">Vendas</div><div id="popup-meta-qt" style="font-size:13px;font-weight:500;color:var(--text)"></div></div>
+        <div style="background:var(--bg);border-radius:8px;padding:7px 9px"><div style="font-size:9px;color:var(--text4);margin-bottom:2px">Vendedora</div><div id="popup-meta-vend" style="font-size:13px;font-weight:500;color:var(--text)"></div></div>
+      </div>
+      <button onclick="fecharPopupMeta()" style="width:100%;padding:10px;background:var(--bg);border:0.5px solid var(--border);border-radius:10px;font-size:13px;color:var(--text3);cursor:pointer;font-family:inherit">Fechar</button>
+    </div>
+  </div>`;
+}
+
+function resolverFotoMeta(raw) {
+  if (!raw) return '';
+  if (raw.startsWith('http')) return raw;
+  try {
+    const fm = JSON.parse(localStorage.getItem('foto_map')||'{}');
+    return fm[raw] || fm[raw.replace(/\.[^.]+$/,'')] || '';
+  } catch(e) { return ''; }
+}
+
+function abrirPopupMeta(marca, item, fotoRaw, qt, vend) {
+  const foto = resolverFotoMeta(fotoRaw);
+  const el = document.getElementById('popup-meta-bg');
+  const fotoEl = document.getElementById('popup-meta-foto');
+  if (foto) { fotoEl.src = foto; fotoEl.style.display = 'block'; }
+  else fotoEl.style.display = 'none';
+  document.getElementById('popup-meta-nome').textContent = item || marca;
+  document.getElementById('popup-meta-marca').textContent = marca;
+  document.getElementById('popup-meta-qt').textContent = qt + ' vendas';
+  document.getElementById('popup-meta-vend').textContent = vend.charAt(0)+vend.slice(1).toLowerCase();
+  el.style.display = 'flex';
+}
+
+function fecharPopupMeta() {
+  const el = document.getElementById('popup-meta-bg');
+  if (el) el.style.display = 'none';
 }
 
 function renderNok() {
@@ -2979,6 +3112,9 @@ function _fbListenCore() {
         localStorage.setItem('meta_vendedoras', data.meta_vendedoras);
         renderMeta();
       }
+      if (data.vendas_resumo) {
+        localStorage.setItem('vendas_resumo', data.vendas_resumo);
+      }
     }
   });
   fbUnsub = window._db.collection('faltantes').onSnapshot(snap => {
@@ -3168,6 +3304,16 @@ function handleCSV(input) {
 function processarCSVUSA(input) {
   const file = input.files[0];
   if (!file) return;
+  // Salvar label do mês se preenchido
+  const inpLabelUsa = document.getElementById('input-label-usa');
+  const novoLabelUsa = inpLabelUsa ? inpLabelUsa.value.trim() : '';
+  if (novoLabelUsa) {
+    localStorage.setItem('mes_label_usa', novoLabelUsa);
+    const elUsa = document.getElementById('label-mes-usa');
+    if (elUsa) elUsa.textContent = novoLabelUsa;
+    if (window._db) window._db.collection('config').doc('app').set({mesLabel_usa: novoLabelUsa}, {merge:true});
+    if (inpLabelUsa) { inpLabelUsa.value = ''; inpLabelUsa.placeholder = novoLabelUsa; }
+  }
   document.getElementById('csv-progress').style.display = '';
   document.getElementById('csv-fill').style.width = '30%';
   (document.getElementById('csv-status')||{}).textContent = 'Lendo arquivo...';
@@ -3265,6 +3411,52 @@ function processarCSVUSA(input) {
       const h = rows[headerIdx];
       const iItem=h.indexOf('ITEM'), iVal=h.indexOf('VALOR'), iConf=h.indexOf('CONF');
       const iMarca=h.indexOf('MARCA'), iCat=h.indexOf('CATEGORIA'), iVend=h.indexOf('VENDEDORA'), iFoto=h.indexOf('FOTO'), iCor=h.indexOf('COR'), iTam=h.indexOf('TAM');
+      const iData=h.indexOf('DATA'), iPer=h.indexOf('PERÍODO');
+
+      // Calcular resumo de vendas por vendedora (todos os itens exceto NOK)
+      const vendasResumo = {};
+      rows.slice(headerIdx+1).forEach(row => {
+        if (!row[iItem]?.trim()) return;
+        const conf = (row[iConf]||'').trim().toUpperCase();
+        if (conf === 'NOK') return;
+        const vend = (row[iVend]||'').trim().toUpperCase();
+        if (!vend) return;
+        const marca = (row[iMarca]||'').trim();
+        const item = row[iItem].trim().replace(/\s+tam\s+.+?(\s+\d+x)?\s*$/i,'').replace(/\s+\d+x\s*$/i,'').trim();
+        const data = iData>-1 ? (row[iData]||'').trim() : '';
+        const periodo = iPer>-1 ? (row[iPer]||'').trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'') : '';
+        const foto = iFoto>-1 ? (row[iFoto]||'').trim() : '';
+        if (!vendasResumo[vend]) vendasResumo[vend] = {marcas:{}, itens:{}, periodos:{MANHA:0,TARDE:0,NOITE:0}, dias:{}};
+        const vr = vendasResumo[vend];
+        if (marca) vr.marcas[marca] = (vr.marcas[marca]||0) + 1;
+        if (item && marca) {
+          const key = marca+'||'+item;
+          if (!vr.itens[key]) vr.itens[key] = {nome:item, marca, qt:0, foto:''};
+          vr.itens[key].qt++;
+          if (foto && !vr.itens[key].foto) vr.itens[key].foto = foto;
+        }
+        if (periodo.includes('MANHA') || periodo === 'MANHA') vr.periodos.MANHA++;
+        else if (periodo.includes('TARDE')) vr.periodos.TARDE++;
+        else if (periodo.includes('NOITE')) vr.periodos.NOITE++;
+        if (data) {
+          const dow = (() => { try { const [d,m] = data.split('/'); const dt = new Date(2026,parseInt(m)-1,parseInt(d)); return ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'][dt.getDay()]; } catch(e){return '';} })();
+          if (dow) vr.dias[dow] = (vr.dias[dow]||0) + 1;
+        }
+      });
+      // Converter para top3 marcas com top item de cada
+      const vendasResumoFinal = {};
+      Object.entries(vendasResumo).forEach(([vend, vr]) => {
+        const top3marcas = Object.entries(vr.marcas).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([marca,qt]) => {
+          const topItem = Object.values(vr.itens).filter(i=>i.marca===marca).sort((a,b)=>b.qt-a.qt)[0];
+          return {nome:marca, qt, item:topItem?.nome||'', itemFoto:topItem?.foto||'', itemQt:topItem?.qt||0};
+        });
+        const diaMais = Object.entries(vr.dias).sort((a,b)=>b[1]-a[1])[0]?.[0]||'';
+        vendasResumoFinal[vend] = {top3marcas, periodos:vr.periodos, diaMais};
+      });
+      localStorage.setItem('vendas_resumo', JSON.stringify(vendasResumoFinal));
+      if (window._db) {
+        window._db.collection('config').doc('app').set({vendas_resumo: JSON.stringify(vendasResumoFinal)}, {merge:true});
+      }
 
       function extrairTamMult(nome) {
         var m = nome.match(/\s+tam\s+(.+?)(\s+(\d+)x)?\s*$/i);
@@ -3423,6 +3615,16 @@ function salvarOrigemNoFirebase(newData, origem, onDone) {
 function processarCSVBR(input) {
   const file = input.files[0];
   if (!file) return;
+  // Salvar label do mês se preenchido
+  const inpLabelBr = document.getElementById('input-label-br');
+  const novoLabelBr = inpLabelBr ? inpLabelBr.value.trim() : '';
+  if (novoLabelBr) {
+    localStorage.setItem('mes_label_br', novoLabelBr);
+    const elBr = document.getElementById('label-mes-br');
+    if (elBr) elBr.textContent = novoLabelBr;
+    if (window._db) window._db.collection('config').doc('app').set({mesLabel_br: novoLabelBr}, {merge:true});
+    if (inpLabelBr) { inpLabelBr.value = ''; inpLabelBr.placeholder = novoLabelBr; }
+  }
   const progEl = document.getElementById('csv-progress-br');
   const fillEl = document.getElementById('csv-fill-br');
   const statusEl = document.getElementById('csv-status-br');
@@ -3680,6 +3882,10 @@ document.addEventListener('DOMContentLoaded', () => {
   if (savedBr) (document.getElementById('label-mes-br')||{}).textContent = savedBr;
   const savedUsa = localStorage.getItem('mes_label_usa');
   if (savedUsa) (document.getElementById('label-mes-usa')||{}).textContent = savedUsa;
+  const inpLabelBr = document.getElementById('input-label-br');
+  if (inpLabelBr) inpLabelBr.placeholder = savedBr || 'ex: Julho BR';
+  const inpLabelUsa = document.getElementById('input-label-usa');
+  if (inpLabelUsa) inpLabelUsa.placeholder = savedUsa || 'ex: Julho USA';
 
   // Header hide on scroll down, show on scroll up
   let _lastScroll = 0;
