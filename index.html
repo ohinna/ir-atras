@@ -3787,9 +3787,14 @@ function processarCSVUSA(input) {
       }
 
       const groups = {};
+      const itemsNaoValidos = /^(CORREIO|CORREIOS|ENTREGA PARCIAL|FABI LEVOU|OPEN|SACOLA|FRETE|CRÉDITO|DESC PG|DESCONTO|PARCIAL|DEVOLUÇÃO|TROCA|TAXA)/i;
       rows.slice(headerIdx+1).forEach(row => {
         if (!row[iItem]?.trim()) return;
         const item = row[iItem].trim();
+        // Ignorar linhas que não são produtos reais
+        if (itemsNaoValidos.test(item)) return;
+        const marca = (row[iMarca]?.trim()||'');
+        if (!marca) return; // ignorar itens sem marca
         const conf = (row[iConf]||'').trim().toUpperCase();
         const confParcialMatch = conf.match(/^(\d+)\s+(OK|BR|ONLINE|ENT)$/i);
         const isEstEua = conf === 'EST' || conf === 'EST EUA' || conf === 'EST USA';
