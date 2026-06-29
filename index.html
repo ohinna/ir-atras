@@ -311,7 +311,7 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
 </div>
 
 <!-- UPLOAD PAGE -->
-<div class="page" id="page-upload">
+<div class="page" id="page-upload" style="display:none">
   <div class="upload-page">
     <div class="upload-card">
       <div class="upload-title">📄 Gerar PDF</div>
@@ -337,6 +337,60 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
       </div>
       <button onclick="gerarPDF()" style="width:100%;padding:12px;border-radius:12px;background:#7a0b1e;border:none;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">↓ Gerar PDF</button>
     </div>
+
+    <div class="upload-card">
+      <div class="upload-title">🇺🇸 Importar Planilha USA</div>
+      <div class="upload-sub">Importe o CSV da planilha EUA para atualizar os produtos faltantes dessa origem.</div>
+      <div style="margin-bottom:10px">
+        <div style="font-size:11px;color:var(--text4);margin-bottom:4px">Nome do mês (aparece no filtro)</div>
+        <div style="display:flex;gap:8px">
+          <input id="input-label-usa" type="text" placeholder="ex: Julho USA" style="flex:1;padding:8px 12px;border-radius:10px;border:0.5px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;font-family:inherit">
+          <button onclick="salvarLabelMes('usa')" style="padding:8px 14px;border-radius:10px;background:var(--red);border:none;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">Salvar</button>
+        </div>
+      </div>
+      <label class="upload-btn">
+        ⬆ Selecionar CSV USA
+        <input type="file" accept=".csv" style="display:none" onchange="processarCSVUSA(this)">
+      </label>
+      <div class="progress-bar" id="csv-progress"><div class="progress-fill" id="csv-fill"></div></div>
+      <div id="csv-status" style="font-size:11px;color:#b08070;margin-top:8px"></div>
+    </div>
+    <div class="upload-card">
+      <div class="upload-title">🇧🇷 Importar Planilha BR</div>
+      <div class="upload-sub">Importe o CSV da planilha BR (itens marcados como "IA" — Ir Atrás) para atualizar os produtos dessa origem.</div>
+      <div style="margin-bottom:10px">
+        <div style="font-size:11px;color:var(--text4);margin-bottom:4px">Nome do mês (aparece no filtro)</div>
+        <div style="display:flex;gap:8px">
+          <input id="input-label-br" type="text" placeholder="ex: Julho BR" style="flex:1;padding:8px 12px;border-radius:10px;border:0.5px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;font-family:inherit">
+          <button onclick="salvarLabelMes('br')" style="padding:8px 14px;border-radius:10px;background:var(--red);border:none;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">Salvar</button>
+        </div>
+      </div>
+      <label class="upload-btn">
+        ⬆ Selecionar CSV BR
+        <input type="file" accept=".csv" style="display:none" onchange="processarCSVBR(this)">
+      </label>
+      <div class="progress-bar" id="csv-progress-br"><div class="progress-fill" id="csv-fill-br"></div></div>
+      <div id="csv-status-br" style="font-size:11px;color:#b08070;margin-top:8px"></div>
+    </div>
+    <div class="upload-card">
+      <div class="upload-title">🖼 Atualizar fotos USA</div>
+      <div class="upload-sub">Importe o CSV de IDs de fotos do Google Drive da planilha USA.</div>
+      <label class="upload-btn">
+        ⬆ Selecionar CSV fotos USA
+        <input type="file" accept=".csv" style="display:none" onchange="handleFotos(this,'usa')">
+      </label>
+      <div id="foto-status-usa" style="font-size:11px;color:#b08070;margin-top:8px"></div>
+    </div>
+    <div class="upload-card">
+      <div class="upload-title">🖼 Atualizar fotos BR</div>
+      <div class="upload-sub">Importe o CSV de IDs de fotos do Google Drive da planilha BR.</div>
+      <label class="upload-btn">
+        ⬆ Selecionar CSV fotos BR
+        <input type="file" accept=".csv" style="display:none" onchange="handleFotos(this,'br')">
+      </label>
+      <div id="foto-status-br" style="font-size:11px;color:#b08070;margin-top:8px"></div>
+    </div>
+>
     <div id="ultima-atualizacao" style="font-size:11px;color:#c4a898;text-align:center;margin-top:8px"></div>
 
     <div class="upload-card" style="margin-top:12px">
@@ -4311,57 +4365,4 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 </body>
-</html
-    <div class="upload-card">
-      <div class="upload-title">🇺🇸 Importar Planilha USA</div>
-      <div class="upload-sub">Importe o CSV da planilha EUA para atualizar os produtos faltantes dessa origem.</div>
-      <div style="margin-bottom:10px">
-        <div style="font-size:11px;color:var(--text4);margin-bottom:4px">Nome do mês (aparece no filtro)</div>
-        <div style="display:flex;gap:8px">
-          <input id="input-label-usa" type="text" placeholder="ex: Julho USA" style="flex:1;padding:8px 12px;border-radius:10px;border:0.5px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;font-family:inherit">
-          <button onclick="salvarLabelMes('usa')" style="padding:8px 14px;border-radius:10px;background:var(--red);border:none;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">Salvar</button>
-        </div>
-      </div>
-      <label class="upload-btn">
-        ⬆ Selecionar CSV USA
-        <input type="file" accept=".csv" style="display:none" onchange="processarCSVUSA(this)">
-      </label>
-      <div class="progress-bar" id="csv-progress"><div class="progress-fill" id="csv-fill"></div></div>
-      <div id="csv-status" style="font-size:11px;color:#b08070;margin-top:8px"></div>
-    </div>
-    <div class="upload-card">
-      <div class="upload-title">🇧🇷 Importar Planilha BR</div>
-      <div class="upload-sub">Importe o CSV da planilha BR (itens marcados como "IA" — Ir Atrás) para atualizar os produtos dessa origem.</div>
-      <div style="margin-bottom:10px">
-        <div style="font-size:11px;color:var(--text4);margin-bottom:4px">Nome do mês (aparece no filtro)</div>
-        <div style="display:flex;gap:8px">
-          <input id="input-label-br" type="text" placeholder="ex: Julho BR" style="flex:1;padding:8px 12px;border-radius:10px;border:0.5px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;font-family:inherit">
-          <button onclick="salvarLabelMes('br')" style="padding:8px 14px;border-radius:10px;background:var(--red);border:none;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">Salvar</button>
-        </div>
-      </div>
-      <label class="upload-btn">
-        ⬆ Selecionar CSV BR
-        <input type="file" accept=".csv" style="display:none" onchange="processarCSVBR(this)">
-      </label>
-      <div class="progress-bar" id="csv-progress-br"><div class="progress-fill" id="csv-fill-br"></div></div>
-      <div id="csv-status-br" style="font-size:11px;color:#b08070;margin-top:8px"></div>
-    </div>
-    <div class="upload-card">
-      <div class="upload-title">🖼 Atualizar fotos USA</div>
-      <div class="upload-sub">Importe o CSV de IDs de fotos do Google Drive da planilha USA.</div>
-      <label class="upload-btn">
-        ⬆ Selecionar CSV fotos USA
-        <input type="file" accept=".csv" style="display:none" onchange="handleFotos(this,'usa')">
-      </label>
-      <div id="foto-status-usa" style="font-size:11px;color:#b08070;margin-top:8px"></div>
-    </div>
-    <div class="upload-card">
-      <div class="upload-title">🖼 Atualizar fotos BR</div>
-      <div class="upload-sub">Importe o CSV de IDs de fotos do Google Drive da planilha BR.</div>
-      <label class="upload-btn">
-        ⬆ Selecionar CSV fotos BR
-        <input type="file" accept=".csv" style="display:none" onchange="handleFotos(this,'br')">
-      </label>
-      <div id="foto-status-br" style="font-size:11px;color:#b08070;margin-top:8px"></div>
-    </div>
->
+</html>
