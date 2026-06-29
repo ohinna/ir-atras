@@ -2650,7 +2650,7 @@ function renderMeta() {
     <tr>
       <td style="padding:8px 10px;font-weight:600;color:var(--text)">${v.nome.charAt(0)+v.nome.slice(1).toLowerCase()}</td>
       <td style="padding:8px 10px;text-align:right;color:#0f6b52;font-weight:600">${fmt(v.oks)}</td>
-      <td style="padding:8px 10px;text-align:right;color:var(--red);font-weight:600">${fmt(v.faltantes)}</td>
+      <td style="padding:8px 10px;text-align:right;color:var(--red);font-weight:600">${fmt(faltantesApp[v.nome.toUpperCase()]||0)}</td>
       <td style="padding:8px 10px;text-align:right;color:var(--text3)">${fmt(v.estGeral)}</td>
       <td style="padding:8px 10px;text-align:right;color:#783c18">${fmt(v.estBR)}</td>
       <td style="padding:8px 10px;text-align:right;color:var(--text4)">${fmt(v.meta)}</td>
@@ -2666,14 +2666,33 @@ function renderMeta() {
   linhas += `<tr style="border-top:1.5px solid var(--border)">
     <td style="padding:8px 10px;font-weight:700;color:var(--text)">Total</td>
     <td style="padding:8px 10px;text-align:right;font-weight:700;color:#0f6b52">${fmt(totalOks)}</td>
-    <td style="padding:8px 10px;text-align:right;font-weight:700;color:var(--red)">${fmt(tFalt)}</td>
+    <td style="padding:8px 10px;text-align:right;font-weight:700;color:var(--red)">${fmt(Object.values(faltantesApp).reduce((a,b)=>a+b,0))}</td>
     <td style="padding:8px 10px;text-align:right;font-weight:700">${fmt(tEstG)}</td>
     <td style="padding:8px 10px;text-align:right;font-weight:700;color:#783c18">${fmt(tEstBR)}</td>
     <td style="padding:8px 10px;text-align:right;font-weight:700">${fmt(totalMeta)}</td>
     <td style="padding:8px 10px;text-align:right"><span style="background:#e8f5f1;color:#0f6b52;border-radius:8px;padding:2px 8px;font-size:10px;font-weight:700">${pctTotal}%</span></td>
   </tr>`;
 
+  // Calcular faltantes do app por vendedora
+  const faltantesApp = {};
+  if (window.PRODUTOS) {
+    window.PRODUTOS.filter(p => !p.nok).forEach(p => {
+      const val = parseFloat(p.vmin||p.vt||p.v)||0;
+      const nokT = p.nokTams || {};
+      const tams = p.tams ? Object.entries(p.tams) : null;
+      const qty = tams ? tams.filter(([t])=>!nokT[t]).reduce((s,[,q])=>s+q,0) : (p.qty||p.q||0);
+      const sub = val * qty;
+      (p.vs||[]).forEach(vend => {
+        faltantesApp[vend.toUpperCase()] = (faltantesApp[vend.toUpperCase()]||0) + sub/(p.vs.length||1);
+      });
+    });
+  }
+
   container.innerHTML = `
+    <div style="background:var(--bg2);border:0.5px solid var(--border);border-radius:10px;padding:8px 12px;margin-bottom:14px;font-size:10px;color:var(--text4);display:flex;align-items:center;gap:6px">
+      <span style="font-size:13px">📋</span>
+      <span>OKs, Estoque, Meta e % importados diretamente da planilha · <strong style="color:var(--text3)">Faltantes calculados pelo app</strong></span>
+    </div>
     <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;flex-wrap:wrap">
       <svg viewBox="0 0 200 200" width="180" height="180" style="flex-shrink:0">${pizzaSlices}</svg>
       <div style="flex:1;min-width:120px">${legendaItems}</div>
@@ -3261,7 +3280,7 @@ function processarCSVUSA(input) {
         const item = row[iItem].trim();
         const conf = (row[iConf]||'').trim().toUpperCase();
         const confParcialMatch = conf.match(/^(\d+)\s+(OK|BR|ONLINE|ENT)$/i);
-        const isEstEua = conf === 'EST' || conf === 'EST EUA';
+        const isEstEua = conf === 'EST' || conf === 'EST EUA' || conf === 'EST USA';
         const isEstBr  = conf === 'EST BR';
         if (conf !== '' && !confParcialMatch && !isEstEua && !isEstBr) return;
         const obs = (row[iItem+2]||'').trim().toUpperCase();
