@@ -2640,9 +2640,9 @@ function renderMeta() {
       const ly = cy + (r+ri)/2 * Math.sin(midAngle);
       if (slice > 0.3) pizzaSlices += `<text x="${lx.toFixed(1)}" y="${(ly+3).toFixed(1)}" text-anchor="middle" font-size="9" font-weight="700" fill="#fff">${v.pct}%</text>`;
     }
-    legendaItems += `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
-      <div style="width:10px;height:10px;border-radius:2px;background:${v.cor};flex-shrink:0"></div>
-      <span style="font-size:11px;color:var(--text)">${v.nome.charAt(0)+v.nome.slice(1).toLowerCase()}</span>
+    legendaItems += `<div style="display:flex;align-items:center;gap:5px;margin-bottom:3px">
+      <div style="width:8px;height:8px;border-radius:2px;background:${v.cor};flex-shrink:0"></div>
+      <span style="font-size:10px;color:var(--text)">${v.nome.charAt(0)+v.nome.slice(1).toLowerCase()}</span>
       <span style="font-size:10px;color:var(--text4);margin-left:auto">${v.pct}%</span>
     </div>`;
     angle += slice;
@@ -2673,45 +2673,44 @@ function renderMeta() {
   // --- Tabela ---
   let linhas = vendedoras.map(v => `
     <tr>
-      <td style="padding:4px 8px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${v.nome.charAt(0)+v.nome.slice(1).toLowerCase()}</td>
-      <td style="padding:4px 8px;text-align:right;color:#0f6b52;font-weight:600;font-size:10px">${fmt(v.oks)}</td>
-      <td style="padding:4px 8px;text-align:right;color:var(--red);font-weight:600;font-size:10px">${fmt(faltantesApp[v.nome.toUpperCase()]||0)}</td>
-      <td style="padding:4px 8px;text-align:right;color:var(--text4);font-size:10px">${fmt(v.meta)}</td>
-      <td style="padding:4px 8px;text-align:right">
+      <td style="padding:4px 6px;font-weight:600;color:var(--text);font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${v.nome.charAt(0)+v.nome.slice(1).toLowerCase()}</td>
+      <td style="padding:4px 6px;text-align:right;color:#0f6b52;font-weight:600;font-size:10px">${fmt(v.oks)}</td>
+      <td style="padding:4px 6px;text-align:right;color:var(--red);font-weight:600;font-size:10px">${fmt(faltantesApp[v.nome.toUpperCase()]||0)}</td>
+      <td style="padding:4px 6px;text-align:right;color:var(--text4);font-size:10px">${fmt(v.meta)}</td>
+      <td style="padding:4px 6px;text-align:right">
         <span style="background:${v.pct>=100?'#e8f5f1':v.pct>=70?'#fff8e8':'#fdf2f3'};color:${v.pct>=100?'#0f6b52':v.pct>=70?'#d97706':'#7a0b1e'};border-radius:8px;padding:2px 6px;font-size:10px;font-weight:700">${v.pct}%</span>
       </td>
     </tr>`).join('');
 
   // Total row
   linhas += `<tr style="border-top:1.5px solid var(--border)">
-    <td style="padding:4px 8px;font-weight:700;color:var(--text);font-size:11px">Total</td>
-    <td style="padding:4px 8px;text-align:right;font-weight:700;color:#0f6b52;font-size:10px">${fmt(totalOks)}</td>
-    <td style="padding:4px 8px;text-align:right;font-weight:700;color:var(--red);font-size:10px">${fmt(Object.values(faltantesApp).reduce((a,b)=>a+b,0))}</td>
-    <td style="padding:4px 8px;text-align:right;font-weight:700;font-size:10px">${fmt(totalMeta)}</td>
-    <td style="padding:4px 8px;text-align:right"><span style="background:#e8f5f1;color:#0f6b52;border-radius:8px;padding:2px 6px;font-size:10px;font-weight:700">${pctTotal}%</span></td>
+    <td style="padding:4px 6px;font-weight:700;color:var(--text);font-size:10px">Total</td>
+    <td style="padding:4px 6px;text-align:right;font-weight:700;color:#0f6b52;font-size:10px">${fmt(totalOks)}</td>
+    <td style="padding:4px 6px;text-align:right;font-weight:700;color:var(--red);font-size:10px">${fmt(Object.values(faltantesApp).reduce((a,b)=>a+b,0))}</td>
+    <td style="padding:4px 6px;text-align:right;font-weight:700;font-size:10px">${fmt(totalMeta)}</td>
+    <td style="padding:4px 6px;text-align:right"><span style="background:#e8f5f1;color:#0f6b52;border-radius:8px;padding:2px 6px;font-size:10px;font-weight:700">${pctTotal}%</span></td>
   </tr>`;
 
   container.innerHTML = `
     <div style="background:var(--bg2);border:0.5px solid var(--border);border-radius:10px;padding:8px 12px;margin-bottom:14px;font-size:10px;color:var(--text4)">
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px"><span style="font-size:13px">📋</span><span>OKs, Meta e % da planilha · <strong style="color:var(--text3)">Faltantes calculados pelo app</strong></span></div>
-      <div style="display:flex;gap:10px;margin-top:4px">
-        <span>🇺🇸 ${localStorage.getItem('mes_label_usa')||'Mês USA'}</span>
-        <span>🇧🇷 ${localStorage.getItem('mes_label_br')||'Mês BR'}</span>
+      <div style="margin-top:4px;font-size:11px;color:var(--text3)">
+        🇺🇸 ${localStorage.getItem('mes_label_usa')||'Mês USA'}
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;flex-wrap:wrap">
-      <svg viewBox="0 0 200 200" width="180" height="180" style="flex-shrink:0">${pizzaSlices}</svg>
-      <div style="flex:1;min-width:120px">${legendaItems}</div>
+      <svg viewBox="0 0 200 200" width="140" height="140" style="flex-shrink:0">${pizzaSlices}</svg>
+      <div style="flex:1;min-width:100px">${legendaItems}</div>
     </div>
     <div style="overflow-x:auto;-webkit-overflow-scrolling:touch">
       <table style="width:100%;min-width:420px;border-collapse:collapse;font-size:11px;table-layout:fixed">
         <thead>
           <tr style="background:var(--red)">
-            <th style="padding:6px 8px;text-align:left;color:#fff;font-size:10px;width:22%">Vendedora</th>
-            <th style="padding:6px 8px;text-align:right;color:#fff;font-size:10px;width:20%">OKs</th>
-            <th style="padding:6px 8px;text-align:right;color:#fff;font-size:10px;width:20%">Faltantes</th>
-            <th style="padding:6px 8px;text-align:right;color:#fff;font-size:10px;width:20%">Meta</th>
-            <th style="padding:6px 8px;text-align:right;color:#fff;font-size:10px;width:10%">%</th>
+            <th style="padding:4px 6px;text-align:left;color:#fff;font-size:9px;width:18%">Vendedora</th>
+            <th style="padding:4px 6px;text-align:right;color:#fff;font-size:9px;width:22%">OKs</th>
+            <th style="padding:4px 6px;text-align:right;color:#fff;font-size:9px;width:22%">Faltantes</th>
+            <th style="padding:4px 6px;text-align:right;color:#fff;font-size:9px;width:22%">Meta</th>
+            <th style="padding:4px 6px;text-align:right;color:#fff;font-size:9px;width:10%">%</th>
           </tr>
         </thead>
         <tbody>${linhas}</tbody>
@@ -2781,18 +2780,18 @@ function renderMeta() {
        const vendKey = v.nome.toUpperCase().replace(/[^A-Z]/g,'');
        turnosHtml = `
          <div style="height:0.5px;background:var(--border);margin:10px 0"></div>
-         <div style="font-size:10px;color:var(--text4);margin-bottom:7px">Turno de mais vendas <span style="font-size:9px;opacity:0.6">· toque para ver marcas</span></div>
+         <div style="font-size:10px;color:var(--text4);margin-bottom:7px">Turno de mais vendas <span style="font-size:9px;opacity:0.6">· toque para ver top marcas</span></div>
          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-bottom:8px">
            ${['MANHA','TARDE','NOITE'].map(t => {
              const isMax = periodos[t] === maxTurno && maxTurno > 0;
-             return `<div onclick="toggleTurnoMarcas('${vendKey}','${t}')" style="cursor:pointer;background:var(--bg2);border-radius:8px;padding:6px 8px;text-align:center;${isMax?'border:1.5px solid #185fa5;':'border:0.5px solid var(--border);'}">
+             return `<div onclick="mostrarMarcasTurno('${vendKey}','${t}',this)" data-turno="${t}" style="cursor:pointer;background:var(--bg2);border-radius:8px;padding:6px 8px;text-align:center;transition:border 0.15s;${isMax?'border:1.5px solid #185fa5;':'border:0.5px solid var(--border);'}">
                <div style="font-size:14px;margin-bottom:2px">${turnoIcons[t]}</div>
                <div style="font-size:9px;color:var(--text4)">${turnoLabel[t]}</div>
                <div style="font-size:12px;font-weight:500;color:${isMax?'#185fa5':'var(--text)'}">${periodos[t]}</div>
              </div>`;
            }).join('')}
          </div>
-         <div id="turno-marcas-${vendKey}" style="display:none;background:var(--bg);border-radius:8px;padding:8px 10px;margin-bottom:8px;border:0.5px solid var(--border)"></div>
+         <div id="turno-marcas-${vendKey}" style="display:none;border-radius:10px;overflow:hidden;margin-bottom:8px"></div>
          <div style="height:0.5px;background:var(--border);margin:10px 0"></div>
          <div style="display:flex;justify-content:space-between;align-items:center">
            <span style="font-size:11px;color:var(--text3)">Dia com mais vendas</span>
@@ -2836,7 +2835,12 @@ function renderMeta() {
       <div id="selecao-vend-wpp-lista" style="display:flex;flex-direction:column;gap:6px"></div>
     </div>`;
 
-  container.innerHTML += botoesHtml + `<div style="margin-top:0">${cardsHtml}</div>
+  // Remove botões antigos se existirem para evitar duplicação
+  const oldBotoes = container.querySelector('[data-meta-botoes]');
+  if (oldBotoes) oldBotoes.remove();
+  const botoesDiv = document.createElement('div');
+  botoesDiv.setAttribute('data-meta-botoes','1');
+  botoesDiv.innerHTML = botoesHtml + `<div style="margin-top:0">${cardsHtml}</div>
   <div id="popup-meta-bg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:999;align-items:flex-end;justify-content:center" onclick="if(event.target===this)fecharPopupMeta()">
     <div style="background:var(--bg2);border-radius:16px 16px 0 0;padding:16px;width:100%;max-width:480px">
       <img id="popup-meta-foto" src="" style="width:100%;height:200px;object-fit:cover;border-radius:10px;background:var(--bg);margin-bottom:12px;display:block" onerror="this.style.display='none'">
@@ -2849,6 +2853,7 @@ function renderMeta() {
       <button onclick="fecharPopupMeta()" style="width:100%;padding:10px;background:var(--bg);border:0.5px solid var(--border);border-radius:10px;font-size:13px;color:var(--text3);cursor:pointer;font-family:inherit">Fechar</button>
     </div>
   </div>`;
+  container.appendChild(botoesDiv);
 }
 
 function abrirSelecaoVendedoraPdf() {
@@ -3075,32 +3080,47 @@ function salvarLabelMes(tipo) {
   setTimeout(()=>inp.style.borderColor='', 1500);
 }
 
-function toggleTurnoMarcas(vendKey, turno) {
+function mostrarMarcasTurno(vendKey, turno, btn) {
   const el = document.getElementById('turno-marcas-' + vendKey);
   if (!el) return;
-  // Se já mostra esse turno, fecha
+  // Destacar botão clicado, resetar outros
+  const grid = btn.parentElement;
+  grid.querySelectorAll('[data-turno]').forEach(b => {
+    b.style.borderWidth = '0.5px';
+    b.style.borderColor = 'var(--border)';
+    b.style.borderStyle = 'solid';
+  });
+  // Toggle — se já mostra esse turno, fecha
   if (el.dataset.turno === turno && el.style.display !== 'none') {
     el.style.display = 'none';
     el.dataset.turno = '';
     return;
   }
+  // Destacar botão ativo
+  btn.style.borderWidth = '1.5px';
+  btn.style.borderColor = '#7a0b1e';
+  btn.style.borderStyle = 'solid';
   let vendasResumo = {};
   try { vendasResumo = JSON.parse(localStorage.getItem('vendas_resumo')||'{}'); } catch(e) {}
-  // Encontrar vendedora pelo key
   const vend = Object.keys(vendasResumo).find(k => k.replace(/[^A-Z]/g,'') === vendKey);
   const marcas = vend ? (vendasResumo[vend].marcasPorTurno?.[turno]||[]) : [];
   const turnoLabels = {MANHA:'🌅 Manhã', TARDE:'☀️ Tarde', NOITE:'🌙 Noite'};
-  const barCores = ['#b8860b','#c45b1a','#c4302b'];
+  const barCores = [{fill:'#b8860b',text:'#7a5c00',medal:'🥇'},{fill:'#c45b1a',text:'#7a3310',medal:'🥈'},{fill:'#c4302b',text:'#8b1a16',medal:'🥉'}];
   if (!marcas.length) {
-    el.innerHTML = '<div style="font-size:11px;color:var(--text4);text-align:center;padding:4px">Sem dados para esse turno</div>';
+    el.innerHTML = '<div style="background:var(--bg2);border:0.5px solid var(--border);border-radius:10px;padding:10px 12px;font-size:11px;color:var(--text4);text-align:center">Reimporte o CSV para ver os dados por turno</div>';
   } else {
     const maxQt = marcas[0].qt;
-    el.innerHTML = '<div style="font-size:10px;color:var(--text4);margin-bottom:6px;font-weight:500">' + turnoLabels[turno] + ' — top marcas</div>' +
-      marcas.map((m,i) => '<div style="display:flex;align-items:center;gap:7px;margin-bottom:4px">' +
-        '<div style="font-size:11px;width:70px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text);font-weight:500">' + m.nome + '</div>' +
-        '<div style="flex:1;background:var(--bg2);border-radius:3px;height:6px;overflow:hidden"><div style="height:100%;background:' + barCores[i] + ';width:' + Math.round(m.qt/maxQt*100) + '%"></div></div>' +
-        '<div style="font-size:10px;color:var(--text4);width:20px;text-align:right">' + m.qt + '</div>' +
-      '</div>').join('');
+    el.innerHTML = '<div style="background:var(--bg2);border:0.5px solid var(--border);border-radius:10px;padding:10px 12px">' +
+      '<div style="font-size:10px;color:var(--text4);margin-bottom:8px;font-weight:500">' + turnoLabels[turno] + ' — top marcas</div>' +
+      marcas.map((m,i) => {
+        const cor = barCores[i];
+        return '<div style="display:flex;align-items:center;gap:7px;margin-bottom:' + (i<marcas.length-1?'6':'0') + 'px">' +
+          '<div style="font-size:11px;width:80px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:' + cor.text + ';font-weight:600">' + cor.medal + ' ' + m.nome + '</div>' +
+          '<div style="flex:1;background:var(--bg);border-radius:3px;height:7px;overflow:hidden"><div style="height:100%;background:' + cor.fill + ';width:' + Math.round(m.qt/maxQt*100) + '%"></div></div>' +
+          '<div style="font-size:10px;color:' + cor.text + ';font-weight:600;width:22px;text-align:right">' + m.qt + '</div>' +
+        '</div>';
+      }).join('') +
+    '</div>';
   }
   el.dataset.turno = turno;
   el.style.display = 'block';
