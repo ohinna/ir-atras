@@ -2748,41 +2748,14 @@ function renderMeta() {
     const vr = vendasResumo[v.nome.toUpperCase()] || null;
     const vendKey = v.nome.toUpperCase().replace(/[^A-Z]/g,'');
 
+    const vrJson = vr ? JSON.stringify({top3marcas: vr.top3marcas||[], marcasPorTurno: vr.marcasPorTurno||{}}).replace(/"/g,'&quot;') : '';
+    const vendNomeCard = v.nome.charAt(0)+v.nome.slice(1).toLowerCase();
     let marcasHtml = '';
     if (vr && vr.top3marcas && vr.top3marcas.length) {
-      const maxQt = vr.top3marcas[0].qt;
-      const vrJson = JSON.stringify({top3marcas: vr.top3marcas, marcasPorTurno: vr.marcasPorTurno||{}}).replace(/"/g,'&quot;');
       marcasHtml = `
         <div style="height:0.5px;background:var(--border);margin:10px 0"></div>
-        <div id="marcas-bloco-${vendKey}" data-vr="${vrJson}">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px">
-          <div style="font-size:10px;color:var(--text4)" id="marcas-titulo-${vendKey}">Top 3 marcas mais vendidas</div>
-        </div>
-        ${vr.top3marcas.map((m,i) => {
-          const cor = barCores[i];
-          const fotoHtml = m.itemFoto
-            ? `<img src="${resolverFotoMeta(m.itemFoto)}" style="width:32px;height:32px;border-radius:6px;object-fit:cover;border:0.5px solid var(--border);flex-shrink:0" onerror="this.style.display='none'">`
-            : `<div style="width:32px;height:32px;border-radius:6px;background:var(--bg2);border:0.5px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--text4)">?</div>`;
-          const marcaNome = m.nome.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-          const itemNome = m.item.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-          const itemFotoSafe = m.itemFoto.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-          return `<div style="margin-bottom:10px">
-            <div style="display:flex;align-items:center;gap:7px;margin-bottom:2px">
-              <div style="font-size:11px;width:75px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:${cor.text};font-weight:600">${cor.medal} ${m.nome}</div>
-              <div style="flex:1;background:var(--bg2);border-radius:4px;height:8px;overflow:hidden"><div style="height:100%;border-radius:4px;background:${cor.fill};width:${Math.round(m.qt/maxQt*100)}%"></div></div>
-              <div style="font-size:10px;width:20px;text-align:right;color:${cor.text};font-weight:600">${m.qt}</div>
-            </div>
-            <div style="font-size:10px;color:${cor.text};opacity:0.75;margin-bottom:6px;padding-left:2px">Total vendido: ${fmt(m.valorMarca||0)}</div>
-            <div style="display:flex;align-items:center;gap:7px;background:var(--bg);border-radius:8px;padding:6px 8px;cursor:pointer;border:0.5px solid var(--border)" onclick="abrirPopupMeta('${marcaNome}','${itemNome}','${itemFotoSafe}',${m.itemQt},'${v.nome}')">
-              ${fotoHtml}
-              <div style="flex:1;min-width:0">
-                <div style="font-size:9px;color:var(--text4);margin-bottom:2px">⭐ item mais vendido</div>
-                <div style="font-size:11px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500">${m.item||'—'}</div>
-                <div style="font-size:9px;color:var(--text4);margin-top:1px">${m.itemQt} vendas · toque para ver →</div>
-              </div>
-            </div>
-          </div>`;
-        }).join('')}
+        <div id="marcas-bloco-${vendKey}" data-vr="${vrJson}" data-vend="${vendNomeCard}">
+          <div style="font-size:10px;color:var(--text4);margin-bottom:7px" id="marcas-titulo-${vendKey}">Top 3 marcas mais vendidas</div>
         </div>`;
     }
 
@@ -2846,6 +2819,19 @@ function renderMeta() {
     </div>
   </div>`;
   container.appendChild(botoesDiv);
+  // Inicializar blocos de marcas via renderMarcasBloco
+  setTimeout(() => {
+    vendedoras.forEach(v => {
+      const vKey = v.nome.toUpperCase().replace(/[^A-Z]/g,'');
+      const bloco = document.getElementById('marcas-bloco-' + vKey);
+      const titulo = document.getElementById('marcas-titulo-' + vKey);
+      if (!bloco) return;
+      let vrData = {};
+      try { vrData = JSON.parse(bloco.dataset.vr.replace(/&quot;/g,'"')); } catch(e) {}
+      const vendNome = bloco.dataset.vend || '';
+      renderMarcasBloco(bloco, titulo, vrData.top3marcas||[], null, vendNome);
+    });
+  }, 0);
 }
 
 function abrirSelecaoVendedoraPdf() {
@@ -3087,7 +3073,7 @@ function mostrarMarcasTurno(vendKey, turno, btn) {
     // Restaurar conteúdo original
     let vr = {};
     try { vr = JSON.parse(bloco.dataset.vr.replace(/&quot;/g,'"')); } catch(e) {}
-    const vendNomeRest = vend ? vend.charAt(0)+vend.slice(1).toLowerCase() : '';
+    const vendNomeRest = bloco.dataset.vend || (vend ? vend.charAt(0)+vend.slice(1).toLowerCase() : '');
     renderMarcasBloco(bloco, titulo, vr.top3marcas||[], null, vendNomeRest);
     return;
   }
@@ -3099,7 +3085,7 @@ function mostrarMarcasTurno(vendKey, turno, btn) {
   let vr = {};
   try { vr = JSON.parse(bloco.dataset.vr.replace(/&quot;/g,'"')); } catch(e) {}
   const marcas = vr.marcasPorTurno?.[turno] || [];
-  const vendNomeTurno = vend ? vend.charAt(0)+vend.slice(1).toLowerCase() : vendKey;
+  const vendNomeTurno = bloco.dataset.vend || (vend ? vend.charAt(0)+vend.slice(1).toLowerCase() : vendKey);
   renderMarcasBloco(bloco, titulo, marcas, turnoLabels[turno], vendNomeTurno);
 }
 
