@@ -173,7 +173,7 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
 /* Firebase sync */
 .sync-dot{width:6px;height:6px;border-radius:50%;background:#7a0b1e;display:inline-block;margin-right:4px}
 /* Main content offset */
-.main-content{padding-top:170px;padding-bottom:70px}
+.main-content{padding-top:170px;padding-bottom:100px}
 /* Empty */
 .empty{text-align:center;padding:60px 20px;color:#c4a898;font-size:14px}
 /* Reaction bar */
@@ -2729,7 +2729,7 @@ function renderMeta() {
   const barCores = [
     {fill:'#b8860b', text:'#7a5c00', medal:'🥇'},
     {fill:'#c45b1a', text:'#7a3310', medal:'🥈'},
-    {fill:'#7a0b1e', text:'#4a0812', medal:'🥉'},
+    {fill:'#c4302b', text:'#8b1a16', medal:'🥉'},
   ];
   const turnoIcons = {MANHA:'🌅', TARDE:'☀️', NOITE:'🌙'};
   const turnoLabel = {MANHA:'Manhã', TARDE:'Tarde', NOITE:'Noite'};
@@ -2774,29 +2774,31 @@ function renderMeta() {
         }).join('')}`;
     }
 
-    let turnosHtml = '';
-    if (vr && vr.periodos) {
-      const periodos = vr.periodos;
-      const maxTurno = Math.max(periodos.MANHA, periodos.TARDE, periodos.NOITE);
-      turnosHtml = `
-        <div style="height:0.5px;background:var(--border);margin:10px 0"></div>
-        <div style="font-size:10px;color:var(--text4);margin-bottom:7px">Turno de mais vendas</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-bottom:10px">
-          ${['MANHA','TARDE','NOITE'].map(t => {
-            const isMax = periodos[t] === maxTurno && maxTurno > 0;
-            return `<div style="background:${isMax?'var(--bg2)':'var(--bg2)'};border-radius:8px;padding:6px 8px;text-align:center;${isMax?'border:1.5px solid #185fa5;':'border:0.5px solid var(--border);'}">
-              <div style="font-size:14px;margin-bottom:2px">${turnoIcons[t]}</div>
-              <div style="font-size:9px;color:var(--text4)">${turnoLabel[t]}</div>
-              <div style="font-size:12px;font-weight:500;color:${isMax?'#185fa5':'var(--text)'}">${periodos[t]}</div>
-            </div>`;
-          }).join('')}
-        </div>
-        <div style="height:0.5px;background:var(--border);margin:10px 0"></div>
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <span style="font-size:11px;color:var(--text3)">Dia com mais vendas</span>
-          <span style="font-size:12px;font-weight:500;color:var(--text)">${vr.diaMais||'—'}</span>
-        </div>`;
-    }
+     let turnosHtml = '';
+     if (vr && vr.periodos) {
+       const periodos = vr.periodos;
+       const maxTurno = Math.max(periodos.MANHA, periodos.TARDE, periodos.NOITE);
+       const vendKey = v.nome.toUpperCase().replace(/[^A-Z]/g,'');
+       turnosHtml = `
+         <div style="height:0.5px;background:var(--border);margin:10px 0"></div>
+         <div style="font-size:10px;color:var(--text4);margin-bottom:7px">Turno de mais vendas <span style="font-size:9px;opacity:0.6">· toque para ver marcas</span></div>
+         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-bottom:8px">
+           ${['MANHA','TARDE','NOITE'].map(t => {
+             const isMax = periodos[t] === maxTurno && maxTurno > 0;
+             return `<div onclick="toggleTurnoMarcas('${vendKey}','${t}')" style="cursor:pointer;background:var(--bg2);border-radius:8px;padding:6px 8px;text-align:center;${isMax?'border:1.5px solid #185fa5;':'border:0.5px solid var(--border);'}">
+               <div style="font-size:14px;margin-bottom:2px">${turnoIcons[t]}</div>
+               <div style="font-size:9px;color:var(--text4)">${turnoLabel[t]}</div>
+               <div style="font-size:12px;font-weight:500;color:${isMax?'#185fa5':'var(--text)'}">${periodos[t]}</div>
+             </div>`;
+           }).join('')}
+         </div>
+         <div id="turno-marcas-${vendKey}" style="display:none;background:var(--bg);border-radius:8px;padding:8px 10px;margin-bottom:8px;border:0.5px solid var(--border)"></div>
+         <div style="height:0.5px;background:var(--border);margin:10px 0"></div>
+         <div style="display:flex;justify-content:space-between;align-items:center">
+           <span style="font-size:11px;color:var(--text3)">Dia com mais vendas</span>
+           <span style="font-size:12px;font-weight:500;color:var(--text)">${vr.diaMais||'—'}</span>
+         </div>`;
+     }
 
     return `<div style="background:var(--bg2);border:0.5px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
@@ -3071,6 +3073,37 @@ function salvarLabelMes(tipo) {
   inp.placeholder = val;
   inp.style.borderColor = '#0f6b52';
   setTimeout(()=>inp.style.borderColor='', 1500);
+}
+
+function toggleTurnoMarcas(vendKey, turno) {
+  const el = document.getElementById('turno-marcas-' + vendKey);
+  if (!el) return;
+  // Se já mostra esse turno, fecha
+  if (el.dataset.turno === turno && el.style.display !== 'none') {
+    el.style.display = 'none';
+    el.dataset.turno = '';
+    return;
+  }
+  let vendasResumo = {};
+  try { vendasResumo = JSON.parse(localStorage.getItem('vendas_resumo')||'{}'); } catch(e) {}
+  // Encontrar vendedora pelo key
+  const vend = Object.keys(vendasResumo).find(k => k.replace(/[^A-Z]/g,'') === vendKey);
+  const marcas = vend ? (vendasResumo[vend].marcasPorTurno?.[turno]||[]) : [];
+  const turnoLabels = {MANHA:'🌅 Manhã', TARDE:'☀️ Tarde', NOITE:'🌙 Noite'};
+  const barCores = ['#b8860b','#c45b1a','#c4302b'];
+  if (!marcas.length) {
+    el.innerHTML = '<div style="font-size:11px;color:var(--text4);text-align:center;padding:4px">Sem dados para esse turno</div>';
+  } else {
+    const maxQt = marcas[0].qt;
+    el.innerHTML = '<div style="font-size:10px;color:var(--text4);margin-bottom:6px;font-weight:500">' + turnoLabels[turno] + ' — top marcas</div>' +
+      marcas.map((m,i) => '<div style="display:flex;align-items:center;gap:7px;margin-bottom:4px">' +
+        '<div style="font-size:11px;width:70px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text);font-weight:500">' + m.nome + '</div>' +
+        '<div style="flex:1;background:var(--bg2);border-radius:3px;height:6px;overflow:hidden"><div style="height:100%;background:' + barCores[i] + ';width:' + Math.round(m.qt/maxQt*100) + '%"></div></div>' +
+        '<div style="font-size:10px;color:var(--text4);width:20px;text-align:right">' + m.qt + '</div>' +
+      '</div>').join('');
+  }
+  el.dataset.turno = turno;
+  el.style.display = 'block';
 }
 
 function resolverFotoMeta(raw) {
@@ -3680,7 +3713,7 @@ function processarCSVUSA(input) {
         const periodo = iPer>-1 ? (row[iPer]||'').trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'') : '';
         const foto = iFoto>-1 ? (row[iFoto]||'').trim() : '';
         const valBruto = pv(row[iVal]||'');
-        if (!vendasResumo[vend]) vendasResumo[vend] = {marcas:{}, marcasVal:{}, itens:{}, periodos:{MANHA:0,TARDE:0,NOITE:0}, dias:{}};
+        if (!vendasResumo[vend]) vendasResumo[vend] = {marcas:{}, marcasVal:{}, itens:{}, periodos:{MANHA:0,TARDE:0,NOITE:0}, marcasPorTurno:{MANHA:{},TARDE:{},NOITE:{}}, dias:{}};
         const vr = vendasResumo[vend];
         if (marca) {
           vr.marcas[marca] = (vr.marcas[marca]||0) + mult;
@@ -3692,9 +3725,13 @@ function processarCSVUSA(input) {
           vr.itens[key].qt += mult;
           if (foto && !vr.itens[key].foto) vr.itens[key].foto = foto;
         }
-        if (periodo.includes('MANHA') || periodo === 'MANHA') vr.periodos.MANHA += mult;
-        else if (periodo.includes('TARDE')) vr.periodos.TARDE += mult;
-        else if (periodo.includes('NOITE')) vr.periodos.NOITE += mult;
+        let turnoAtual = null;
+        if (periodo.includes('MANHA') || periodo === 'MANHA') { vr.periodos.MANHA += mult; turnoAtual = 'MANHA'; }
+        else if (periodo.includes('TARDE')) { vr.periodos.TARDE += mult; turnoAtual = 'TARDE'; }
+        else if (periodo.includes('NOITE')) { vr.periodos.NOITE += mult; turnoAtual = 'NOITE'; }
+        if (turnoAtual && marca) {
+          vr.marcasPorTurno[turnoAtual][marca] = (vr.marcasPorTurno[turnoAtual][marca]||0) + mult;
+        }
         if (data) {
           const dow = (() => { try { const [d,m] = data.split('/'); const dt = new Date(2026,parseInt(m)-1,parseInt(d)); return ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'][dt.getDay()]; } catch(e){return '';} })();
           if (dow) vr.dias[dow] = (vr.dias[dow]||0) + mult;
@@ -3708,7 +3745,11 @@ function processarCSVUSA(input) {
           return {nome:marca, qt, valorMarca:Math.round((vr.marcasVal[marca]||0)*100)/100, item:topItem?.nome||'', itemFoto:topItem?.foto||'', itemQt:topItem?.qt||0};
         });
         const diaMais = Object.entries(vr.dias).sort((a,b)=>b[1]-a[1])[0]?.[0]||'';
-        vendasResumoFinal[vend] = {top3marcas, periodos:vr.periodos, diaMais};
+        const marcasPorTurno = {};
+        ['MANHA','TARDE','NOITE'].forEach(t => {
+          marcasPorTurno[t] = Object.entries(vr.marcasPorTurno[t]||{}).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([nome,qt])=>({nome,qt}));
+        });
+        vendasResumoFinal[vend] = {top3marcas, periodos:vr.periodos, marcasPorTurno, diaMais};
       });
       localStorage.setItem('vendas_resumo', JSON.stringify(vendasResumoFinal));
       if (window._db) {
