@@ -119,7 +119,7 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
 .tab-btn.active .tab-icon{color:var(--red)}
 .tab-badge{position:absolute;top:4px;right:calc(50% - 18px);background:#7a0b1e;color:#fff;font-size:8px;font-weight:700;min-width:14px;height:14px;border-radius:7px;display:none;align-items:center;justify-content:center;padding:0 3px}
 /* Chat page */
-.page{display:none;position:fixed;inset:0;background:var(--bg);overflow-y:auto;padding-top:60px;padding-bottom:70px;opacity:0;transition:opacity 0.18s ease}
+.page{display:none;position:fixed;inset:0;background:var(--bg);overflow-y:auto;padding-top:60px;padding-bottom:100px;opacity:0;transition:opacity 0.18s ease}
 .page.active{display:block;opacity:1}
 .page.active{display:block}
 .chat-header{position:fixed;top:0;left:0;right:0;z-index:100;background:var(--bg);border-bottom:0.5px solid var(--border);padding:14px 16px;transition:top 0.2s}
@@ -173,7 +173,7 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
 /* Firebase sync */
 .sync-dot{width:6px;height:6px;border-radius:50%;background:#7a0b1e;display:inline-block;margin-right:4px}
 /* Main content offset */
-.main-content{padding-top:170px;padding-bottom:100px}
+.main-content{padding-top:170px;padding-bottom:120px}
 /* Empty */
 .empty{text-align:center;padding:60px 20px;color:#c4a898;font-size:14px}
 /* Reaction bar */
@@ -1294,7 +1294,7 @@ function setMarca(m, btn) {
     }
     document.getElementById('chip-all-marca').classList.add('active');
     document.querySelectorAll('#marca-row .chip:not(#chip-all-marca)').forEach(c => c.style.display = '');
-    document.getElementById('marca-search').value = '';
+    const ms = document.getElementById('marca-search'); if (ms) ms.value = '';
   } else {
     document.getElementById('chip-all-marca').classList.remove('active');
     if (fMarcas.has(m)) { fMarcas.delete(m); btn.classList.remove('active'); }
@@ -2746,11 +2746,12 @@ function renderMeta() {
     const pctCor = pctOk ? '#085041' : '#7a0b1e';
     const falt = faltantesApp[v.nome.toUpperCase()]||0;
     const vr = vendasResumo[v.nome.toUpperCase()] || null;
+    const vendKey = v.nome.toUpperCase().replace(/[^A-Z]/g,'');
 
     let marcasHtml = '';
     if (vr && vr.top3marcas && vr.top3marcas.length) {
       const maxQt = vr.top3marcas[0].qt;
-      const vrJson = JSON.stringify({top3marcas: vr.top3marcas, marcasPorTurno: vr.marcasPorTurno||{}}).replace(/'/g,"\'").replace(/"/g,'&quot;');
+      const vrJson = JSON.stringify({top3marcas: vr.top3marcas, marcasPorTurno: vr.marcasPorTurno||{}}).replace(/"/g,'&quot;');
       marcasHtml = `
         <div style="height:0.5px;background:var(--border);margin:10px 0"></div>
         <div id="marcas-bloco-${vendKey}" data-vr="${vrJson}">
@@ -2789,7 +2790,6 @@ function renderMeta() {
      if (vr && vr.periodos) {
        const periodos = vr.periodos;
        const maxTurno = Math.max(periodos.MANHA, periodos.TARDE, periodos.NOITE);
-       const vendKey = v.nome.toUpperCase().replace(/[^A-Z]/g,'');
        turnosHtml = `
          <div style="height:0.5px;background:var(--border);margin:10px 0"></div>
          <div style="font-size:10px;color:var(--text4);margin-bottom:7px">Turno de mais vendas <span style="font-size:9px;opacity:0.6">· toque para ver top marcas</span></div>
