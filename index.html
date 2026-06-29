@@ -242,11 +242,11 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
       <button onclick="toggleDark()" id="btn-dark" style="background:var(--bg2);border:0.5px solid var(--border);border-radius:10px;padding:4px 8px;cursor:pointer;font-size:14px;color:var(--red)" title="Modo escuro">🌙</button>
       <button onclick="toggleGrid()" id="btn-grid" style="background:#fff;border:0.5px solid #ede0d4;border-radius:10px;padding:4px 8px;cursor:pointer;font-size:14px;color:#7a0b1e" title="Mudar visualização">⊞</button>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:1px">
-      <span class="header-meta" id="header-meta">231 itens · R$ 48.959,50</span>
-      <span id="header-total" style="font-size:9px;color:var(--text4)"></span>
-      <span id="header-vend-total" style="font-size:9px;color:var(--red);font-weight:600;display:none"></span>
-      <span id="header-compra" style="font-size:9px;color:#f59e0b;font-weight:600;display:none"></span>
-    </div>
+        <span class="header-meta" id="header-meta" style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block">231 itens · R$ 48.959,50</span>
+        <span id="header-total" style="font-size:9px;color:var(--text4)"></span>
+        <span id="header-vend-total" style="font-size:9px;color:var(--red);font-weight:600;display:none"></span>
+        <span id="header-compra" style="font-size:9px;color:#f59e0b;font-weight:600;display:none"></span>
+      </div>
     </div>
   </div>
   <div class="search-wrap">
@@ -1154,7 +1154,6 @@ function renderGrid() {
     return `<div class="card ${p.nok?'is-nok':''}" id="card-${p._id}">
       <div class="card-img" onclick="openModal(${p._id})">
         ${img}
-        ${p.origem ? `<div style="position:absolute;bottom:6px;left:32px;background:rgba(0,0,0,0.55);border-radius:6px;padding:1px 6px;font-size:9px;font-weight:700;color:#fff;z-index:2">${p.origem === 'br' ? '🇧🇷' : '🇺🇸'}</div>` : ''}
         ${p.nok ? '<div class="nok-overlay show"><div class="nok-bg"></div><div class="nok-content"><div class="nok-label">✕ NOK</div>' + (p.nokWho ? '<div style="font-size:9px;color:rgba(255,255,255,0.75);margin-top:2px">'+p.nokWho+'</div>' : '') + '</div></div>' : ''}
         ${p.em_compra ? '<div class="compra-overlay show"><div class="compra-bg"></div><div class="compra-content"><div class="compra-label">🛒 Em compra</div></div></div>' : ''}
         ${p.est_eua ? '<div class="eua-overlay show"><div class="eua-bg"></div><div class="eua-content"><div class="eua-label">🇺🇸 Est EUA</div></div></div>' : ''}
@@ -2674,30 +2673,30 @@ function renderMeta() {
   // --- Tabela ---
   let linhas = vendedoras.map(v => `
     <tr>
-      <td style="padding:6px 8px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${v.nome.charAt(0)+v.nome.slice(1).toLowerCase()}</td>
-      <td style="padding:6px 8px;text-align:right;color:#0f6b52;font-weight:600;font-size:10px">${fmt(v.oks)}</td>
-      <td style="padding:6px 8px;text-align:right;color:var(--red);font-weight:600;font-size:10px">${fmt(faltantesApp[v.nome.toUpperCase()]||0)}</td>
-      <td style="padding:6px 8px;text-align:right;color:var(--text4);font-size:10px">${fmt(v.meta)}</td>
-      <td style="padding:6px 8px;text-align:right">
+      <td style="padding:4px 8px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${v.nome.charAt(0)+v.nome.slice(1).toLowerCase()}</td>
+      <td style="padding:4px 8px;text-align:right;color:#0f6b52;font-weight:600;font-size:10px">${fmt(v.oks)}</td>
+      <td style="padding:4px 8px;text-align:right;color:var(--red);font-weight:600;font-size:10px">${fmt(faltantesApp[v.nome.toUpperCase()]||0)}</td>
+      <td style="padding:4px 8px;text-align:right;color:var(--text4);font-size:10px">${fmt(v.meta)}</td>
+      <td style="padding:4px 8px;text-align:right">
         <span style="background:${v.pct>=100?'#e8f5f1':v.pct>=70?'#fff8e8':'#fdf2f3'};color:${v.pct>=100?'#0f6b52':v.pct>=70?'#d97706':'#7a0b1e'};border-radius:8px;padding:2px 6px;font-size:10px;font-weight:700">${v.pct}%</span>
       </td>
     </tr>`).join('');
 
   // Total row
   linhas += `<tr style="border-top:1.5px solid var(--border)">
-    <td style="padding:6px 8px;font-weight:700;color:var(--text);font-size:11px">Total</td>
-    <td style="padding:6px 8px;text-align:right;font-weight:700;color:#0f6b52;font-size:10px">${fmt(totalOks)}</td>
-    <td style="padding:6px 8px;text-align:right;font-weight:700;color:var(--red);font-size:10px">${fmt(Object.values(faltantesApp).reduce((a,b)=>a+b,0))}</td>
-    <td style="padding:6px 8px;text-align:right;font-weight:700;font-size:10px">${fmt(totalMeta)}</td>
-    <td style="padding:6px 8px;text-align:right"><span style="background:#e8f5f1;color:#0f6b52;border-radius:8px;padding:2px 6px;font-size:10px;font-weight:700">${pctTotal}%</span></td>
+    <td style="padding:4px 8px;font-weight:700;color:var(--text);font-size:11px">Total</td>
+    <td style="padding:4px 8px;text-align:right;font-weight:700;color:#0f6b52;font-size:10px">${fmt(totalOks)}</td>
+    <td style="padding:4px 8px;text-align:right;font-weight:700;color:var(--red);font-size:10px">${fmt(Object.values(faltantesApp).reduce((a,b)=>a+b,0))}</td>
+    <td style="padding:4px 8px;text-align:right;font-weight:700;font-size:10px">${fmt(totalMeta)}</td>
+    <td style="padding:4px 8px;text-align:right"><span style="background:#e8f5f1;color:#0f6b52;border-radius:8px;padding:2px 6px;font-size:10px;font-weight:700">${pctTotal}%</span></td>
   </tr>`;
 
   container.innerHTML = `
     <div style="background:var(--bg2);border:0.5px solid var(--border);border-radius:10px;padding:8px 12px;margin-bottom:14px;font-size:10px;color:var(--text4)">
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px"><span style="font-size:13px">📋</span><span>OKs, Meta e % da planilha · <strong style="color:var(--text3)">Faltantes calculados pelo app</strong></span></div>
       <div style="display:flex;gap:10px;margin-top:4px">
-        <span>🇺🇸 ' + (localStorage.getItem('mes_label_usa')||'Mês USA') + '</span>
-        <span>🇧🇷 ' + (localStorage.getItem('mes_label_br')||'Mês BR') + '</span>
+        <span>🇺🇸 ${localStorage.getItem('mes_label_usa')||'Mês USA'}</span>
+        <span>🇧🇷 ${localStorage.getItem('mes_label_br')||'Mês BR'}</span>
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;flex-wrap:wrap">
@@ -2815,7 +2814,27 @@ function renderMeta() {
     </div>`;
   }).join('');
 
-  container.innerHTML += `<div style="margin-top:16px">${cardsHtml}</div>
+  // Botões PDF e WhatsApp
+  const mesMeta = localStorage.getItem('mes_label_usa') || 'Mês USA';
+  const botoesHtml = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px;margin-bottom:4px">
+      <button onclick="gerarPdfMeta('todas')" style="padding:11px;border-radius:12px;background:#7a0b1e;border:none;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px">📄 PDF Geral</button>
+      <button onclick="abrirSelecaoVendedoraPdf()" style="padding:11px;border-radius:12px;background:var(--bg2);border:0.5px solid var(--border);color:var(--text);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px">📄 PDF por vendedora</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
+      <button onclick="enviarWppMeta('todas')" style="padding:11px;border-radius:12px;background:#0f6b52;border:none;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px">💬 WPP Geral</button>
+      <button onclick="abrirSelecaoVendedoraWpp()" style="padding:11px;border-radius:12px;background:var(--bg2);border:0.5px solid var(--border);color:var(--text);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px">💬 WPP por vendedora</button>
+    </div>
+    <div id="selecao-vend-pdf" style="display:none;background:var(--bg2);border:0.5px solid var(--border);border-radius:12px;padding:12px;margin-bottom:12px">
+      <div style="font-size:11px;color:var(--text4);margin-bottom:8px">Escolha a vendedora:</div>
+      <div id="selecao-vend-pdf-lista" style="display:flex;flex-direction:column;gap:6px"></div>
+    </div>
+    <div id="selecao-vend-wpp" style="display:none;background:var(--bg2);border:0.5px solid var(--border);border-radius:12px;padding:12px;margin-bottom:12px">
+      <div style="font-size:11px;color:var(--text4);margin-bottom:8px">Escolha a vendedora:</div>
+      <div id="selecao-vend-wpp-lista" style="display:flex;flex-direction:column;gap:6px"></div>
+    </div>`;
+
+  container.innerHTML += botoesHtml + `<div style="margin-top:0">${cardsHtml}</div>
   <div id="popup-meta-bg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:999;align-items:flex-end;justify-content:center" onclick="if(event.target===this)fecharPopupMeta()">
     <div style="background:var(--bg2);border-radius:16px 16px 0 0;padding:16px;width:100%;max-width:480px">
       <img id="popup-meta-foto" src="" style="width:100%;height:200px;object-fit:cover;border-radius:10px;background:var(--bg);margin-bottom:12px;display:block" onerror="this.style.display='none'">
@@ -2828,6 +2847,215 @@ function renderMeta() {
       <button onclick="fecharPopupMeta()" style="width:100%;padding:10px;background:var(--bg);border:0.5px solid var(--border);border-radius:10px;font-size:13px;color:var(--text3);cursor:pointer;font-family:inherit">Fechar</button>
     </div>
   </div>`;
+}
+
+function abrirSelecaoVendedoraPdf() {
+  const el = document.getElementById('selecao-vend-pdf');
+  const lista = document.getElementById('selecao-vend-pdf-lista');
+  document.getElementById('selecao-vend-wpp').style.display = 'none';
+  if (el.style.display !== 'none') { el.style.display = 'none'; return; }
+  let data = [];
+  try { data = JSON.parse(localStorage.getItem('meta_vendedoras')||'[]'); } catch(e) {}
+  lista.innerHTML = data.map(v => `<button onclick="gerarPdfMeta('${v.nome}');document.getElementById('selecao-vend-pdf').style.display='none'" style="padding:10px 14px;border-radius:10px;background:var(--bg);border:0.5px solid var(--border);color:var(--text);font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;text-align:left">${v.nome.charAt(0)+v.nome.slice(1).toLowerCase()}</button>`).join('');
+  el.style.display = 'block';
+}
+
+function abrirSelecaoVendedoraWpp() {
+  const el = document.getElementById('selecao-vend-wpp');
+  const lista = document.getElementById('selecao-vend-wpp-lista');
+  document.getElementById('selecao-vend-pdf').style.display = 'none';
+  if (el.style.display !== 'none') { el.style.display = 'none'; return; }
+  let data = [];
+  try { data = JSON.parse(localStorage.getItem('meta_vendedoras')||'[]'); } catch(e) {}
+  lista.innerHTML = data.map(v => `<button onclick="enviarWppMeta('${v.nome}');document.getElementById('selecao-vend-wpp').style.display='none'" style="padding:10px 14px;border-radius:10px;background:var(--bg);border:0.5px solid var(--border);color:var(--text);font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;text-align:left">${v.nome.charAt(0)+v.nome.slice(1).toLowerCase()}</button>`).join('');
+  el.style.display = 'block';
+}
+
+function gerarPdfMeta(filtroVend) {
+  let metaData = [];
+  try { metaData = JSON.parse(localStorage.getItem('meta_vendedoras')||'[]'); } catch(e) {}
+  let vendasResumo = {};
+  try { vendasResumo = JSON.parse(localStorage.getItem('vendas_resumo')||'{}'); } catch(e) {}
+  const mes = localStorage.getItem('mes_label_usa') || 'Relatório';
+  const fmt = v => 'R$ ' + (v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+
+  const faltantesApp = {};
+  PRODUTOS.filter(p => !p.nok).forEach(p => {
+    const val = parseFloat(p.vmin||p.vt||p.v)||0;
+    const nokT = p.nokTams||{};
+    const tams = p.tams ? Object.entries(p.tams) : null;
+    const qty = tams ? tams.filter(([t])=>!nokT[t]).reduce((s,[,q])=>s+q,0) : (p.qty||p.q||0);
+    (p.vs||[]).forEach(vend => {
+      faltantesApp[vend.toUpperCase()] = (faltantesApp[vend.toUpperCase()]||0) + val*qty/(p.vs.length||1);
+    });
+  });
+
+  const lista = filtroVend === 'todas' ? metaData : metaData.filter(v => v.nome.toUpperCase() === filtroVend.toUpperCase());
+  const barCores = [{fill:'#b8860b',text:'#7a5c00',medal:'🥇'},{fill:'#c45b1a',text:'#7a3310',medal:'🥈'},{fill:'#7a0b1e',text:'#4a0812',medal:'🥉'}];
+  const turnoLabel = {MANHA:'Manhã',TARDE:'Tarde',NOITE:'Noite'};
+  const turnoIcons = {MANHA:'🌅',TARDE:'☀️',NOITE:'🌙'};
+
+  const cardsHtml = lista.map(v => {
+    const pct = v.meta > 0 ? Math.round(v.oks/v.meta*100) : 0;
+    const falt = faltantesApp[v.nome.toUpperCase()]||0;
+    const vr = vendasResumo[v.nome.toUpperCase()]||null;
+    const pctCor = pct >= 100 ? '#0f6b52' : '#7a0b1e';
+    const pctBg = pct >= 100 ? '#e8f5f1' : '#fdf2f3';
+
+    let marcasHtml = '';
+    if (vr && vr.top3marcas && vr.top3marcas.length) {
+      const maxQt = vr.top3marcas[0].qt;
+      marcasHtml = `<div style="margin-top:14px"><div style="font-size:10px;color:#888;margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Top 3 marcas mais vendidas</div>
+        ${vr.top3marcas.map((m,i) => {
+          const cor = barCores[i];
+          return `<div style="margin-bottom:10px">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
+              <div style="font-size:11px;width:90px;flex-shrink:0;color:${cor.text};font-weight:600;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">${cor.medal} ${m.nome}</div>
+              <div style="flex:1;background:#f0ece8;border-radius:3px;height:7px;overflow:hidden"><div style="height:100%;background:${cor.fill};width:${Math.round(m.qt/maxQt*100)}%"></div></div>
+              <div style="font-size:10px;color:${cor.text};font-weight:600;width:22px;text-align:right">${m.qt}</div>
+            </div>
+            <div style="font-size:10px;color:#888;padding-left:2px">Total vendido: ${fmt(m.valorMarca||0)}</div>
+            ${m.item ? `<div style="font-size:10px;color:#555;padding-left:2px;margin-top:1px">⭐ ${m.item} (${m.itemQt} vendas)</div>` : ''}
+          </div>`;
+        }).join('')}
+      </div>`;
+    }
+
+    let turnosHtml = '';
+    if (vr && vr.periodos) {
+      const p = vr.periodos;
+      const maxT = Math.max(p.MANHA,p.TARDE,p.NOITE);
+      turnosHtml = `<div style="margin-top:14px"><div style="font-size:10px;color:#888;margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Turno de mais vendas</div>
+        <div style="display:flex;gap:8px;margin-bottom:10px">
+          ${['MANHA','TARDE','NOITE'].map(t => `<div style="flex:1;text-align:center;padding:8px 4px;border-radius:8px;background:${p[t]===maxT?'#fdf2f3':'#f9f5f2'};border:${p[t]===maxT?'1.5px solid #7a0b1e':'1px solid #e8e0d8'}">
+            <div style="font-size:16px;margin-bottom:2px">${turnoIcons[t]}</div>
+            <div style="font-size:9px;color:#888">${turnoLabel[t]}</div>
+            <div style="font-size:13px;font-weight:600;color:${p[t]===maxT?'#7a0b1e':'#333'}">${p[t]}</div>
+          </div>`).join('')}
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;background:#f9f5f2;padding:8px 12px;border-radius:8px">
+          <span style="font-size:11px;color:#888">Dia com mais vendas</span>
+          <span style="font-size:12px;font-weight:600;color:#333">${vr.diaMais||'—'}</span>
+        </div>
+      </div>`;
+    }
+
+    return `<div style="background:#fff;border:1px solid #e8e0d8;border-radius:14px;padding:18px;margin-bottom:16px;page-break-inside:avoid">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid #f0ece8">
+        <div>
+          <div style="font-size:18px;font-weight:700;color:#1a1a1a">${v.nome.charAt(0)+v.nome.slice(1).toLowerCase()}</div>
+          <div style="font-size:11px;color:#888;margin-top:2px">${mes}</div>
+        </div>
+        <div style="background:${pctBg};color:${pctCor};font-size:22px;font-weight:700;padding:8px 16px;border-radius:10px">${pct}%</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div style="background:#fdf2f3;border-radius:10px;padding:10px 14px"><div style="font-size:9px;color:#888;margin-bottom:3px;text-transform:uppercase;letter-spacing:0.4px">Faltantes</div><div style="font-size:15px;font-weight:700;color:#7a0b1e">${fmt(falt)}</div></div>
+        <div style="background:#f0faf6;border-radius:10px;padding:10px 14px"><div style="font-size:9px;color:#888;margin-bottom:3px;text-transform:uppercase;letter-spacing:0.4px">OKs</div><div style="font-size:15px;font-weight:700;color:#0f6b52">${fmt(v.oks)}</div></div>
+        <div style="background:#f9f5f2;border-radius:10px;padding:10px 14px"><div style="font-size:9px;color:#888;margin-bottom:3px;text-transform:uppercase;letter-spacing:0.4px">Est. Geral</div><div style="font-size:15px;font-weight:700;color:#333">${fmt(v.estGeral)}</div></div>
+        <div style="background:#f9f5f2;border-radius:10px;padding:10px 14px"><div style="font-size:9px;color:#888;margin-bottom:3px;text-transform:uppercase;letter-spacing:0.4px">Meta</div><div style="font-size:15px;font-weight:700;color:#333">${fmt(v.meta)}</div></div>
+      </div>
+      ${marcasHtml}${turnosHtml}
+    </div>`;
+  }).join('');
+
+  const totalOks = lista.reduce((s,v)=>s+v.oks,0);
+  const totalFalt = lista.reduce((s,v)=>s+(faltantesApp[v.nome.toUpperCase()]||0),0);
+  const totalMeta = lista.reduce((s,v)=>s+v.meta,0);
+  const totalPct = totalMeta > 0 ? Math.round(totalOks/totalMeta*100) : 0;
+
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
+    <title>Relatório Meta — ${mes}</title>
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f0eb; padding: 24px; color: #1a1a1a; }
+      @media print { body { background: #fff; padding: 0; } @page { margin: 20px; } }
+    </style>
+  </head><body>
+    <div style="max-width:680px;margin:0 auto">
+      <div style="background:#7a0b1e;color:#fff;border-radius:14px;padding:20px 24px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-size:22px;font-weight:700;letter-spacing:1px">BAZAAR</div>
+          <div style="font-size:13px;opacity:0.8;margin-top:2px">Relatório de Meta — ${mes}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:28px;font-weight:700">${totalPct}%</div>
+          <div style="font-size:11px;opacity:0.8">da meta geral</div>
+        </div>
+      </div>
+      <div style="background:#fff;border:1px solid #e8e0d8;border-radius:14px;padding:16px 20px;margin-bottom:20px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+        <div style="text-align:center"><div style="font-size:9px;color:#888;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:4px">OKs</div><div style="font-size:16px;font-weight:700;color:#0f6b52">${fmt(totalOks)}</div></div>
+        <div style="text-align:center;border-left:1px solid #f0ece8;border-right:1px solid #f0ece8"><div style="font-size:9px;color:#888;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:4px">Faltantes</div><div style="font-size:16px;font-weight:700;color:#7a0b1e">${fmt(totalFalt)}</div></div>
+        <div style="text-align:center"><div style="font-size:9px;color:#888;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:4px">Meta</div><div style="font-size:16px;font-weight:700;color:#333">${fmt(totalMeta)}</div></div>
+      </div>
+      ${cardsHtml}
+      <div style="text-align:center;font-size:10px;color:#aaa;margin-top:8px;padding-bottom:8px">Gerado em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})} · Bazaar App</div>
+    </div>
+  </body></html>`;
+
+  const win = window.open('','_blank');
+  if (win) {
+    win.document.write(html);
+    win.document.close();
+    setTimeout(() => win.print(), 800);
+  }
+}
+
+function enviarWppMeta(filtroVend) {
+  let metaData = [];
+  try { metaData = JSON.parse(localStorage.getItem('meta_vendedoras')||'[]'); } catch(e) {}
+  const mes = localStorage.getItem('mes_label_usa') || 'Mês USA';
+  const fmt = v => 'R$' + (v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+
+  const faltantesApp = {};
+  PRODUTOS.filter(p => !p.nok).forEach(p => {
+    const val = parseFloat(p.vmin||p.vt||p.v)||0;
+    const nokT = p.nokTams||{};
+    const tams = p.tams ? Object.entries(p.tams) : null;
+    const qty = tams ? tams.filter(([t])=>!nokT[t]).reduce((s,[,q])=>s+q,0) : (p.qty||p.q||0);
+    (p.vs||[]).forEach(vend => {
+      faltantesApp[vend.toUpperCase()] = (faltantesApp[vend.toUpperCase()]||0) + val*qty/(p.vs.length||1);
+    });
+  });
+
+  const lista = filtroVend === 'todas' ? metaData : metaData.filter(v => v.nome.toUpperCase() === filtroVend.toUpperCase());
+  let vendasResumo = {};
+  try { vendasResumo = JSON.parse(localStorage.getItem('vendas_resumo')||'{}'); } catch(e) {}
+
+  let texto = `📊 *Relatório Bazaar — ${mes}*
+
+`;
+
+  lista.forEach(v => {
+    const pct = v.meta > 0 ? Math.round(v.oks/v.meta*100) : 0;
+    const falt = faltantesApp[v.nome.toUpperCase()]||0;
+    const vr = vendasResumo[v.nome.toUpperCase()]||null;
+    const emoji = pct >= 100 ? '✅' : pct >= 70 ? '⚠️' : '❌';
+    texto += `${emoji} *${v.nome.charAt(0)+v.nome.slice(1).toLowerCase()}* — ${pct}% da meta
+`;
+    texto += '• OKs: ' + fmt(v.oks) + '\n';
+    texto += '• Faltantes: ' + fmt(falt) + '\n';
+    texto += '• Meta: ' + fmt(v.meta) + '\n';
+    if (vr && vr.top3marcas && vr.top3marcas.length) {
+      texto += '• Top marca: ' + vr.top3marcas[0].nome + ' (' + vr.top3marcas[0].qt + ' vendas · ' + fmt(vr.top3marcas[0].valorMarca||0) + ')\n';
+    }
+    if (vr && vr.diaMais) texto += '• Melhor dia: ' + vr.diaMais + '\n';
+    texto += '\n';
+  });
+
+  const totalOks = lista.reduce((s,v)=>s+v.oks,0);
+  const totalFalt = lista.reduce((s,v)=>s+(faltantesApp[v.nome.toUpperCase()]||0),0);
+  const totalMeta = lista.reduce((s,v)=>s+v.meta,0);
+  const totalPct = totalMeta > 0 ? Math.round(totalOks/totalMeta*100) : 0;
+
+  if (filtroVend === 'todas') {
+    texto += '-----------------\n';
+    texto += '📈 *Total geral: ' + totalPct + '% da meta*\n';
+    texto += 'OKs: ' + fmt(totalOks) + ' · Faltantes: ' + fmt(totalFalt) + '\n';
+  }
+
+  texto += `
+_Gerado pelo Bazaar App_`;
+  window.open('https://wa.me/?text=' + encodeURIComponent(texto), '_blank');
 }
 
 function salvarLabelMes(tipo) {
