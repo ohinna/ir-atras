@@ -2647,8 +2647,8 @@ function renderMeta() {
 
   // Calcular faltantes do app por vendedora
   const faltantesApp = {};
-  if (window.PRODUTOS) {
-    window.PRODUTOS.filter(p => !p.nok).forEach(p => {
+  if (PRODUTOS) {
+    PRODUTOS.filter(p => !p.nok).forEach(p => {
       const val = parseFloat(p.vmin||p.vt||p.v)||0;
       const nokT = p.nokTams || {};
       const tams = p.tams ? Object.entries(p.tams) : null;
