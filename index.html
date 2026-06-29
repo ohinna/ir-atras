@@ -3888,7 +3888,8 @@ function processarCSVUSA(input) {
         const confParcialMatch = conf.match(/^(\d+)\s+(OK|BR|ONLINE|ENT)$/i);
         const isEstEua = conf === 'EST' || conf === 'EST EUA' || conf === 'EST USA';
         const isEstBr  = conf === 'EST BR';
-        if (conf !== '' && !confParcialMatch && !isEstEua && !isEstBr) return;
+        // EST USA/BR = já comprados, não são faltantes — só ignorar como os outros CONF preenchidos
+        if (conf !== '' && !confParcialMatch) return;
         const obs = (row[iItem+2]||'').trim().toUpperCase();
         const temDesconto = obs.includes('COM DESCONTO');
         const tamCol = iTam > -1 ? (row[iTam]||'').trim() : '';
