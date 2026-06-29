@@ -2668,51 +2668,45 @@ function renderMeta() {
   // --- Tabela ---
   let linhas = vendedoras.map(v => `
     <tr>
-      <td style="padding:8px 10px;font-weight:600;color:var(--text)">${v.nome.charAt(0)+v.nome.slice(1).toLowerCase()}</td>
-      <td style="padding:8px 10px;text-align:right;color:#0f6b52;font-weight:600">${fmt(v.oks)}</td>
-      <td style="padding:8px 10px;text-align:right;color:var(--red);font-weight:600">${fmt(faltantesApp[v.nome.toUpperCase()]||0)}</td>
-      <td style="padding:8px 10px;text-align:right;color:var(--text3)">${fmt(v.estGeral)}</td>
-      <td style="padding:8px 10px;text-align:right;color:#783c18">${fmt(v.estBR)}</td>
-      <td style="padding:8px 10px;text-align:right;color:var(--text4)">${fmt(v.meta)}</td>
-      <td style="padding:8px 10px;text-align:right">
-        <span style="background:${v.pct>=100?'#e8f5f1':v.pct>=70?'#fff8e8':'#fdf2f3'};color:${v.pct>=100?'#0f6b52':v.pct>=70?'#d97706':'#7a0b1e'};border-radius:8px;padding:2px 8px;font-size:10px;font-weight:700">${v.pct}%</span>
+      <td style="padding:6px 8px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${v.nome.charAt(0)+v.nome.slice(1).toLowerCase()}</td>
+      <td style="padding:6px 8px;text-align:right;color:#0f6b52;font-weight:600;font-size:10px">${fmt(v.oks)}</td>
+      <td style="padding:6px 8px;text-align:right;color:var(--red);font-weight:600;font-size:10px">${fmt(faltantesApp[v.nome.toUpperCase()]||0)}</td>
+      <td style="padding:6px 8px;text-align:right;color:var(--text4);font-size:10px">${fmt(v.meta)}</td>
+      <td style="padding:6px 8px;text-align:right">
+        <span style="background:${v.pct>=100?'#e8f5f1':v.pct>=70?'#fff8e8':'#fdf2f3'};color:${v.pct>=100?'#0f6b52':v.pct>=70?'#d97706':'#7a0b1e'};border-radius:8px;padding:2px 6px;font-size:10px;font-weight:700">${v.pct}%</span>
       </td>
     </tr>`).join('');
 
   // Total row
-  const tFalt = vendedoras.reduce((s,v)=>s+v.faltantes,0);
-  const tEstG = vendedoras.reduce((s,v)=>s+v.estGeral,0);
-  const tEstBR = vendedoras.reduce((s,v)=>s+v.estBR,0);
   linhas += `<tr style="border-top:1.5px solid var(--border)">
-    <td style="padding:8px 10px;font-weight:700;color:var(--text)">Total</td>
-    <td style="padding:8px 10px;text-align:right;font-weight:700;color:#0f6b52">${fmt(totalOks)}</td>
-    <td style="padding:8px 10px;text-align:right;font-weight:700;color:var(--red)">${fmt(Object.values(faltantesApp).reduce((a,b)=>a+b,0))}</td>
-    <td style="padding:8px 10px;text-align:right;font-weight:700">${fmt(tEstG)}</td>
-    <td style="padding:8px 10px;text-align:right;font-weight:700;color:#783c18">${fmt(tEstBR)}</td>
-    <td style="padding:8px 10px;text-align:right;font-weight:700">${fmt(totalMeta)}</td>
-    <td style="padding:8px 10px;text-align:right"><span style="background:#e8f5f1;color:#0f6b52;border-radius:8px;padding:2px 8px;font-size:10px;font-weight:700">${pctTotal}%</span></td>
+    <td style="padding:6px 8px;font-weight:700;color:var(--text);font-size:11px">Total</td>
+    <td style="padding:6px 8px;text-align:right;font-weight:700;color:#0f6b52;font-size:10px">${fmt(totalOks)}</td>
+    <td style="padding:6px 8px;text-align:right;font-weight:700;color:var(--red);font-size:10px">${fmt(Object.values(faltantesApp).reduce((a,b)=>a+b,0))}</td>
+    <td style="padding:6px 8px;text-align:right;font-weight:700;font-size:10px">${fmt(totalMeta)}</td>
+    <td style="padding:6px 8px;text-align:right"><span style="background:#e8f5f1;color:#0f6b52;border-radius:8px;padding:2px 6px;font-size:10px;font-weight:700">${pctTotal}%</span></td>
   </tr>`;
 
   container.innerHTML = `
-    <div style="background:var(--bg2);border:0.5px solid var(--border);border-radius:10px;padding:8px 12px;margin-bottom:14px;font-size:10px;color:var(--text4);display:flex;align-items:center;gap:6px">
-      <span style="font-size:13px">📋</span>
-      <span>OKs, Estoque, Meta e % importados diretamente da planilha · <strong style="color:var(--text3)">Faltantes calculados pelo app</strong></span>
+    <div style="background:var(--bg2);border:0.5px solid var(--border);border-radius:10px;padding:8px 12px;margin-bottom:14px;font-size:10px;color:var(--text4)">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px"><span style="font-size:13px">📋</span><span>OKs, Meta e % da planilha · <strong style="color:var(--text3)">Faltantes calculados pelo app</strong></span></div>
+      <div style="display:flex;gap:10px;margin-top:4px">
+        <span>🇺🇸 ' + (localStorage.getItem('mes_label_usa')||'Mês USA') + '</span>
+        <span>🇧🇷 ' + (localStorage.getItem('mes_label_br')||'Mês BR') + '</span>
+      </div>
     </div>
     <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;flex-wrap:wrap">
       <svg viewBox="0 0 200 200" width="180" height="180" style="flex-shrink:0">${pizzaSlices}</svg>
       <div style="flex:1;min-width:120px">${legendaItems}</div>
     </div>
-    <div style="overflow-x:auto">
-      <table style="width:100%;border-collapse:collapse;font-size:11px">
+    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+      <table style="width:100%;min-width:420px;border-collapse:collapse;font-size:11px;table-layout:fixed">
         <thead>
           <tr style="background:var(--red)">
-            <th style="padding:8px 10px;text-align:left;color:#fff;font-size:10px">Vendedora</th>
-            <th style="padding:8px 10px;text-align:right;color:#fff;font-size:10px">OKs</th>
-            <th style="padding:8px 10px;text-align:right;color:#fff;font-size:10px">Faltantes</th>
-            <th style="padding:8px 10px;text-align:right;color:#fff;font-size:10px">Est. Geral</th>
-            <th style="padding:8px 10px;text-align:right;color:#fff;font-size:10px">Est. BR</th>
-            <th style="padding:8px 10px;text-align:right;color:#fff;font-size:10px">Meta</th>
-            <th style="padding:8px 10px;text-align:right;color:#fff;font-size:10px">%</th>
+            <th style="padding:6px 8px;text-align:left;color:#fff;font-size:10px;width:22%">Vendedora</th>
+            <th style="padding:6px 8px;text-align:right;color:#fff;font-size:10px;width:20%">OKs</th>
+            <th style="padding:6px 8px;text-align:right;color:#fff;font-size:10px;width:20%">Faltantes</th>
+            <th style="padding:6px 8px;text-align:right;color:#fff;font-size:10px;width:20%">Meta</th>
+            <th style="padding:6px 8px;text-align:right;color:#fff;font-size:10px;width:10%">%</th>
           </tr>
         </thead>
         <tbody>${linhas}</tbody>
@@ -2762,8 +2756,9 @@ function renderMeta() {
             <div style="display:flex;align-items:center;gap:7px;cursor:pointer" onclick="abrirPopupMeta('${m.nome.replace(/'/g,"\'")}','${m.item.replace(/'/g,"\'")}','${m.itemFoto.replace(/'/g,"\'")}',${m.itemQt},'${v.nome}')">
               ${fotoHtml}
               <div style="flex:1;min-width:0">
-                <div style="font-size:10px;color:${cor.text};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.item||'—'}</div>
-                <div style="font-size:9px;color:var(--text4)">toque para ver →</div>
+                <div style="font-size:9px;color:var(--text4);margin-bottom:1px">item mais vendido</div>
+                <div style="font-size:10px;color:${cor.text};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500">${m.item||'—'}</div>
+                <div style="font-size:9px;color:var(--text4)">valor total: ${fmt(m.valorMarca||0)} · toque →</div>
               </div>
             </div>
           </div>`;
@@ -3418,29 +3413,38 @@ function processarCSVUSA(input) {
       rows.slice(headerIdx+1).forEach(row => {
         if (!row[iItem]?.trim()) return;
         const conf = (row[iConf]||'').trim().toUpperCase();
-        if (conf === 'NOK') return;
+        if (conf === 'NOK') return; // só exclui NOK, SOS e tudo mais conta
         const vend = (row[iVend]||'').trim().toUpperCase();
         if (!vend) return;
+        const itemRaw = row[iItem].trim();
+        // Extrair multiplicador do nome (ex: "Produto 2x" = 2 unidades)
+        const multMatch = itemRaw.match(/\s+(\d+)x\s*$/i);
+        const mult = multMatch ? parseInt(multMatch[1]) : 1;
         const marca = (row[iMarca]||'').trim();
-        const item = row[iItem].trim().replace(/\s+tam\s+.+?(\s+\d+x)?\s*$/i,'').replace(/\s+\d+x\s*$/i,'').trim();
+        // Nome limpo sem tam/multiplicador
+        const item = itemRaw.replace(/\s+tam\s+.+?(\s+\d+x)?\s*$/i,'').replace(/\s+\d+x\s*$/i,'').trim();
         const data = iData>-1 ? (row[iData]||'').trim() : '';
         const periodo = iPer>-1 ? (row[iPer]||'').trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'') : '';
         const foto = iFoto>-1 ? (row[iFoto]||'').trim() : '';
-        if (!vendasResumo[vend]) vendasResumo[vend] = {marcas:{}, itens:{}, periodos:{MANHA:0,TARDE:0,NOITE:0}, dias:{}};
+        const valBruto = pv(row[iVal]||'');
+        if (!vendasResumo[vend]) vendasResumo[vend] = {marcas:{}, marcasVal:{}, itens:{}, periodos:{MANHA:0,TARDE:0,NOITE:0}, dias:{}};
         const vr = vendasResumo[vend];
-        if (marca) vr.marcas[marca] = (vr.marcas[marca]||0) + 1;
+        if (marca) {
+          vr.marcas[marca] = (vr.marcas[marca]||0) + mult;
+          vr.marcasVal[marca] = (vr.marcasVal[marca]||0) + valBruto;
+        }
         if (item && marca) {
           const key = marca+'||'+item;
           if (!vr.itens[key]) vr.itens[key] = {nome:item, marca, qt:0, foto:''};
-          vr.itens[key].qt++;
+          vr.itens[key].qt += mult;
           if (foto && !vr.itens[key].foto) vr.itens[key].foto = foto;
         }
-        if (periodo.includes('MANHA') || periodo === 'MANHA') vr.periodos.MANHA++;
-        else if (periodo.includes('TARDE')) vr.periodos.TARDE++;
-        else if (periodo.includes('NOITE')) vr.periodos.NOITE++;
+        if (periodo.includes('MANHA') || periodo === 'MANHA') vr.periodos.MANHA += mult;
+        else if (periodo.includes('TARDE')) vr.periodos.TARDE += mult;
+        else if (periodo.includes('NOITE')) vr.periodos.NOITE += mult;
         if (data) {
           const dow = (() => { try { const [d,m] = data.split('/'); const dt = new Date(2026,parseInt(m)-1,parseInt(d)); return ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'][dt.getDay()]; } catch(e){return '';} })();
-          if (dow) vr.dias[dow] = (vr.dias[dow]||0) + 1;
+          if (dow) vr.dias[dow] = (vr.dias[dow]||0) + mult;
         }
       });
       // Converter para top3 marcas com top item de cada
@@ -3448,7 +3452,7 @@ function processarCSVUSA(input) {
       Object.entries(vendasResumo).forEach(([vend, vr]) => {
         const top3marcas = Object.entries(vr.marcas).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([marca,qt]) => {
           const topItem = Object.values(vr.itens).filter(i=>i.marca===marca).sort((a,b)=>b.qt-a.qt)[0];
-          return {nome:marca, qt, item:topItem?.nome||'', itemFoto:topItem?.foto||'', itemQt:topItem?.qt||0};
+          return {nome:marca, qt, valorMarca:Math.round((vr.marcasVal[marca]||0)*100)/100, item:topItem?.nome||'', itemFoto:topItem?.foto||'', itemQt:topItem?.qt||0};
         });
         const diaMais = Object.entries(vr.dias).sort((a,b)=>b[1]-a[1])[0]?.[0]||'';
         vendasResumoFinal[vend] = {top3marcas, periodos:vr.periodos, diaMais};
