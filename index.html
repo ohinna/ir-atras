@@ -1101,13 +1101,19 @@ function renderGrid() {
     if (soUmaVend) {
       const vend = [...fVends][0];
       const prodsDaVend = PRODUTOS.filter(p => (p.vs||[]).includes(vend));
-      const totalVend = prodsDaVend.filter(p => !p.nok).reduce((a,p) => {
-        const val = parseFloat(p.vmin||p.vt||p.v)||0;
-        const nokT = p.nokTams || {};
-        const tams = p.tams ? Object.entries(p.tams) : null;
-        const qty = tams ? tams.filter(([t])=>!nokT[t]).reduce((s,[,q])=>s+q,0) : (p.qty||p.q||0);
-        return a + val * qty;
-      }, 0);
+      // Total por vendedora = faltantes da planilha
+      let _mvVend = [];
+      try { _mvVend = JSON.parse(localStorage.getItem('meta_vendedoras')||'[]'); } catch(e) {}
+      const mvEntry = _mvVend.find(v => v.nome.toUpperCase() === vend);
+      const totalVend = mvEntry
+        ? (mvEntry.faltantes !== undefined ? mvEntry.faltantes : Math.max(0,(mvEntry.total||0)-(mvEntry.oks||0)))
+        : prodsDaVend.filter(p => !p.nok).reduce((a,p) => {
+            const val = parseFloat(p.vmin||p.vt||p.v)||0;
+            const nokT = p.nokTams || {};
+            const tams = p.tams ? Object.entries(p.tams) : null;
+            const qty = tams ? tams.filter(([t])=>!nokT[t]).reduce((s,[,q])=>s+q,0) : (p.qty||p.q||0);
+            return a + val * qty;
+          }, 0);
       vendTotal.textContent = vend.charAt(0) + vend.slice(1).toLowerCase() + ': R$ ' + totalVend.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
       vendTotal.style.display = '';
     } else {
@@ -1116,13 +1122,18 @@ function renderGrid() {
   }
   if (headerMeta) {
     const totalItens = PRODUTOS.length;
-    const totalGeral = PRODUTOS.filter(p => !p.nok).reduce((a,p) => {
-      const val = parseFloat(p.vmin||p.vt||p.v)||0;
-      const nokT = p.nokTams || {};
-      const tams = p.tams ? Object.entries(p.tams) : null;
-      const qty = tams ? tams.filter(([t])=>!nokT[t]).reduce((s,[,q])=>s+q,0) : (p.qty||p.q||0);
-      return a + val * qty;
-    }, 0);
+    // Total geral = soma dos faltantes da planilha (Total - OKS por vendedora)
+    let _mvTotal = [];
+    try { _mvTotal = JSON.parse(localStorage.getItem('meta_vendedoras')||'[]'); } catch(e) {}
+    const totalGeral = _mvTotal.length > 0
+      ? _mvTotal.reduce((s,v) => s + (v.faltantes !== undefined ? v.faltantes : Math.max(0,(v.total||0)-(v.oks||0))), 0)
+      : PRODUTOS.filter(p => !p.nok).reduce((a,p) => {
+          const val = parseFloat(p.vmin||p.vt||p.v)||0;
+          const nokT = p.nokTams || {};
+          const tams = p.tams ? Object.entries(p.tams) : null;
+          const qty = tams ? tams.filter(([t])=>!nokT[t]).reduce((s,[,q])=>s+q,0) : (p.qty||p.q||0);
+          return a + val * qty;
+        }, 0);
     const isFiltrado = !fVends.has('TODAS') || fMarcas.size > 0 || fCat || fSearch;
     if (isFiltrado) {
       headerMeta.textContent = prods.length + ' de ' + totalItens + ' itens';
@@ -2682,20 +2693,14 @@ function renderMeta() {
   pizzaSlices += `<text x="${cx}" y="${cy-6}" text-anchor="middle" font-size="18" font-weight="700" fill="var(--text)">${pctTotal}%</text>`;
   pizzaSlices += `<text x="${cx}" y="${cy+10}" text-anchor="middle" font-size="8" fill="#b08070">da meta</text>`;
 
-  // Calcular faltantes do app por vendedora
+  // Faltantes = Total - OKS direto da planilha (igual à planilha)
+  let _metaFalt = [];
+  try { _metaFalt = JSON.parse(localStorage.getItem('meta_vendedoras')||'[]'); } catch(e) {}
   const faltantesApp = {};
-  if (PRODUTOS) {
-    PRODUTOS.filter(p => !p.nok).forEach(p => {
-      const val = parseFloat(p.vmin||p.vt||p.v)||0;
-      const nokT = p.nokTams || {};
-      const tams = p.tams ? Object.entries(p.tams) : null;
-      const qty = tams ? tams.filter(([t])=>!nokT[t]).reduce((s,[,q])=>s+q,0) : (p.qty||p.q||0);
-      const sub = val * qty;
-      (p.vs||[]).forEach(vend => {
-        faltantesApp[vend.toUpperCase()] = (faltantesApp[vend.toUpperCase()]||0) + sub/(p.vs.length||1);
-      });
-    });
-  }
+  _metaFalt.forEach(v => {
+    faltantesApp[v.nome.toUpperCase()] = v.faltantes !== undefined ? v.faltantes : Math.max(0,(v.total||0)-(v.oks||0));
+  });
+
 
   // --- Tabela ---
   let linhas = vendedoras.map(v => `
@@ -2896,15 +2901,11 @@ function gerarPdfMeta(filtroVend) {
   const mes = localStorage.getItem('mes_label_usa') || 'Relatório';
   const fmt = v => 'R$ ' + (v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
 
+  let _metaFalt2 = [];
+  try { _metaFalt2 = JSON.parse(localStorage.getItem('meta_vendedoras')||'[]'); } catch(e) {}
   const faltantesApp = {};
-  PRODUTOS.filter(p => !p.nok).forEach(p => {
-    const val = parseFloat(p.vmin||p.vt||p.v)||0;
-    const nokT = p.nokTams||{};
-    const tams = p.tams ? Object.entries(p.tams) : null;
-    const qty = tams ? tams.filter(([t])=>!nokT[t]).reduce((s,[,q])=>s+q,0) : (p.qty||p.q||0);
-    (p.vs||[]).forEach(vend => {
-      faltantesApp[vend.toUpperCase()] = (faltantesApp[vend.toUpperCase()]||0) + val*qty/(p.vs.length||1);
-    });
+  _metaFalt2.forEach(v => {
+    faltantesApp[v.nome.toUpperCase()] = v.faltantes !== undefined ? v.faltantes : Math.max(0,(v.total||0)-(v.oks||0));
   });
 
   const lista = filtroVend === 'todas' ? metaData : metaData.filter(v => v.nome.toUpperCase() === filtroVend.toUpperCase());
@@ -3023,15 +3024,11 @@ function enviarWppMeta(filtroVend) {
   const mes = localStorage.getItem('mes_label_usa') || 'Mês USA';
   const fmt = v => 'R$' + (v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
 
+  let _metaFalt2 = [];
+  try { _metaFalt2 = JSON.parse(localStorage.getItem('meta_vendedoras')||'[]'); } catch(e) {}
   const faltantesApp = {};
-  PRODUTOS.filter(p => !p.nok).forEach(p => {
-    const val = parseFloat(p.vmin||p.vt||p.v)||0;
-    const nokT = p.nokTams||{};
-    const tams = p.tams ? Object.entries(p.tams) : null;
-    const qty = tams ? tams.filter(([t])=>!nokT[t]).reduce((s,[,q])=>s+q,0) : (p.qty||p.q||0);
-    (p.vs||[]).forEach(vend => {
-      faltantesApp[vend.toUpperCase()] = (faltantesApp[vend.toUpperCase()]||0) + val*qty/(p.vs.length||1);
-    });
+  _metaFalt2.forEach(v => {
+    faltantesApp[v.nome.toUpperCase()] = v.faltantes !== undefined ? v.faltantes : Math.max(0,(v.total||0)-(v.oks||0));
   });
 
   const lista = filtroVend === 'todas' ? metaData : metaData.filter(v => v.nome.toUpperCase() === filtroVend.toUpperCase());
@@ -3752,10 +3749,13 @@ function processarCSVUSA(input) {
           const row = rows[i];
           const nome = (row[12]||'').trim();
           if (!nome || nome.toLowerCase() === 'total') continue;
+          const oksVal = pv(row[colOks]);
+          const faltVal = pv(row[colFalt]);
           metaVendedoras.push({
             nome,
-            oks:       pv(row[colOks]),
-            faltantes: pv(row[colFalt]),
+            oks:       oksVal,
+            total:     oksVal + faltVal,
+            faltantes: faltVal,
             estGeral:  pv(row[colEstGeral]),
             estBR:     pv(row[colEstBR]),
             meta:      pv(row[colMeta]),
