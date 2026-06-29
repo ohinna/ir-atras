@@ -125,8 +125,8 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
 .chat-header{position:fixed;top:0;left:0;right:0;z-index:100;background:var(--bg);border-bottom:0.5px solid var(--border);padding:14px 16px;transition:top 0.2s}
 .user-bar-visible .chat-header{top:38px}
 .user-bar-visible .page{padding-top:98px}
-.user-bar-visible .main-content{padding-top:208px}
-.user-bar-visible #count-bar{padding-top:208px}
+.user-bar-visible .main-content{padding-top:193px}
+.user-bar-visible #count-bar{padding-top:193px}
 .chat-title{font-size:16px;font-weight:600;color:var(--text)}
 .chat-sub{font-size:11px;color:var(--text3);margin-top:2px}
 .chat-item{background:var(--bg2);border-left:3px solid var(--border);border-radius:0 12px 12px 0;margin:0 12px 8px;padding:10px 12px;cursor:pointer}
@@ -173,7 +173,7 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
 /* Firebase sync */
 .sync-dot{width:6px;height:6px;border-radius:50%;background:#7a0b1e;display:inline-block;margin-right:4px}
 /* Main content offset */
-.main-content{padding-top:170px;padding-bottom:120px}
+.main-content{padding-top:155px;padding-bottom:120px}
 /* Empty */
 .empty{text-align:center;padding:60px 20px;color:#c4a898;font-size:14px}
 /* Reaction bar */
@@ -290,7 +290,7 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
 </div>
 
 <!-- CONTADOR -->
-<div class="count-bar main-content" id="count-bar" style="padding-top:170px">
+<div class="count-bar main-content" id="count-bar" style="padding-top:155px">
   <span>Mostrando <strong id="count-num">231</strong> faltantes</span>
   <span id="count-val"></span>
 </div>
@@ -3087,7 +3087,8 @@ function mostrarMarcasTurno(vendKey, turno, btn) {
     // Restaurar conteúdo original
     let vr = {};
     try { vr = JSON.parse(bloco.dataset.vr.replace(/&quot;/g,'"')); } catch(e) {}
-    renderMarcasBloco(bloco, titulo, vr.top3marcas||[], null, vendKey);
+    const vendNomeRest = vend ? vend.charAt(0)+vend.slice(1).toLowerCase() : '';
+    renderMarcasBloco(bloco, titulo, vr.top3marcas||[], null, vendNomeRest);
     return;
   }
   // Destacar botão ativo
@@ -3098,13 +3099,13 @@ function mostrarMarcasTurno(vendKey, turno, btn) {
   let vr = {};
   try { vr = JSON.parse(bloco.dataset.vr.replace(/&quot;/g,'"')); } catch(e) {}
   const marcas = vr.marcasPorTurno?.[turno] || [];
-  renderMarcasBloco(bloco, titulo, marcas, turnoLabels[turno], vendKey);
+  const vendNomeTurno = vend ? vend.charAt(0)+vend.slice(1).toLowerCase() : vendKey;
+  renderMarcasBloco(bloco, titulo, marcas, turnoLabels[turno], vendNomeTurno);
 }
 
-function renderMarcasBloco(bloco, titulo, marcas, turnoLabel, vendKey) {
+function renderMarcasBloco(bloco, titulo, marcas, turnoLabel, vendNome) {
   const barCores = [{fill:'#b8860b',text:'#7a5c00',medal:'🥇'},{fill:'#c45b1a',text:'#7a3310',medal:'🥈'},{fill:'#c4302b',text:'#8b1a16',medal:'🥉'}];
   if (titulo) titulo.textContent = turnoLabel ? turnoLabel + ' — top marcas' : 'Top 3 marcas mais vendidas';
-  // Limpar conteúdo antigo exceto o título
   const filhos = Array.from(bloco.children).filter(el => !el.id || !el.id.startsWith('marcas-titulo'));
   filhos.forEach(el => el.remove());
   if (!marcas.length) {
@@ -3115,15 +3116,35 @@ function renderMarcasBloco(bloco, titulo, marcas, turnoLabel, vendKey) {
     return;
   }
   const maxQt = marcas[0].qt;
+  const fmtV = v => 'R$ ' + (v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
   marcas.forEach((m, i) => {
     const cor = barCores[i] || barCores[2];
+    const fotoSrc = m.itemFoto ? resolverFotoMeta(m.itemFoto) : '';
+    const fotoHtml = fotoSrc
+      ? '<img src="' + fotoSrc + '" style="width:32px;height:32px;border-radius:6px;object-fit:cover;border:0.5px solid var(--border);flex-shrink:0" onerror="this.style.display=&quot;none&quot;">'
+      : '<div style="width:32px;height:32px;border-radius:6px;background:var(--bg2);border:0.5px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--text4)">?</div>';
     const div = document.createElement('div');
     div.style.cssText = 'margin-bottom:10px';
-    div.innerHTML = '<div style="display:flex;align-items:center;gap:7px;margin-bottom:2px">' +
-      '<div style="font-size:11px;width:75px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:' + cor.text + ';font-weight:600">' + cor.medal + ' ' + m.nome + '</div>' +
-      '<div style="flex:1;background:var(--bg2);border-radius:4px;height:8px;overflow:hidden"><div style="height:100%;border-radius:4px;background:' + cor.fill + ';width:' + Math.round(m.qt/maxQt*100) + '%"></div></div>' +
-      '<div style="font-size:10px;width:20px;text-align:right;color:' + cor.text + ';font-weight:600">' + m.qt + '</div>' +
-    '</div>';
+    div.innerHTML =
+      '<div style="display:flex;align-items:center;gap:7px;margin-bottom:2px">' +
+        '<div style="font-size:11px;width:75px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:' + cor.text + ';font-weight:600">' + cor.medal + ' ' + m.nome + '</div>' +
+        '<div style="flex:1;background:var(--bg2);border-radius:4px;height:8px;overflow:hidden"><div style="height:100%;border-radius:4px;background:' + cor.fill + ';width:' + Math.round(m.qt/maxQt*100) + '%"></div></div>' +
+        '<div style="font-size:10px;width:20px;text-align:right;color:' + cor.text + ';font-weight:600">' + m.qt + '</div>' +
+      '</div>' +
+      '<div style="font-size:10px;color:' + cor.text + ';opacity:0.75;margin-bottom:6px;padding-left:2px">Total vendido: ' + fmtV(m.valorMarca||0) + '</div>' +
+      (m.item ? '<div style="display:flex;align-items:center;gap:7px;background:var(--bg);border-radius:8px;padding:6px 8px;cursor:pointer;border:0.5px solid var(--border)" onclick="abrirPopupMetaEl(this)"' +
+        ' data-marca="' + (m.nome||'').replace(/"/g,'&quot;') + '"' +
+        ' data-item="' + (m.item||'').replace(/"/g,'&quot;') + '"' +
+        ' data-foto="' + (m.itemFoto||'').replace(/"/g,'&quot;') + '"' +
+        ' data-qt="' + (m.itemQt||0) + '"' +
+        ' data-vend="' + (vendNome||'').replace(/"/g,'&quot;') + '">' +
+        fotoHtml +
+        '<div style="flex:1;min-width:0">' +
+          '<div style="font-size:9px;color:var(--text4);margin-bottom:2px">⭐ item mais vendido</div>' +
+          '<div style="font-size:11px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500">' + (m.item||'—') + '</div>' +
+          '<div style="font-size:9px;color:var(--text4);margin-top:1px">' + (m.itemQt||0) + ' vendas · toque para ver →</div>' +
+        '</div>' +
+      '</div>' : '');
     bloco.appendChild(div);
   });
 }
@@ -3135,6 +3156,10 @@ function resolverFotoMeta(raw) {
     const fm = JSON.parse(localStorage.getItem('foto_map')||'{}');
     return fm[raw] || fm[raw.replace(/\.[^.]+$/,'')] || '';
   } catch(e) { return ''; }
+}
+
+function abrirPopupMetaEl(el) {
+  abrirPopupMeta(el.dataset.marca, el.dataset.item, el.dataset.foto, parseInt(el.dataset.qt)||0, el.dataset.vend);
 }
 
 function abrirPopupMeta(marca, item, fotoRaw, qt, vend) {
@@ -3752,7 +3777,14 @@ function processarCSVUSA(input) {
         else if (periodo.includes('TARDE')) { vr.periodos.TARDE += mult; turnoAtual = 'TARDE'; }
         else if (periodo.includes('NOITE')) { vr.periodos.NOITE += mult; turnoAtual = 'NOITE'; }
         if (turnoAtual && marca) {
-          vr.marcasPorTurno[turnoAtual][marca] = (vr.marcasPorTurno[turnoAtual][marca]||0) + mult;
+          if (!vr.marcasPorTurno[turnoAtual][marca]) vr.marcasPorTurno[turnoAtual][marca] = {qt:0, val:0, itens:{}};
+          vr.marcasPorTurno[turnoAtual][marca].qt += mult;
+          vr.marcasPorTurno[turnoAtual][marca].val += valBruto;
+          if (item) {
+            const ikey = item;
+            if (!vr.marcasPorTurno[turnoAtual][marca].itens[ikey]) vr.marcasPorTurno[turnoAtual][marca].itens[ikey] = {qt:0, foto:foto};
+            vr.marcasPorTurno[turnoAtual][marca].itens[ikey].qt += mult;
+          }
         }
         if (data) {
           const dow = (() => { try { const [d,m] = data.split('/'); const dt = new Date(2026,parseInt(m)-1,parseInt(d)); return ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'][dt.getDay()]; } catch(e){return '';} })();
@@ -3769,7 +3801,11 @@ function processarCSVUSA(input) {
         const diaMais = Object.entries(vr.dias).sort((a,b)=>b[1]-a[1])[0]?.[0]||'';
         const marcasPorTurno = {};
         ['MANHA','TARDE','NOITE'].forEach(t => {
-          marcasPorTurno[t] = Object.entries(vr.marcasPorTurno[t]||{}).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([nome,qt])=>({nome,qt}));
+          marcasPorTurno[t] = Object.entries(vr.marcasPorTurno[t]||{})
+            .sort((a,b)=>(b[1].qt||0)-(a[1].qt||0)).slice(0,3).map(([nome,obj]) => {
+              const topItem = Object.entries(obj.itens||{}).sort((a,b)=>b[1].qt-a[1].qt)[0];
+              return {nome, qt:obj.qt||0, valorMarca:Math.round((obj.val||0)*100)/100, item:topItem?.[0]||'', itemFoto:topItem?.[1]?.foto||'', itemQt:topItem?.[1]?.qt||0};
+            });
         });
         vendasResumoFinal[vend] = {top3marcas, periodos:vr.periodos, marcasPorTurno, diaMais};
       });
@@ -3794,7 +3830,8 @@ function processarCSVUSA(input) {
         // Ignorar linhas que não são produtos reais
         if (itemsNaoValidos.test(item)) return;
         const marca = (row[iMarca]?.trim()||'');
-        if (!marca) return; // ignorar itens sem marca
+        const fotoRaw = iFoto > -1 ? (row[iFoto]?.trim()||'') : '';
+        if (!marca && !fotoRaw) return; // ignorar sem marca E sem foto
         const conf = (row[iConf]||'').trim().toUpperCase();
         const confParcialMatch = conf.match(/^(\d+)\s+(OK|BR|ONLINE|ENT)$/i);
         const isEstEua = conf === 'EST' || conf === 'EST EUA' || conf === 'EST USA';
