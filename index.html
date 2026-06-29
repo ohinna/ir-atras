@@ -173,7 +173,7 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
 /* Firebase sync */
 .sync-dot{width:6px;height:6px;border-radius:50%;background:#7a0b1e;display:inline-block;margin-right:4px}
 /* Main content offset */
-.main-content{padding-top:155px;padding-bottom:120px}
+.main-content{padding-top:162px;padding-bottom:120px}
 /* Empty */
 .empty{text-align:center;padding:60px 20px;color:#c4a898;font-size:14px}
 /* Reaction bar */
@@ -290,7 +290,7 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
 </div>
 
 <!-- CONTADOR -->
-<div class="count-bar main-content" id="count-bar" style="padding-top:155px">
+<div class="count-bar main-content" id="count-bar" style="padding-top:162px">
   <span>Mostrando <strong id="count-num">231</strong> faltantes</span>
   <span id="count-val"></span>
 </div>
@@ -1180,7 +1180,7 @@ function renderGrid() {
           <span class="card-val">${p.vmin && p.vmax && p.vmin !== p.vmax ? fmtVal(p.vmin)+' – '+fmtVal(p.vmax) : fmtVal(p.vt||p.v)}</span>
           <span style="font-size:10px;background:#fdf2f3;border:0.5px solid #f5c4c4;border-radius:8px;padding:2px 7px;color:#7a0b1e;font-weight:600">${p.qty||p.q} un</span>
         </div>
-        ${p.tams && Object.keys(p.tams).length > 1 ? '<div style="margin-top:6px;display:grid;grid-template-columns:repeat(auto-fill,minmax(36px,1fr));gap:3px">' +
+        ${p.tams && Object.keys(p.tams).length > 0 ? '<div style="margin-top:6px;display:grid;grid-template-columns:repeat(auto-fill,minmax(36px,1fr));gap:3px">' +
           Object.entries(p.tams).map(([t,q]) => {
             const isUndef = t === '??? (a definir)';
             const isNok = (p.nokTams||{})[t];
@@ -1198,6 +1198,13 @@ function renderGrid() {
   }).join('');
   updateChatBadge();
   updateNokBadge();
+  // Atualizar contadores nos chips de vendedora
+  const vendChips = document.querySelectorAll('#vend-row .chip:not(#chip-todas)');
+  vendChips.forEach(btn => {
+    const vName = btn.textContent.replace(/\s*\(\d+\)/, '').trim().toUpperCase();
+    const count = PRODUTOS.filter(p => !p.nok && (p.vs||[]).some(v => v.toUpperCase() === vName)).length;
+    btn.textContent = btn.textContent.replace(/\s*\(\d+\)/, '') + ' (' + count + ')';
+  });
   } catch(e) {
     console.error('renderGrid error:', e.message, e.stack);
   }
@@ -1253,6 +1260,7 @@ function confirmNok(id) {
   const _quem = getNomeUsuario();
   const _t = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
   registrarAtividade(p.nok ? 'nok_on' : 'nok_off', id, _quem, _t);
+  if (p.nok) mostrarNotificacao('🚫 NOK marcado', _quem + ' · ' + (p.n||'').substring(0,40), '#7a0b1e');
   fbSave(id);
   renderGrid();
   updateNokBadge();
@@ -2340,6 +2348,7 @@ function toggleEmCompraCard(id) {
   const _quemC = getNomeUsuario();
   const _tC = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
   registrarAtividade(p.em_compra ? 'compra_on' : 'compra_off', id, _quemC, _tC);
+  if (p.em_compra) mostrarNotificacao('🛒 Em compra', _quemC + ' · ' + (p.n||'').substring(0,40), '#d97706');
   fbSave(id);
   renderGrid();
   updateEmCompraBadge();
@@ -3636,28 +3645,63 @@ function gerarPDF() {
     byMarca[m].push(p);
   });
 
-  const rows = Object.entries(byMarca).map(([m, items]) => `
-    <tr><td colspan="3" style="background:#fdf2f3;color:#7a0b1e;font-size:11px;font-weight:700;padding:8px 10px;text-transform:uppercase;letter-spacing:0.5px">${m}</td></tr>
-    ${items.map(p => `<tr>
-      <td style="padding:7px 10px;font-size:12px;color:#1a1a1a;border-bottom:0.5px solid #f5ede8">${p.n}</td>
-      <td style="padding:7px 10px;font-size:12px;color:#888;border-bottom:0.5px solid #f5ede8;text-align:center">${p.qty||p.q} un</td>
-      <td style="padding:7px 10px;font-size:12px;font-weight:600;color:#7a0b1e;border-bottom:0.5px solid #f5ede8;text-align:right">${fmt(p.vt||p.v)}</td>
-    </tr>`).join('')}
-  `).join('');
+  const rows = Object.entries(byMarca).map(([m, items]) => {
+    const mTotal = items.reduce((s,p)=>s+(parseFloat(p.vmin||p.vt||p.v)||0)*(p.qty||p.q||0),0);
+    const mUn = items.reduce((s,p)=>s+(p.qty||p.q||0),0);
+    return `
+    <tr><td colspan="3" style="background:#7a0b1e;color:#fff;font-size:11px;font-weight:700;padding:8px 12px;text-transform:uppercase;letter-spacing:0.8px;border-radius:0">
+      <span>${m}</span><span style="float:right;font-weight:400;opacity:0.85">${mUn} un · ${fmt(mTotal)}</span>
+    </td></tr>
+    ${items.map(p => {
+      const tamsStr = p.tams && Object.keys(p.tams).length > 0
+        ? Object.entries(p.tams).filter(([t])=>!(p.nokTams||{})[t]).map(([t,q])=>`<span style="display:inline-block;background:#f5ede8;border-radius:4px;padding:1px 5px;font-size:10px;margin-right:2px">${t}: ${q}</span>`).join('')
+        : '';
+      return `<tr style="border-bottom:0.5px solid #f0e8e0">
+        <td style="padding:8px 12px;font-size:12px;color:#1a1a1a">
+          <div style="font-weight:500">${p.n}</div>
+          ${tamsStr ? '<div style="margin-top:3px">'+tamsStr+'</div>' : ''}
+          ${p.cor ? '<div style="font-size:10px;color:#b08070;margin-top:2px">'+p.cor+'</div>' : ''}
+        </td>
+        <td style="padding:8px 12px;font-size:11px;color:#888;text-align:center;white-space:nowrap">
+          ${(p.vs||[]).map(v=>v.charAt(0)+v.slice(1).toLowerCase()).join('<br>')}
+        </td>
+        <td style="padding:8px 12px;font-size:12px;font-weight:600;color:#7a0b1e;text-align:right;white-space:nowrap">
+          ${fmt(p.vmin||p.vt||p.v)}<br><span style="font-size:10px;font-weight:400;color:#999">${p.qty||p.q} un</span>
+        </td>
+      </tr>`;
+    }).join('')}`;
+  }).join('');
 
   const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${titulo}</title>
   <style>
-    body{font-family:-apple-system,sans-serif;background:#fff;color:#1a1a1a;padding:32px;max-width:600px;margin:0 auto}
-    table{width:100%;border-collapse:collapse;margin-top:16px}
-  </style></head><body>
-    <div style="border-bottom:2px solid #7a0b1e;padding-bottom:12px;margin-bottom:16px">
-      <div style="font-size:22px;font-weight:700;color:#7a0b1e;letter-spacing:2px">BAZAAR</div>
-      <div style="font-size:13px;color:#888;margin-top:2px">${titulo} · ${subtit}</div>
-      <div style="font-size:11px;color:#bbb;margin-top:2px">${now} · ${prods.length} produtos · ${totalUn} unidades · ${fmt(totalVal)}</div>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#faf7f5;color:#1a1a1a;padding:0}
+    .page{max-width:680px;margin:0 auto;padding:32px 24px}
+    table{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.08)}
+    @media print{body{background:#fff}.page{padding:16px}}
+  </style></head><body><div class="page">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;padding-bottom:16px;border-bottom:2px solid #7a0b1e">
+      <div>
+        <div style="font-size:28px;font-weight:800;color:#7a0b1e;letter-spacing:3px">BAZAAR</div>
+        <div style="font-size:13px;color:#888;margin-top:4px">${titulo}</div>
+        ${subtit !== 'Todos' ? '<div style="font-size:12px;color:#7a0b1e;margin-top:2px;font-weight:600">'+subtit+'</div>' : ''}
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:22px;font-weight:700;color:#1a1a1a">${fmt(totalVal)}</div>
+        <div style="font-size:11px;color:#aaa;margin-top:2px">${prods.length} produtos · ${totalUn} unidades</div>
+        <div style="font-size:11px;color:#aaa">${now}</div>
+      </div>
     </div>
-    <table>${rows}</table>
-    <div style="margin-top:24px;font-size:11px;color:#bbb;text-align:center">Total: ${prods.length} produtos · ${totalUn} unidades · ${fmt(totalVal)}</div>
-  </body></html>`;
+    <table>
+      <thead><tr style="background:#f5ede8">
+        <th style="padding:8px 12px;text-align:left;font-size:10px;color:#b08070;font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Produto</th>
+        <th style="padding:8px 12px;text-align:center;font-size:10px;color:#b08070;font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Vendedora</th>
+        <th style="padding:8px 12px;text-align:right;font-size:10px;color:#b08070;font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Valor</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <div style="margin-top:16px;font-size:11px;color:#aaa;text-align:center">Gerado pelo Bazaar App · ${now}</div>
+  </div></body></html>`;
 
   const blob = new Blob([html], {type:'text/html'});
   const url = URL.createObjectURL(blob);
@@ -4286,7 +4330,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function updateOnlineStatus() {
     if (!navigator.onLine) {
       offlineBanner.style.background = '#1a1a1a';
-      offlineBanner.textContent = '⚠️ Sem conexão — alterações serão salvas quando voltar';
+      offlineBanner.textContent = '⚠️ Sem conexão com a internet — dados em cache';
       offlineBanner.style.display = 'block';
     } else {
       offlineBanner.textContent = '✓ Conexão restaurada';
