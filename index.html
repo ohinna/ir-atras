@@ -282,6 +282,7 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
     <button class="chip" id="status-compra" onclick="setStatus('compra',this)">🛒 Compra</button>
     <button class="chip" id="status-eua" onclick="setStatus('eua',this)">🇺🇸 USA</button>
     <button class="chip" id="status-br" onclick="setStatus('br',this)">🇧🇷 BR</button>
+    <button class="chip" id="status-urgente" onclick="setStatus('urgente',this)">🔴 Urgente</button>
   </div>
   <div class="filter-row" id="marca-row">
     <button class="chip active" id="chip-all-marca" onclick="setMarca('',this)">Todas marcas</button>
@@ -643,6 +644,7 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
       <div style="display:flex;gap:8px">
         <button id="btn-est-eua" onclick="toggleEstEua()" style="flex:1;padding:12px;border-radius:12px;background:#0f6b52;border:none;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🇺🇸 Est USA</button>
         <button id="btn-est-br" onclick="toggleEstBr()" style="flex:1;padding:12px;border-radius:12px;background:#783c18;border:none;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🇧🇷 Est BR</button>
+        <button id="btn-urgente" onclick="toggleUrgente()" style="flex:1;padding:12px;border-radius:12px;background:#dc2626;border:none;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🔴 Urgente</button>
       </div>
       <div style="display:flex;gap:8px">
         <button onclick="compartilharWhatsApp()" style="flex:1;padding:12px;border-radius:12px;background:#25d366;border:none;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">📲 WhatsApp</button>
@@ -671,7 +673,7 @@ window._db = typeof firebase !== 'undefined' ? firebase.firestore() : null;
 
 const RAW_DATA = [];
 
-let PRODUTOS = RAW_DATA.map((p,i) => ({...p, _id:i, nok:false, em_compra:false, comments:[], qty: p.q}));
+let PRODUTOS = RAW_DATA.map((p,i) => ({...p, _id:i, nok:false, em_compra:false, urgente:false, comments:[], qty: p.q}));
 // Restaurar filtros salvos
 function salvarFiltros() {
   localStorage.setItem('filtros', JSON.stringify({
@@ -1025,6 +1027,7 @@ function getFiltered() {
     if (fStatus === 'compra' && !p.em_compra) return false;
     if (fStatus === 'eua'    && !p.est_eua) return false;
     if (fStatus === 'br'     && !p.est_br) return false;
+    if (fStatus === 'urgente' && !p.urgente) return false;
     if (fOrigem && p.origem !== fOrigem) return false;
     if (q && !p.n.toLowerCase().includes(q) && !(p.m||'').toLowerCase().includes(q) && !(p.vs||[]).some(v=>v.toLowerCase().includes(q))) return false;
     if (minQty > 0 && (p.qty||p.q||0) < minQty) return false;
@@ -1035,7 +1038,7 @@ function getFiltered() {
 
 function getFiltradosOrdenados() {
   let prods = getFiltered();
-  prods.sort((a,b) => {
+  prods.sort((a,b) => { if (a.urgente && !b.urgente) return -1; if (!a.urgente && b.urgente) return 1;
     const dir = _sortDir === 'asc' ? 1 : -1;
     if (_sortMode === 'valor') return ((parseFloat(a.vt||a.v)||0) - (parseFloat(b.vt||b.v)||0)) * dir;
     if (_sortMode === 'qty')   return ((a.qty||a.q||0) - (b.qty||b.q||0)) * dir;
@@ -1168,6 +1171,7 @@ function renderGrid() {
         ${p.est_eua ? '<div class="eua-overlay show"><div class="eua-bg"></div><div class="eua-content"><div class="eua-label">🇺🇸 Est USA</div></div></div>' : ''}
         ${p.est_br ? '<div class="br-overlay show"><div class="br-bg"></div><div class="br-content"><div class="br-label">🇧🇷 Est BR</div></div></div>' : ''}
         <button class="btn-nok" onclick="event.stopPropagation();confirmNok(${p._id})">✕</button>
+        ${p.urgente ? '<div style="position:absolute;top:6px;left:6px;background:#dc2626;border-radius:6px;padding:1px 6px;font-size:9px;font-weight:700;color:#fff;z-index:2">🔴 URGENTE</div>' : ''}
         ${unread>0 ? '' : ''}
       </div>
       <div class="card-body" onclick="openModal(${p._id})">
@@ -1653,6 +1657,12 @@ function openModal(id, focusComment=false) {
     btnBr.style.background = p.est_br ? '#7a4615' : '#783c18';
     btnBr.textContent = p.est_br ? '🇧🇷 Est BR ✓' : '🇧🇷 Est BR';
   }
+  const btnUrg = document.getElementById('btn-urgente');
+  if (btnUrg) {
+    btnUrg.style.background = p.urgente ? '#991b1b' : '#dc2626';
+    btnUrg.textContent = p.urgente ? '🔴 Urgente ✓' : '🔴 Urgente';
+    btnUrg.style.boxShadow = p.urgente ? '0 0 0 2px #fca5a5' : '';
+  }
   // Show compra history
   let compraHistEl = document.getElementById('compra-hist-modal');
   if (!compraHistEl) {
@@ -1866,9 +1876,9 @@ function renderTimeline() {
   el.innerHTML = '<div style="text-align:center;padding:40px;color:#c4a898;font-size:13px">Carregando...</div>';
   window._db.collection('atividade').orderBy('ts','desc').limit(100).get().then(snap => {
     if (snap.empty) { el.innerHTML = '<div style="text-align:center;padding:40px;color:#c4a898;font-size:13px">Nenhuma atividade registrada ainda</div>'; return; }
-    const icons = { nok_on:'🚫', nok_off:'✅', compra_on:'🛒', compra_off:'↩️', comentario:'💬', nok_clear:'🗑', est_usa_on:'🇺🇸', est_usa_off:'🇺🇸', eua_on:'🇺🇸', eua_off:'🇺🇸', est_br_on:'🇧🇷', est_br_off:'🇧🇷' };
-    const labels = { nok_on:'marcou NOK', nok_off:'removeu NOK', compra_on:'colocou em compra', compra_off:'removeu de compra', comentario:'comentou em', nok_clear:'limpou NOK em', est_usa_on:'marcou Est USA em', est_usa_off:'removeu Est USA de', eua_on:'marcou Est USA em', eua_off:'removeu Est USA de', est_br_on:'marcou Est BR em', est_br_off:'removeu Est BR de' };
-    const colors = { nok_on:'#7a0b1e', nok_off:'#1D9E75', compra_on:'#d97706', compra_off:'#888', comentario:'#6366f1', nok_clear:'#888', est_usa_on:'#0f6b52', est_usa_off:'#888', eua_on:'#0f6b52', eua_off:'#888', est_br_on:'#783c18', est_br_off:'#888' };
+    const icons = { nok_on:'🚫', nok_off:'✅', compra_on:'🛒', compra_off:'↩️', comentario:'💬', nok_clear:'🗑', est_usa_on:'🇺🇸', est_usa_off:'🇺🇸', eua_on:'🇺🇸', eua_off:'🇺🇸', est_br_on:'🇧🇷', est_br_off:'🇧🇷', urgente_on:'🔴', urgente_off:'⚪' };
+    const labels = { nok_on:'marcou NOK', nok_off:'removeu NOK', compra_on:'colocou em compra', compra_off:'removeu de compra', comentario:'comentou em', nok_clear:'limpou NOK em', est_usa_on:'marcou Est USA em', est_usa_off:'removeu Est USA de', eua_on:'marcou Est USA em', eua_off:'removeu Est USA de', est_br_on:'marcou Est BR em', est_br_off:'removeu Est BR de', urgente_on:'marcou como urgente', urgente_off:'removeu urgente de' };
+    const colors = { nok_on:'#7a0b1e', nok_off:'#1D9E75', compra_on:'#d97706', compra_off:'#888', comentario:'#6366f1', nok_clear:'#888', est_usa_on:'#0f6b52', est_usa_off:'#888', eua_on:'#0f6b52', eua_off:'#888', est_br_on:'#783c18', est_br_off:'#888', urgente_on:'#dc2626', urgente_off:'#888' };
     (document.getElementById('hist-sub')||{}).textContent = snap.size + ' evento(s)';
     el.innerHTML = snap.docs.map(doc => {
       const d = doc.data();
@@ -2315,6 +2325,26 @@ function toggleEstBrCard(id) {
   fbSave(id);
   renderGrid();
   updateEstBrBadge();
+}
+
+function toggleUrgente() {
+  const p = PRODUTOS[modalId];
+  if (!p) return;
+  p.urgente = !p.urgente;
+  const btn = document.getElementById('btn-urgente');
+  if (btn) {
+    btn.style.background = p.urgente ? '#991b1b' : '#dc2626';
+    btn.textContent = p.urgente ? '🔴 Urgente ✓' : '🔴 Urgente';
+    btn.style.boxShadow = p.urgente ? '0 0 0 2px #fca5a5' : '';
+  }
+  const quem = getNomeUsuario();
+  const t = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+  registrarAtividade(p.urgente ? 'urgente_on' : 'urgente_off', modalId, quem, t);
+  if (p.urgente) mostrarNotificacao('🔴 Urgente!', quem + ' · ' + (p.n||'').substring(0,40), '#dc2626');
+  if (window._db) {
+    window._db.collection('faltantes').doc(String(p._id)).set({urgente: p.urgente}, {merge:true});
+  }
+  renderGrid();
 }
 
 function toggleEstBr() {
@@ -3487,6 +3517,7 @@ function _fbListenCore() {
         PRODUTOS[id].compraHistory = data.compraHistory || [];
         PRODUTOS[id].est_eua = data.est_eua || false;
         PRODUTOS[id].est_br  = data.est_br  || false;
+        PRODUTOS[id].urgente = data.urgente || false;
         if (data.qty !== undefined) PRODUTOS[id].qty = data.qty;
         if ((data.comments||[]).length > prevLen) notificarSeNovo(id, prevLen);
         // Notificar mudança de NOK
@@ -3983,6 +4014,20 @@ function processarCSVUSA(input) {
         return p;
       });
       newData.sort((a,b)=>a.n.localeCompare(b.n,'pt-BR'));
+
+      // Detectar duplicatas (mesmo nome base ignorando tamanho)
+      const nomeCount = {};
+      newData.forEach(p => {
+        const nBase = p.n.toLowerCase().replace(/\s+tam\s+\S+/i,'').replace(/\s+\d+x\s*$/i,'').trim();
+        nomeCount[nBase] = (nomeCount[nBase]||[]);
+        nomeCount[nBase].push(p.n);
+      });
+      const duplicatas = Object.entries(nomeCount).filter(([,arr]) => arr.length > 1);
+      if (duplicatas.length > 0) {
+        const statusEl = document.getElementById('csv-status');
+        const dupMsg = duplicatas.slice(0,3).map(([n,arr]) => arr[0].substring(0,30)).join(', ');
+        if (statusEl) statusEl.innerHTML += '<br><span style="color:#d97706">⚠️ ' + duplicatas.length + ' possíveis duplicatas: ' + dupMsg + (duplicatas.length>3?'...':'') + '</span>';
+      }
 
       salvarOrigemNoFirebase(newData, 'usa', () => {
         const now = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
