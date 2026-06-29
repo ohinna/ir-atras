@@ -323,7 +323,10 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
       <div class="upload-sub">Importe o CSV da planilha EUA para atualizar os produtos faltantes dessa origem.</div>
       <div style="margin-bottom:10px">
         <div style="font-size:11px;color:var(--text4);margin-bottom:4px">Nome do mês (aparece no filtro)</div>
-        <input id="input-label-usa" type="text" placeholder="ex: Julho USA" style="width:100%;box-sizing:border-box;padding:8px 12px;border-radius:10px;border:0.5px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;font-family:inherit">
+        <div style="display:flex;gap:8px">
+          <input id="input-label-usa" type="text" placeholder="ex: Julho USA" style="flex:1;padding:8px 12px;border-radius:10px;border:0.5px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;font-family:inherit">
+          <button onclick="salvarLabelMes('usa')" style="padding:8px 14px;border-radius:10px;background:var(--red);border:none;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">Salvar</button>
+        </div>
       </div>
       <label class="upload-btn">
         ⬆ Selecionar CSV USA
@@ -337,7 +340,10 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
       <div class="upload-sub">Importe o CSV da planilha BR (itens marcados como "IA" — Ir Atrás) para atualizar os produtos dessa origem.</div>
       <div style="margin-bottom:10px">
         <div style="font-size:11px;color:var(--text4);margin-bottom:4px">Nome do mês (aparece no filtro)</div>
-        <input id="input-label-br" type="text" placeholder="ex: Julho BR" style="width:100%;box-sizing:border-box;padding:8px 12px;border-radius:10px;border:0.5px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;font-family:inherit">
+        <div style="display:flex;gap:8px">
+          <input id="input-label-br" type="text" placeholder="ex: Julho BR" style="flex:1;padding:8px 12px;border-radius:10px;border:0.5px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;font-family:inherit">
+          <button onclick="salvarLabelMes('br')" style="padding:8px 14px;border-radius:10px;background:var(--red);border:none;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">Salvar</button>
+        </div>
       </div>
       <label class="upload-btn">
         ⬆ Selecionar CSV BR
@@ -2747,18 +2753,22 @@ function renderMeta() {
           const fotoHtml = m.itemFoto
             ? `<img src="${resolverFotoMeta(m.itemFoto)}" style="width:32px;height:32px;border-radius:6px;object-fit:cover;border:0.5px solid var(--border);flex-shrink:0" onerror="this.style.display='none'">`
             : `<div style="width:32px;height:32px;border-radius:6px;background:var(--bg2);border:0.5px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--text4)">?</div>`;
-          return `<div style="margin-bottom:8px">
-            <div style="display:flex;align-items:center;gap:7px;margin-bottom:3px">
+          const marcaNome = m.nome.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+          const itemNome = m.item.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+          const itemFotoSafe = m.itemFoto.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+          return `<div style="margin-bottom:10px">
+            <div style="display:flex;align-items:center;gap:7px;margin-bottom:2px">
               <div style="font-size:11px;width:75px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:${cor.text};font-weight:600">${cor.medal} ${m.nome}</div>
               <div style="flex:1;background:var(--bg2);border-radius:4px;height:8px;overflow:hidden"><div style="height:100%;border-radius:4px;background:${cor.fill};width:${Math.round(m.qt/maxQt*100)}%"></div></div>
               <div style="font-size:10px;width:20px;text-align:right;color:${cor.text};font-weight:600">${m.qt}</div>
             </div>
-            <div style="display:flex;align-items:center;gap:7px;cursor:pointer" onclick="abrirPopupMeta('${m.nome.replace(/'/g,"\'")}','${m.item.replace(/'/g,"\'")}','${m.itemFoto.replace(/'/g,"\'")}',${m.itemQt},'${v.nome}')">
+            <div style="font-size:10px;color:${cor.text};opacity:0.75;margin-bottom:6px;padding-left:2px">Total vendido: ${fmt(m.valorMarca||0)}</div>
+            <div style="display:flex;align-items:center;gap:7px;background:var(--bg);border-radius:8px;padding:6px 8px;cursor:pointer;border:0.5px solid var(--border)" onclick="abrirPopupMeta('${marcaNome}','${itemNome}','${itemFotoSafe}',${m.itemQt},'${v.nome}')">
               ${fotoHtml}
               <div style="flex:1;min-width:0">
-                <div style="font-size:9px;color:var(--text4);margin-bottom:1px">item mais vendido</div>
-                <div style="font-size:10px;color:${cor.text};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500">${m.item||'—'}</div>
-                <div style="font-size:9px;color:var(--text4)">valor total: ${fmt(m.valorMarca||0)} · toque →</div>
+                <div style="font-size:9px;color:var(--text4);margin-bottom:2px">⭐ item mais vendido</div>
+                <div style="font-size:11px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500">${m.item||'—'}</div>
+                <div style="font-size:9px;color:var(--text4);margin-top:1px">${m.itemQt} vendas · toque para ver →</div>
               </div>
             </div>
           </div>`;
@@ -2818,6 +2828,21 @@ function renderMeta() {
       <button onclick="fecharPopupMeta()" style="width:100%;padding:10px;background:var(--bg);border:0.5px solid var(--border);border-radius:10px;font-size:13px;color:var(--text3);cursor:pointer;font-family:inherit">Fechar</button>
     </div>
   </div>`;
+}
+
+function salvarLabelMes(tipo) {
+  const inp = document.getElementById('input-label-' + tipo);
+  if (!inp) return;
+  const val = inp.value.trim();
+  if (!val) { inp.style.borderColor = '#e24b4a'; setTimeout(()=>inp.style.borderColor='',1200); return; }
+  localStorage.setItem('mes_label_' + tipo, val);
+  const el = document.getElementById('label-mes-' + tipo);
+  if (el) el.textContent = val;
+  if (window._db) window._db.collection('config').doc('app').set({['mesLabel_'+tipo]: val}, {merge:true});
+  inp.value = '';
+  inp.placeholder = val;
+  inp.style.borderColor = '#0f6b52';
+  setTimeout(()=>inp.style.borderColor='', 1500);
 }
 
 function resolverFotoMeta(raw) {
