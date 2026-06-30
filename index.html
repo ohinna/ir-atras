@@ -119,14 +119,14 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
 .tab-btn.active .tab-icon{color:var(--red)}
 .tab-badge{position:absolute;top:4px;right:calc(50% - 18px);background:#7a0b1e;color:#fff;font-size:8px;font-weight:700;min-width:14px;height:14px;border-radius:7px;display:none;align-items:center;justify-content:center;padding:0 3px}
 /* Chat page */
-.page{display:none;position:fixed;inset:0;background:var(--bg);overflow-y:auto;padding-top:60px;padding-bottom:100px;opacity:0;transition:opacity 0.18s ease}
+.page{display:none;position:fixed;inset:0;background:var(--bg);overflow-y:auto;padding-top:60px;padding-bottom:70px;opacity:0;transition:opacity 0.18s ease}
 .page.active{display:block;opacity:1}
 .page.active{display:block}
 .chat-header{position:fixed;top:0;left:0;right:0;z-index:100;background:var(--bg);border-bottom:0.5px solid var(--border);padding:14px 16px;transition:top 0.2s}
 .user-bar-visible .chat-header{top:38px}
 .user-bar-visible .page{padding-top:98px}
-.user-bar-visible .main-content{padding-top:193px}
-.user-bar-visible #count-bar{padding-top:193px}
+.user-bar-visible .main-content{padding-top:208px}
+.user-bar-visible #count-bar{padding-top:208px}
 .chat-title{font-size:16px;font-weight:600;color:var(--text)}
 .chat-sub{font-size:11px;color:var(--text3);margin-top:2px}
 .chat-item{background:var(--bg2);border-left:3px solid var(--border);border-radius:0 12px 12px 0;margin:0 12px 8px;padding:10px 12px;cursor:pointer}
@@ -163,7 +163,7 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
 .name-save-btn{background:#7a0b1e;border:none;border-radius:8px;color:#fff;font-size:10px;font-weight:600;padding:5px 10px;cursor:pointer}
 .name-cancel-btn{background:#fdf2f3;border:0.5px solid #f5c4c4;border-radius:8px;color:#7a0b1e;font-size:10px;padding:5px 8px;cursor:pointer}
 /* Upload section */
-.upload-page{padding:16px 16px 100px;background:var(--bg);min-height:100vh}
+.upload-page{padding:80px 16px 100px;background:var(--bg);min-height:100vh}
 .upload-card{background:var(--bg2);border:0.5px solid var(--border);border-radius:16px;padding:20px;margin-bottom:12px}
 .upload-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:6px}
 .upload-sub{font-size:12px;color:var(--text3);margin-bottom:14px;line-height:1.5}
@@ -173,7 +173,7 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
 /* Firebase sync */
 .sync-dot{width:6px;height:6px;border-radius:50%;background:#7a0b1e;display:inline-block;margin-right:4px}
 /* Main content offset */
-.main-content{padding-top:162px;padding-bottom:120px}
+.main-content{padding-top:170px;padding-bottom:70px}
 /* Empty */
 .empty{text-align:center;padding:60px 20px;color:#c4a898;font-size:14px}
 /* Reaction bar */
@@ -228,8 +228,6 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
   </div>
   <div style="display:flex;align-items:center;gap:8px">
     <div id="online-users" style="display:flex;align-items:center;gap:4px"></div>
-    <button onclick="toggleDark()" id="btn-dark" style="background:rgba(255,255,255,0.15);border:none;border-radius:8px;padding:4px 8px;cursor:pointer;font-size:14px;color:#fff" title="Modo escuro">🌙</button>
-    <button onclick="toggleGrid()" id="btn-grid" style="background:rgba(255,255,255,0.15);border:none;border-radius:8px;padding:4px 8px;cursor:pointer;font-size:14px;color:#fff" title="Mudar visualização">⊞</button>
     <button onclick="logoutGoogle()" style="background:rgba(255,255,255,0.15);border:none;border-radius:8px;color:#fff;font-size:10px;padding:4px 10px;cursor:pointer">Sair</button>
   </div>
 </div>
@@ -238,15 +236,17 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
   <div class="header-top">
     <div>
       <span class="logo">BAZAAR</span>
-      <div id="subtitulo" onclick="editarSubtitulo()" style="font-size:10px;color:#b08070;margin-top:2px;cursor:pointer;letter-spacing:0.5px;word-break:break-word;max-width:200px;line-height:1.3" title="Clique para editar">Faltantes — Junho 2026</div>
+      <div id="subtitulo" onclick="editarSubtitulo()" style="font-size:10px;color:#b08070;margin-top:1px;cursor:pointer;letter-spacing:0.5px" title="Clique para editar">Faltantes — Junho 2026</div>
     </div>
     <div style="display:flex;align-items:center;gap:8px">
+      <button onclick="toggleDark()" id="btn-dark" style="background:var(--bg2);border:0.5px solid var(--border);border-radius:10px;padding:4px 8px;cursor:pointer;font-size:14px;color:var(--red)" title="Modo escuro">🌙</button>
+      <button onclick="toggleGrid()" id="btn-grid" style="background:#fff;border:0.5px solid #ede0d4;border-radius:10px;padding:4px 8px;cursor:pointer;font-size:14px;color:#7a0b1e" title="Mudar visualização">⊞</button>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:1px">
-        <span class="header-meta" id="header-meta" style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block">231 itens · R$ 48.959,50</span>
-        <span id="header-total" style="font-size:9px;color:var(--text4)"></span>
-        <span id="header-vend-total" style="font-size:9px;color:var(--red);font-weight:600;display:none"></span>
-        <span id="header-compra" style="font-size:9px;color:#f59e0b;font-weight:600;display:none"></span>
-      </div>
+      <span class="header-meta" id="header-meta">231 itens · R$ 48.959,50</span>
+      <span id="header-total" style="font-size:9px;color:var(--text4)"></span>
+      <span id="header-vend-total" style="font-size:9px;color:var(--red);font-weight:600;display:none"></span>
+      <span id="header-compra" style="font-size:9px;color:#f59e0b;font-weight:600;display:none"></span>
+    </div>
     </div>
   </div>
   <div class="search-wrap">
@@ -255,17 +255,22 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
   </div>
   <div style="display:flex;gap:8px;padding:8px 12px 4px">
     <button class="chip active" id="chip-origem-todos" onclick="setOrigem('',this)" style="flex:1;justify-content:center">Todos</button>
-    <button class="chip" id="chip-origem-br" onclick="setOrigem('br',this)" style="flex:1;justify-content:center">🇧🇷 <span id="label-mes-br">Mês BR</span></button>
-    <button class="chip" id="chip-origem-usa" onclick="setOrigem('usa',this)" style="flex:1;justify-content:center">🇺🇸 <span id="label-mes-usa">Mês USA</span></button>
+    <button class="chip" id="chip-origem-br" onclick="setOrigem('br',this)" style="flex:1;justify-content:center">🇧🇷 <span id="label-mes-br" onclick="event.stopPropagation();editarMesLabel('br')">Mês BR</span></button>
+    <button class="chip" id="chip-origem-usa" onclick="setOrigem('usa',this)" style="flex:1;justify-content:center">🇺🇸 <span id="label-mes-usa" onclick="event.stopPropagation();editarMesLabel('usa')">Mês USA</span></button>
   </div>
   <div class="filter-row" id="vend-row">
     <button class="chip active" id="chip-todas" onclick="setVend('TODAS',this)">Todas</button>
     <button class="chip" onclick="setVend('FABIANA',this)">Fabiana</button><button class="chip" onclick="setVend('JÉSSICA',this)">Jéssica</button><button class="chip" onclick="setVend('SABRINA',this)">Sabrina</button><button class="chip" onclick="setVend('THAIS',this)">Thais</button>
   </div>
-
+  <div style="padding:0 12px 6px;position:relative">
+    <input id="marca-search" type="text" placeholder="Buscar marca..." autocomplete="off"
+      style="width:100%;background:#fff;border:0.5px solid #ede0d4;border-radius:16px;padding:5px 12px 5px 28px;font-size:11px;color:#1a1a1a;outline:none;font-family:inherit"
+      oninput="filtrarMarcaChips(this.value)">
+    <span style="position:absolute;left:20px;top:50%;transform:translateY(-50%);font-size:11px;color:#c4a898;pointer-events:none">🔍</span>
+  </div>
   <div style="padding:0 12px 4px">
     <div style="font-size:9px;font-weight:600;color:var(--text4);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:4px">Categoria</div>
-  <div class="filter-row" id="cat-row" style="align-items:center">
+  <div class="filter-row" id="cat-row">
       <button class="chip active" id="chip-all-cat" onclick="setCat('',this)">Todas</button><button class="chip" onclick="setCat('ACESSÓRIOS',this)">ACESSÓRIOS</button><button class="chip" onclick="setCat('ALIMENTICIO',this)">ALIMENTICIO</button><button class="chip" onclick="setCat('CALÇADO FEMININO',this)">CALÇADO FEMININO</button><button class="chip" onclick="setCat('CALÇADO MASCULINO',this)">CALÇADO MASCULINO</button><button class="chip" onclick="setCat('CASA',this)">CASA</button><button class="chip" onclick="setCat('COSMÉTICOS',this)">COSMÉTICOS</button><button class="chip" onclick="setCat('FARMÁCIA',this)">FARMÁCIA</button><button class="chip" onclick="setCat('FEMININO',this)">FEMININO</button><button class="chip" onclick="setCat('INFANTIL',this)">INFANTIL</button><button class="chip" onclick="setCat('MASCULINO',this)">MASCULINO</button><button class="chip" onclick="setCat('PERFUMARIA',this)">PERFUMARIA</button><button class="chip" onclick="setCat('ROUPA INFANTIL',this)">ROUPA INFANTIL</button>
     </div>
   </div>
@@ -280,9 +285,8 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
     <button class="chip active" id="status-todos" onclick="setStatus('',this)">Todos</button>
     <button class="chip" id="status-nok" onclick="setStatus('nok',this)">✕ NOK</button>
     <button class="chip" id="status-compra" onclick="setStatus('compra',this)">🛒 Compra</button>
-    <button class="chip" id="status-eua" onclick="setStatus('eua',this)">🇺🇸 USA</button>
+    <button class="chip" id="status-eua" onclick="setStatus('eua',this)">🇺🇸 EUA</button>
     <button class="chip" id="status-br" onclick="setStatus('br',this)">🇧🇷 BR</button>
-    <button class="chip" id="status-urgente" onclick="setStatus('urgente',this)">🔴 Urgente</button>
   </div>
   <div class="filter-row" id="marca-row">
     <button class="chip active" id="chip-all-marca" onclick="setMarca('',this)">Todas marcas</button>
@@ -291,7 +295,7 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
 </div>
 
 <!-- CONTADOR -->
-<div class="count-bar main-content" id="count-bar" style="padding-top:162px">
+<div class="count-bar main-content" id="count-bar" style="padding-top:170px">
   <span>Mostrando <strong id="count-num">231</strong> faltantes</span>
   <span id="count-val"></span>
 </div>
@@ -312,15 +316,45 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
 </div>
 
 <!-- UPLOAD PAGE -->
-<div class="page" id="page-upload" style="display:none">
+<div class="page" id="page-upload">
   <div class="upload-page">
+    <div class="upload-card">
+      <div class="upload-title">🇺🇸 Importar Planilha USA</div>
+      <div class="upload-sub">Importe o CSV da planilha EUA para atualizar os produtos faltantes dessa origem.</div>
+      <label class="upload-btn">
+        ⬆ Selecionar CSV USA
+        <input type="file" accept=".csv" style="display:none" onchange="processarCSVUSA(this)">
+      </label>
+      <div class="progress-bar" id="csv-progress"><div class="progress-fill" id="csv-fill"></div></div>
+      <div id="csv-status" style="font-size:11px;color:#b08070;margin-top:8px"></div>
+    </div>
+    <div class="upload-card">
+      <div class="upload-title">🇧🇷 Importar Planilha BR</div>
+      <div class="upload-sub">Importe o CSV da planilha BR (itens marcados como "IA" — Ir Atrás) para atualizar os produtos dessa origem.</div>
+      <label class="upload-btn">
+        ⬆ Selecionar CSV BR
+        <input type="file" accept=".csv" style="display:none" onchange="processarCSVBR(this)">
+      </label>
+      <div class="progress-bar" id="csv-progress-br"><div class="progress-fill" id="csv-fill-br"></div></div>
+      <div id="csv-status-br" style="font-size:11px;color:#b08070;margin-top:8px"></div>
+    </div>
+    <div class="upload-card">
+      <div class="upload-title">🖼 Atualizar fotos</div>
+      <div class="upload-sub">Importe o CSV de IDs de fotos do Google Drive.</div>
+      <label class="upload-btn">
+        ⬆ Selecionar CSV de fotos
+        <input type="file" accept=".csv" style="display:none" onchange="handleFotos(this)">
+      </label>
+      <div id="foto-status" style="font-size:11px;color:#b08070;margin-top:8px"></div>
+    </div>
     <div class="upload-card">
       <div class="upload-title">📄 Gerar PDF</div>
       <div class="upload-sub">Gere uma lista de faltantes filtrada por marca e vendedora.</div>
       <div style="margin-bottom:10px">
-        <div style="font-size:10px;font-weight:600;color:#b08070;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px">Vendedora</div>
-        <div id="pdf-vend-chips" style="display:flex;flex-wrap:wrap;gap:6px"></div>
-        <input type="hidden" id="pdf-vend" value="">
+        <div style="font-size:10px;font-weight:600;color:#b08070;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:5px">Vendedora</div>
+        <select id="pdf-vend" style="width:100%;background:#fdf8f4;border:0.5px solid #ede0d4;border-radius:10px;padding:9px 12px;font-size:13px;font-family:inherit;outline:none;color:#1a1a1a">
+          <option value="">Todas</option>
+        </select>
       </div>
       <div style="margin-bottom:14px">
         <div style="font-size:10px;font-weight:600;color:#b08070;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px">Marca</div>
@@ -338,70 +372,30 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
       </div>
       <button onclick="gerarPDF()" style="width:100%;padding:12px;border-radius:12px;background:#7a0b1e;border:none;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">↓ Gerar PDF</button>
     </div>
-
-    <div class="upload-card">
-      <div class="upload-title">🇺🇸 Importar Planilha USA</div>
-      <div class="upload-sub">Importe o CSV da planilha EUA para atualizar os produtos faltantes dessa origem.</div>
-      <div style="margin-bottom:10px">
-        <div style="font-size:11px;color:var(--text4);margin-bottom:4px">Nome do mês (aparece no filtro)</div>
-        <div style="display:flex;gap:8px">
-          <input id="input-label-usa" type="text" placeholder="ex: Julho USA" style="flex:1;padding:8px 12px;border-radius:10px;border:0.5px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;font-family:inherit">
-          <button onclick="salvarLabelMes('usa')" style="padding:8px 14px;border-radius:10px;background:var(--red);border:none;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">Salvar</button>
-        </div>
-      </div>
-      <label class="upload-btn">
-        ⬆ Selecionar CSV USA
-        <input type="file" accept=".csv" style="display:none" onchange="processarCSVUSA(this)">
-      </label>
-      <div class="progress-bar" id="csv-progress"><div class="progress-fill" id="csv-fill"></div></div>
-      <div id="csv-status" style="font-size:11px;color:#b08070;margin-top:8px"></div>
-    </div>
-    <div class="upload-card">
-      <div class="upload-title">🇧🇷 Importar Planilha BR</div>
-      <div class="upload-sub">Importe o CSV da planilha BR (itens marcados como "IA" — Ir Atrás) para atualizar os produtos dessa origem.</div>
-      <div style="margin-bottom:10px">
-        <div style="font-size:11px;color:var(--text4);margin-bottom:4px">Nome do mês (aparece no filtro)</div>
-        <div style="display:flex;gap:8px">
-          <input id="input-label-br" type="text" placeholder="ex: Julho BR" style="flex:1;padding:8px 12px;border-radius:10px;border:0.5px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;font-family:inherit">
-          <button onclick="salvarLabelMes('br')" style="padding:8px 14px;border-radius:10px;background:var(--red);border:none;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">Salvar</button>
-        </div>
-      </div>
-      <label class="upload-btn">
-        ⬆ Selecionar CSV BR
-        <input type="file" accept=".csv" style="display:none" onchange="processarCSVBR(this)">
-      </label>
-      <div class="progress-bar" id="csv-progress-br"><div class="progress-fill" id="csv-fill-br"></div></div>
-      <div id="csv-status-br" style="font-size:11px;color:#b08070;margin-top:8px"></div>
-    </div>
-    <div class="upload-card">
-      <div class="upload-title">🖼 Atualizar fotos USA</div>
-      <div class="upload-sub">Importe o CSV de IDs de fotos do Google Drive da planilha USA.</div>
-      <label class="upload-btn">
-        ⬆ Selecionar CSV fotos USA
-        <input type="file" accept=".csv" style="display:none" onchange="handleFotos(this,'usa')">
-      </label>
-      <div id="foto-status-usa" style="font-size:11px;color:#b08070;margin-top:8px"></div>
-    </div>
-    <div class="upload-card">
-      <div class="upload-title">🖼 Atualizar fotos BR</div>
-      <div class="upload-sub">Importe o CSV de IDs de fotos do Google Drive da planilha BR.</div>
-      <label class="upload-btn">
-        ⬆ Selecionar CSV fotos BR
-        <input type="file" accept=".csv" style="display:none" onchange="handleFotos(this,'br')">
-      </label>
-      <div id="foto-status-br" style="font-size:11px;color:#b08070;margin-top:8px"></div>
-    </div>
->
     <div id="ultima-atualizacao" style="font-size:11px;color:#c4a898;text-align:center;margin-top:8px"></div>
-
     <div class="upload-card" style="margin-top:12px">
-      <div class="upload-title">📋 Histórico de importações</div>
+      <div class="upload-title">🏷️ Nome da versão</div>
+      <div class="upload-sub">Dê um nome para esta versão e sincronize com todas.</div>
+      <div style="display:flex;gap:8px;margin-top:4px">
+        <input id="csv-versao-nome" type="text" placeholder="Ex: Faltantes — Julho 2026"
+          style="flex:1;border:0.5px solid #ede0d4;border-radius:10px;padding:9px 12px;font-size:13px;font-family:inherit;outline:none;background:#fdf8f4;color:#1a1a1a">
+        <button onclick="salvarVersao()" style="padding:9px 14px;border-radius:10px;background:#7a0b1e;border:none;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">Salvar</button>
+      </div>
+      <div id="versao-status" style="font-size:11px;color:#b08070;margin-top:6px"></div>
+    </div>
+    <div class="upload-card" style="margin-top:12px">
+      <div class="upload-title">📋 Histórico de versões</div>
       <div id="version-list" style="margin-top:8px"></div>
     </div>
     <div style="margin-top:12px;padding:0 0 4px">
       <button onclick="abrirModalAdd()" style="width:100%;padding:13px;border-radius:14px;background:var(--red);border:none;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px">
         + Adicionar item manualmente
       </button>
+    </div>
+    <div style="margin-top:12px;padding:12px 16px;border-top:0.5px solid var(--border)">
+      <div style="font-size:10px;color:var(--text4);font-weight:600;letter-spacing:0.5px;margin-bottom:8px">FIREBASE</div>
+      <div id="fb-usage" style="font-size:11px;color:var(--text3)">Calculando...</div>
+      <a href="https://console.firebase.google.com" target="_blank" style="font-size:10px;color:var(--text4);text-decoration:none;display:block;margin-top:6px">Ver console completo ↗</a>
     </div>
     <div style="margin-top:12px;border-top:0.5px solid var(--border)">
       <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px 6px">
@@ -412,13 +406,8 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
           <button onclick="setHistView('relatorio')" id="hist-btn-relatorio" class="chip" style="font-size:9px;padding:4px 10px">Semanal</button>
         </div>
       </div>
-      <div id="hist-timeline" style="padding:4px 0;max-height:320px;overflow-y:auto"></div>
-      <div id="hist-relatorio" style="padding:8px 16px;display:none;max-height:320px;overflow-y:auto"></div>
-    </div>
-    <div style="margin-top:12px;padding:12px 16px;border-top:0.5px solid var(--border)">
-      <div style="font-size:10px;color:var(--text4);font-weight:600;letter-spacing:0.5px;margin-bottom:8px">FIREBASE</div>
-      <div id="fb-usage" style="font-size:11px;color:var(--text3)">Calculando...</div>
-      <a href="https://console.firebase.google.com" target="_blank" style="font-size:10px;color:var(--text4);text-decoration:none;display:block;margin-top:6px">Ver console completo ↗</a>
+      <div id="hist-timeline" style="padding:4px 0"></div>
+      <div id="hist-relatorio" style="padding:8px 16px;display:none"></div>
     </div>
   </div>
 </div>
@@ -560,7 +549,7 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
     <div style="display:flex;align-items:center;justify-content:space-between;width:100%">
       <div>
         <div class="chat-title">🌎 Estoques</div>
-        <div class="chat-sub" id="eua-sub">USA e BR</div>
+        <div class="chat-sub" id="eua-sub">EUA e BR</div>
       </div>
       <div style="display:flex;gap:8px">
         <button onclick="exportarEstoquesPDF()" style="background:#555;border:none;border-radius:12px;padding:8px 14px;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;flex-shrink:0">↓ PDF</button>
@@ -569,7 +558,7 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
     </div>
   </div>
   <div style="padding:12px 0">
-    <div style="padding:8px 16px 4px;font-size:11px;font-weight:700;color:#0f6b52;letter-spacing:0.5px;display:flex;align-items:center;gap:6px">🇺🇸 Estoque USA <span id="eua-count" style="background:#e8f5f1;border-radius:8px;padding:1px 8px;font-size:10px">0</span></div>
+    <div style="padding:8px 16px 4px;font-size:11px;font-weight:700;color:#0f6b52;letter-spacing:0.5px;display:flex;align-items:center;gap:6px">🇺🇸 Estoque EUA <span id="eua-count" style="background:#e8f5f1;border-radius:8px;padding:1px 8px;font-size:10px">0</span></div>
     <div id="eua-list"></div>
     <div style="padding:12px 16px 4px;font-size:11px;font-weight:700;color:#783c18;letter-spacing:0.5px;display:flex;align-items:center;gap:6px;border-top:0.5px solid var(--border);margin-top:4px">🇧🇷 Estoque BR <span id="br-count" style="background:#f5ede8;border-radius:8px;padding:1px 8px;font-size:10px">0</span></div>
     <div id="br-list"></div>
@@ -604,7 +593,6 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
 <div class="modal-bg" id="modal-bg" onclick="closeModal(event)">
   <div class="modal" id="modal">
     <div class="modal-handle"></div>
-    <button onclick="closeModalBtn()" style="position:absolute;top:12px;right:12px;width:32px;height:32px;border-radius:50%;background:rgba(0,0,0,0.45);border:none;color:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;line-height:1">×</button>
     <div class="modal-img" id="modal-img"></div>
     <div class="modal-brand" id="modal-brand"></div>
     <div id="modal-tams" style="font-size:11px;color:var(--red);font-weight:500;margin-bottom:4px;display:none"></div>
@@ -613,8 +601,8 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
 
     <div style="background:var(--red-light);border:0.5px solid var(--border2);border-radius:12px;padding:14px 16px;margin-bottom:10px">
       <div style="font-size:9px;color:var(--text4);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px">Pra comprar</div>
-      <div id="modal-tams-inline" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px"><div id="modal-qty-sem-tam" style="display:none;background:var(--bg2);border:1.5px solid var(--red);border-radius:10px;padding:6px 14px;font-size:13px;font-weight:700;color:var(--red)"></div></div>
-      <div id="modal-qty" style="display:none"></div>
+      <div id="modal-tams-inline" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px"></div>
+      <div id="modal-qty" style="font-size:13px;font-weight:700;color:var(--red)"></div>
       <div id="modal-cor-wrap" style="display:none;margin-top:8px;padding-top:8px;border-top:0.5px solid var(--border2)">
         <div style="font-size:9px;color:var(--text4);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:5px">Cor</div>
         <div id="modal-cor" style="display:inline-block;background:var(--bg2);border:0.5px solid var(--border);border-radius:8px;padding:4px 12px;font-size:12px;font-weight:600;color:var(--text)"></div>
@@ -642,9 +630,8 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
         <button id="btn-em-compra" onclick="toggleEmCompra()" style="flex:1;padding:12px;border-radius:12px;background:#f59e0b;border:none;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🛒 Em compra</button>
       </div>
       <div style="display:flex;gap:8px">
-        <button id="btn-est-eua" onclick="toggleEstEua()" style="flex:1;padding:12px;border-radius:12px;background:#0f6b52;border:none;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🇺🇸 Est USA</button>
+        <button id="btn-est-eua" onclick="toggleEstEua()" style="flex:1;padding:12px;border-radius:12px;background:#0f6b52;border:none;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🇺🇸 Est EUA</button>
         <button id="btn-est-br" onclick="toggleEstBr()" style="flex:1;padding:12px;border-radius:12px;background:#783c18;border:none;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🇧🇷 Est BR</button>
-        <button id="btn-urgente" onclick="toggleUrgente()" style="flex:1;padding:12px;border-radius:12px;background:#dc2626;border:none;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🔴 Urgente</button>
       </div>
       <div style="display:flex;gap:8px">
         <button onclick="compartilharWhatsApp()" style="flex:1;padding:12px;border-radius:12px;background:#25d366;border:none;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">📲 WhatsApp</button>
@@ -673,7 +660,7 @@ window._db = typeof firebase !== 'undefined' ? firebase.firestore() : null;
 
 const RAW_DATA = [];
 
-let PRODUTOS = RAW_DATA.map((p,i) => ({...p, _id:i, nok:false, em_compra:false, urgente:false, comments:[], qty: p.q}));
+let PRODUTOS = RAW_DATA.map((p,i) => ({...p, _id:i, nok:false, em_compra:false, comments:[], qty: p.q}));
 // Restaurar filtros salvos
 function salvarFiltros() {
   localStorage.setItem('filtros', JSON.stringify({
@@ -974,16 +961,15 @@ function resolverFoto(raw) {
   if (!s) return '';
   // Se for um link do Drive, converter normalmente
   if (s.startsWith('http')) return converterLinkDrive(s);
-  // Buscar no foto_map USA e BR
+  // Se for nome de arquivo, buscar no foto_map
   try {
+    const fotoMap = JSON.parse(localStorage.getItem('foto_map')||'{}');
+    if (fotoMap[s]) return fotoMap[s];
+    if (fotoMap[s.toLowerCase()]) return fotoMap[s.toLowerCase()];
+    // Tentar sem extensão
     const semExt = s.replace(/\.[^/.]+$/, '');
-    const maps = ['foto_map','foto_map_br'].map(k => { try { return JSON.parse(localStorage.getItem(k)||'{}'); } catch(e) { return {}; } });
-    for (const fotoMap of maps) {
-      if (fotoMap[s]) return fotoMap[s];
-      if (fotoMap[s.toLowerCase()]) return fotoMap[s.toLowerCase()];
-      if (fotoMap[semExt]) return fotoMap[semExt];
-      if (fotoMap[semExt.toLowerCase()]) return fotoMap[semExt.toLowerCase()];
-    }
+    if (fotoMap[semExt]) return fotoMap[semExt];
+    if (fotoMap[semExt.toLowerCase()]) return fotoMap[semExt.toLowerCase()];
   } catch(e) {}
   // Fallback: tentar como ID do Drive direto
   return s.length > 10 ? `https://drive.google.com/thumbnail?id=${s}&sz=w1000` : '';
@@ -1027,7 +1013,6 @@ function getFiltered() {
     if (fStatus === 'compra' && !p.em_compra) return false;
     if (fStatus === 'eua'    && !p.est_eua) return false;
     if (fStatus === 'br'     && !p.est_br) return false;
-    if (fStatus === 'urgente' && !p.urgente) return false;
     if (fOrigem && p.origem !== fOrigem) return false;
     if (q && !p.n.toLowerCase().includes(q) && !(p.m||'').toLowerCase().includes(q) && !(p.vs||[]).some(v=>v.toLowerCase().includes(q))) return false;
     if (minQty > 0 && (p.qty||p.q||0) < minQty) return false;
@@ -1038,7 +1023,7 @@ function getFiltered() {
 
 function getFiltradosOrdenados() {
   let prods = getFiltered();
-  prods.sort((a,b) => { if (a.urgente && !b.urgente) return -1; if (!a.urgente && b.urgente) return 1;
+  prods.sort((a,b) => {
     const dir = _sortDir === 'asc' ? 1 : -1;
     if (_sortMode === 'valor') return ((parseFloat(a.vt||a.v)||0) - (parseFloat(b.vt||b.v)||0)) * dir;
     if (_sortMode === 'qty')   return ((a.qty||a.q||0) - (b.qty||b.q||0)) * dir;
@@ -1091,10 +1076,10 @@ function renderGrid() {
   const totalEl = document.getElementById('header-total');
   if (totalEl) totalEl.textContent = '';
   const tv = prods.reduce((a,p)=>{
-    const val = parseFloat(p.vmin||p.vt||p.v)||0;
+    const val = parseFloat(p.vt||p.v)||0;
     return a + val * (p.qty||p.q||0);
   }, 0);
-  const cvEl = document.getElementById('count-val'); if (cvEl) cvEl.textContent = '';
+  const cvEl = document.getElementById('count-val'); if (cvEl) cvEl.textContent = fmtVal(tv);
   // Update header-meta with live filtered totals
   const headerMeta = document.getElementById('header-meta');
   // Contador por vendedora
@@ -1104,19 +1089,7 @@ function renderGrid() {
     if (soUmaVend) {
       const vend = [...fVends][0];
       const prodsDaVend = PRODUTOS.filter(p => (p.vs||[]).includes(vend));
-      // Total por vendedora = faltantes da planilha
-      let _mvVend = [];
-      try { _mvVend = JSON.parse(localStorage.getItem('meta_vendedoras')||'[]'); } catch(e) {}
-      const mvEntry = _mvVend.find(v => v.nome.toUpperCase() === vend);
-      const totalVend = mvEntry
-        ? (mvEntry.faltantes !== undefined ? mvEntry.faltantes : Math.max(0,(mvEntry.total||0)-(mvEntry.oks||0)))
-        : prodsDaVend.filter(p => !p.nok).reduce((a,p) => {
-            const val = parseFloat(p.vmin||p.vt||p.v)||0;
-            const nokT = p.nokTams || {};
-            const tams = p.tams ? Object.entries(p.tams) : null;
-            const qty = tams ? tams.filter(([t])=>!nokT[t]).reduce((s,[,q])=>s+q,0) : (p.qty||p.q||0);
-            return a + val * qty;
-          }, 0);
+      const totalVend = prodsDaVend.filter(p => !p.nok).reduce((a,p) => a + (parseFloat(p.vt||p.v)||0) * (p.qty||p.q||0), 0);
       vendTotal.textContent = vend.charAt(0) + vend.slice(1).toLowerCase() + ': R$ ' + totalVend.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
       vendTotal.style.display = '';
     } else {
@@ -1125,21 +1098,16 @@ function renderGrid() {
   }
   if (headerMeta) {
     const totalItens = PRODUTOS.length;
-    // Total geral = soma dos faltantes da planilha (Total - OKS por vendedora)
-    let _mvTotal = [];
-    try { _mvTotal = JSON.parse(localStorage.getItem('meta_vendedoras')||'[]'); } catch(e) {}
-    const totalGeral = _mvTotal.length > 0
-      ? _mvTotal.reduce((s,v) => s + (v.faltantes !== undefined ? v.faltantes : Math.max(0,(v.total||0)-(v.oks||0))), 0)
-      : PRODUTOS.filter(p => !p.nok).reduce((a,p) => {
-          const val = parseFloat(p.vmin||p.vt||p.v)||0;
-          const nokT = p.nokTams || {};
-          const tams = p.tams ? Object.entries(p.tams) : null;
-          const qty = tams ? tams.filter(([t])=>!nokT[t]).reduce((s,[,q])=>s+q,0) : (p.qty||p.q||0);
-          return a + val * qty;
-        }, 0);
+    const totalGeral = PRODUTOS.filter(p => !p.nok).reduce((a,p) => {
+      const val = parseFloat(p.vmin||p.vt||p.v)||0;
+      const nokT = p.nokTams || {};
+      const tams = p.tams ? Object.entries(p.tams) : null;
+      const qty = tams ? tams.filter(([t])=>!nokT[t]).reduce((s,[,q])=>s+q,0) : (p.qty||p.q||0);
+      return a + val * qty;
+    }, 0);
     const isFiltrado = !fVends.has('TODAS') || fMarcas.size > 0 || fCat || fSearch;
     if (isFiltrado) {
-      headerMeta.textContent = prods.length + ' de ' + totalItens + ' itens';
+      headerMeta.textContent = prods.length + ' de ' + totalItens + ' itens · R$ ' + totalV.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
     } else {
       headerMeta.textContent = totalItens + ' itens · R$ ' + totalGeral.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
     }
@@ -1166,12 +1134,15 @@ function renderGrid() {
     return `<div class="card ${p.nok?'is-nok':''}" id="card-${p._id}">
       <div class="card-img" onclick="openModal(${p._id})">
         ${img}
+        ${p.origem ? `<div style="position:absolute;bottom:6px;left:6px;background:rgba(0,0,0,0.55);border-radius:6px;padding:1px 6px;font-size:9px;font-weight:700;color:#fff;z-index:2">${p.origem === 'br' ? '🇧🇷' : '🇺🇸'}</div>` : ''}
         ${p.nok ? '<div class="nok-overlay show"><div class="nok-bg"></div><div class="nok-content"><div class="nok-label">✕ NOK</div>' + (p.nokWho ? '<div style="font-size:9px;color:rgba(255,255,255,0.75);margin-top:2px">'+p.nokWho+'</div>' : '') + '</div></div>' : ''}
         ${p.em_compra ? '<div class="compra-overlay show"><div class="compra-bg"></div><div class="compra-content"><div class="compra-label">🛒 Em compra</div></div></div>' : ''}
-        ${p.est_eua ? '<div class="eua-overlay show"><div class="eua-bg"></div><div class="eua-content"><div class="eua-label">🇺🇸 Est USA</div></div></div>' : ''}
+        ${p.est_eua ? '<div class="eua-overlay show"><div class="eua-bg"></div><div class="eua-content"><div class="eua-label">🇺🇸 Est EUA</div></div></div>' : ''}
         ${p.est_br ? '<div class="br-overlay show"><div class="br-bg"></div><div class="br-content"><div class="br-label">🇧🇷 Est BR</div></div></div>' : ''}
         <button class="btn-nok" onclick="event.stopPropagation();confirmNok(${p._id})">✕</button>
-        ${p.urgente ? '<div style="position:absolute;top:6px;left:6px;background:#dc2626;border-radius:6px;padding:1px 6px;font-size:9px;font-weight:700;color:#fff;z-index:2">🔴 URGENTE</div>' : ''}
+        <button class="btn-compra ${p.em_compra?'ativo':''}" onclick="event.stopPropagation();toggleEmCompraCard(${p._id})">🛒</button>
+        <button class="btn-eua ${p.est_eua?'ativo':''}" onclick="event.stopPropagation();toggleEstEuaCard(${p._id})">🇺🇸</button>
+        <button class="btn-br ${p.est_br?'ativo':''}" onclick="event.stopPropagation();toggleEstBrCard(${p._id})">🇧🇷</button>
         ${unread>0 ? '' : ''}
       </div>
       <div class="card-body" onclick="openModal(${p._id})">
@@ -1184,7 +1155,7 @@ function renderGrid() {
           <span class="card-val">${p.vmin && p.vmax && p.vmin !== p.vmax ? fmtVal(p.vmin)+' – '+fmtVal(p.vmax) : fmtVal(p.vt||p.v)}</span>
           <span style="font-size:10px;background:#fdf2f3;border:0.5px solid #f5c4c4;border-radius:8px;padding:2px 7px;color:#7a0b1e;font-weight:600">${p.qty||p.q} un</span>
         </div>
-        ${p.tams && Object.keys(p.tams).length > 0 ? '<div style="margin-top:6px;display:grid;grid-template-columns:repeat(auto-fill,minmax(36px,1fr));gap:3px">' +
+        ${p.tams && Object.keys(p.tams).length > 1 ? '<div style="margin-top:6px;display:grid;grid-template-columns:repeat(auto-fill,minmax(36px,1fr));gap:3px">' +
           Object.entries(p.tams).map(([t,q]) => {
             const isUndef = t === '??? (a definir)';
             const isNok = (p.nokTams||{})[t];
@@ -1202,13 +1173,6 @@ function renderGrid() {
   }).join('');
   updateChatBadge();
   updateNokBadge();
-  // Atualizar contadores nos chips de vendedora
-  const vendChips = document.querySelectorAll('#vend-row .chip:not(#chip-todas)');
-  vendChips.forEach(btn => {
-    const vName = btn.textContent.replace(/\s*\(\d+\)/, '').trim().toUpperCase();
-    const count = PRODUTOS.filter(p => !p.nok && (p.vs||[]).some(v => v.toUpperCase() === vName)).length;
-    btn.textContent = btn.textContent.replace(/\s*\(\d+\)/, '') + ' (' + count + ')';
-  });
   } catch(e) {
     console.error('renderGrid error:', e.message, e.stack);
   }
@@ -1264,7 +1228,6 @@ function confirmNok(id) {
   const _quem = getNomeUsuario();
   const _t = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
   registrarAtividade(p.nok ? 'nok_on' : 'nok_off', id, _quem, _t);
-  if (p.nok) mostrarNotificacao('🚫 NOK marcado', _quem + ' · ' + (p.n||'').substring(0,40), '#7a0b1e');
   fbSave(id);
   renderGrid();
   updateNokBadge();
@@ -1320,7 +1283,7 @@ function setMarca(m, btn) {
     }
     document.getElementById('chip-all-marca').classList.add('active');
     document.querySelectorAll('#marca-row .chip:not(#chip-all-marca)').forEach(c => c.style.display = '');
-    const ms = document.getElementById('marca-search'); if (ms) ms.value = '';
+    document.getElementById('marca-search').value = '';
   } else {
     document.getElementById('chip-all-marca').classList.remove('active');
     if (fMarcas.has(m)) { fMarcas.delete(m); btn.classList.remove('active'); }
@@ -1363,19 +1326,15 @@ function goTab(tab) {
       window._db.collection('config').doc('versoes').get().then(doc => {
         const vl = document.getElementById('version-list');
         if (!vl) return;
-        // Ler do versao_hist local também
-        const localHist = JSON.parse(localStorage.getItem('versao_hist')||'[]');
-        const fbHist = doc.exists ? JSON.parse(doc.data().list||'[]') : [];
-        const hist = (fbHist.length > localHist.length ? fbHist : localHist);
-        if (!hist.length) {
-          vl.innerHTML = '<div style="font-size:11px;color:var(--text4);text-align:center;padding:8px">Nenhuma importação registrada ainda</div>';
+        if (!doc.exists || !(doc.data().lista||[]).length) {
+          vl.innerHTML = '<div style="font-size:11px;color:var(--text4);text-align:center;padding:8px">Nenhuma versão registrada</div>';
           return;
         }
-        vl.innerHTML = hist.map(v =>
+        vl.innerHTML = doc.data().lista.map(v =>
           '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:0.5px solid var(--border);font-size:11px">' +
-          '<div><div style="font-weight:600;color:var(--text)">' + (v.nome||v.titulo||'—') + '</div>' +
-          '<div style="color:var(--text3);font-size:10px">' + (v.uid||v.who||'') + '</div></div>' +
-          '<div style="color:var(--text4);font-size:10px;text-align:right;white-space:nowrap">' + (v.ts||v.time||'') + '</div>' +
+          '<div><div style="font-weight:600;color:var(--text)">' + v.titulo + '</div>' +
+          '<div style="color:var(--text3);font-size:10px">' + v.who + '</div></div>' +
+          '<div style="color:var(--text4);font-size:10px;text-align:right">' + v.time + '</div>' +
           '</div>'
         ).join('');
       }).catch(()=>{});
@@ -1385,14 +1344,7 @@ function goTab(tab) {
     const marcas = [...new Set(PRODUTOS.map(p=>(p.m||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
     const pdfVend = document.getElementById('pdf-vend');
     const pdfMarca = document.getElementById('pdf-marca');
-    if (pdfVend) {
-      pdfVend.innerHTML = '<option value="">Todas</option>' + vendas.map(v=>`<option value="${v}">${v}</option>`).join('');
-    }
-    const pdfVendChips = document.getElementById('pdf-vend-chips');
-    if (pdfVendChips) {
-      const allVends = ['Todas', ...vendas.map(v=>v.charAt(0)+v.slice(1).toLowerCase())];
-      pdfVendChips.innerHTML = allVends.map((v,i) => `<button onclick="togglePdfVend('${v==='Todas'?'':vendas[i-1]||''}')" id="pdf-vchip-${v}" style="font-size:11px;padding:4px 12px;border-radius:20px;border:0.5px solid #ede0d4;background:${v==='Todas'?'#7a0b1e':'#fdf8f4'};color:${v==='Todas'?'#fff':'#1a1a1a'};cursor:pointer;font-family:inherit">${v}</button>`).join('');
-    }
+    if (pdfVend) pdfVend.innerHTML = '<option value="">Todas</option>' + vendas.map(v=>`<option value="${v}">${v}</option>`).join('');
     // Populate PDF marca chips
     const pdfChips = document.getElementById('pdf-marcas-chips');
     if (pdfChips) {
@@ -1576,7 +1528,6 @@ function openModal(id, focusComment=false) {
   const hasTams = p.tams && Object.keys(p.tams).length > 0 && !(Object.keys(p.tams).length === 1 && Object.keys(p.tams)[0] === 'Único');
   const tamsInline = document.getElementById('modal-tams-inline');
   const qtyEl = document.getElementById('modal-qty');
-  const semTamEl2 = document.getElementById('modal-qty-sem-tam'); if (semTamEl2) semTamEl2.style.display = 'none';
   const tamsPerVend = p.tams_por_vend || {};
   const multiVend = Object.keys(tamsPerVend).length > 1;
 
@@ -1625,10 +1576,8 @@ function openModal(id, focusComment=false) {
       }
       if (qtyEl) { qtyEl.textContent = 'total: ' + totalQty + ' un'; qtyEl.style.cssText = 'font-size:10px;font-weight:400;color:rgba(122,11,30,0.45);margin-top:6px'; }
     } else {
-      tamsInline.style.display = 'flex';
-      const semTamEl = document.getElementById('modal-qty-sem-tam');
-      if (semTamEl) { semTamEl.textContent = totalQty + ' un'; semTamEl.style.display = 'block'; }
-      if (qtyEl) qtyEl.style.display = 'none';
+      tamsInline.style.display = 'none';
+      if (qtyEl) qtyEl.textContent = totalQty + ' un';
     }
   }
   const tamsEl = document.getElementById('modal-tams');
@@ -1650,18 +1599,12 @@ function openModal(id, focusComment=false) {
   const btnEua = document.getElementById('btn-est-eua');
   if (btnEua) {
     btnEua.style.background = p.est_eua ? '#0a6648' : '#0f6b52';
-    btnEua.textContent = p.est_eua ? '🇺🇸 Est USA ✓' : '🇺🇸 Est USA';
+    btnEua.textContent = p.est_eua ? '🇺🇸 Est EUA ✓' : '🇺🇸 Est EUA';
   }
   const btnBr = document.getElementById('btn-est-br');
   if (btnBr) {
     btnBr.style.background = p.est_br ? '#7a4615' : '#783c18';
     btnBr.textContent = p.est_br ? '🇧🇷 Est BR ✓' : '🇧🇷 Est BR';
-  }
-  const btnUrg = document.getElementById('btn-urgente');
-  if (btnUrg) {
-    btnUrg.style.background = p.urgente ? '#991b1b' : '#dc2626';
-    btnUrg.textContent = p.urgente ? '🔴 Urgente ✓' : '🔴 Urgente';
-    btnUrg.style.boxShadow = p.urgente ? '0 0 0 2px #fca5a5' : '';
   }
   // Show compra history
   let compraHistEl = document.getElementById('compra-hist-modal');
@@ -1848,22 +1791,6 @@ function setHistView(view) {
   if (view === 'relatorio') renderRelatorioSemanal();
 }
 
-// Auto-clear histórico todo sábado às 14h
-(function checkHistClear() {
-  try {
-    const now = new Date();
-    const lastClear = parseInt(localStorage.getItem('hist_last_clear')||'0');
-    const isSabado = now.getDay() === 6;
-    const isAfter14 = now.getHours() >= 14;
-    const weekMs = 7*24*60*60*1000;
-    if (isSabado && isAfter14 && (Date.now() - lastClear > weekMs - 60000)) {
-      localStorage.setItem('hist_last_clear', Date.now().toString());
-      if (window._db) window._db.collection('atividade').get().then(snap => snap.forEach(d => d.ref.delete()));
-    }
-  } catch(e) {}
-  setTimeout(checkHistClear, 60000);
-})();
-
 function renderHist() {
   setHistView(_histView);
   if (_histView === 'timeline') renderTimeline();
@@ -1876,20 +1803,21 @@ function renderTimeline() {
   el.innerHTML = '<div style="text-align:center;padding:40px;color:#c4a898;font-size:13px">Carregando...</div>';
   window._db.collection('atividade').orderBy('ts','desc').limit(100).get().then(snap => {
     if (snap.empty) { el.innerHTML = '<div style="text-align:center;padding:40px;color:#c4a898;font-size:13px">Nenhuma atividade registrada ainda</div>'; return; }
-    const icons = { nok_on:'🚫', nok_off:'✅', compra_on:'🛒', compra_off:'↩️', comentario:'💬', nok_clear:'🗑', est_usa_on:'🇺🇸', est_usa_off:'🇺🇸', eua_on:'🇺🇸', eua_off:'🇺🇸', est_br_on:'🇧🇷', est_br_off:'🇧🇷', urgente_on:'🔴', urgente_off:'⚪' };
-    const labels = { nok_on:'marcou NOK', nok_off:'removeu NOK', compra_on:'colocou em compra', compra_off:'removeu de compra', comentario:'comentou em', nok_clear:'limpou NOK em', est_usa_on:'marcou Est USA em', est_usa_off:'removeu Est USA de', eua_on:'marcou Est USA em', eua_off:'removeu Est USA de', est_br_on:'marcou Est BR em', est_br_off:'removeu Est BR de', urgente_on:'marcou como urgente', urgente_off:'removeu urgente de' };
-    const colors = { nok_on:'#7a0b1e', nok_off:'#1D9E75', compra_on:'#d97706', compra_off:'#888', comentario:'#6366f1', nok_clear:'#888', est_usa_on:'#0f6b52', est_usa_off:'#888', eua_on:'#0f6b52', eua_off:'#888', est_br_on:'#783c18', est_br_off:'#888', urgente_on:'#dc2626', urgente_off:'#888' };
+    const icons = { nok_on:'🚫', nok_off:'✅', compra_on:'🛒', compra_off:'↩️', comentario:'💬', nok_clear:'🗑' };
+    const labels = { nok_on:'marcou NOK', nok_off:'removeu NOK', compra_on:'colocou em compra', compra_off:'removeu de compra', comentario:'comentou em', nok_clear:'limpou NOK em' };
+    const colors = { nok_on:'#7a0b1e', nok_off:'#1D9E75', compra_on:'#d97706', compra_off:'#888', comentario:'#6366f1', nok_clear:'#888' };
     (document.getElementById('hist-sub')||{}).textContent = snap.size + ' evento(s)';
     el.innerHTML = snap.docs.map(doc => {
       const d = doc.data();
       const icon = icons[d.tipo] || '•';
       const label = labels[d.tipo] || d.tipo;
       const color = colors[d.tipo] || '#888';
-      return `<div style="display:flex;gap:8px;padding:6px 12px;border-bottom:0.5px solid var(--border);align-items:center">
-        <div style="width:24px;height:24px;border-radius:50%;background:${color}22;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0">${icon}</div>
-        <div style="flex:1;min-width:0;overflow:hidden">
-          <div style="font-size:11px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><span style="color:${color};font-weight:600">${d.quem}</span> ${label} <span style="color:var(--text3)">${d.prodNome||''}</span></div>
-          <div style="font-size:9px;color:var(--text4)">${d.prodMarca||''} ${d.prodMarca&&d.time?'·':''} ${d.time||''}</div>
+      return `<div style="display:flex;gap:12px;padding:10px 16px;border-bottom:0.5px solid var(--border);align-items:flex-start">
+        <div style="width:32px;height:32px;border-radius:50%;background:${color}22;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">${icon}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:600;color:var(--text)"><span style="color:${color}">${d.quem}</span> ${label} <span style="font-weight:400">${d.prodNome||''}</span></div>
+          ${d.prodMarca ? `<div style="font-size:10px;color:var(--text3)">${d.prodMarca}</div>` : ''}
+          <div style="font-size:10px;color:var(--text4);margin-top:2px">${d.time||''}</div>
         </div>
       </div>`;
     }).join('');
@@ -2294,7 +2222,7 @@ function toggleEstEuaCard(id) {
   const p = PRODUTOS[id];
   if (!p) return;
   p.est_eua = !p.est_eua;
-  registrarAtividade(p.est_eua ? 'est_usa_on' : 'est_usa_off', id, getNomeUsuario(), new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}));
+  registrarAtividade(p.est_eua ? 'eua_on' : 'eua_off', id, getNomeUsuario(), new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}));
   fbSave(id);
   renderGrid();
   updateEstEuaBadge();
@@ -2305,7 +2233,7 @@ function toggleEstEua() {
   const p = PRODUTOS[modalId];
   p.est_eua = !p.est_eua;
   const btn = document.getElementById('btn-est-eua');
-  if (btn) { btn.style.background = p.est_eua ? '#0a6648' : '#0f6b52'; btn.textContent = p.est_eua ? '🇺🇸 Est USA ✓' : '🇺🇸 Est USA'; }
+  if (btn) { btn.style.background = p.est_eua ? '#0a6648' : '#0f6b52'; btn.textContent = p.est_eua ? '🇺🇸 Est EUA ✓' : '🇺🇸 Est EUA'; }
   registrarAtividade(p.est_eua ? 'eua_on' : 'eua_off', modalId, getNomeUsuario(), new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}));
   fbSave(modalId);
   renderGrid();
@@ -2325,26 +2253,6 @@ function toggleEstBrCard(id) {
   fbSave(id);
   renderGrid();
   updateEstBrBadge();
-}
-
-function toggleUrgente() {
-  const p = PRODUTOS[modalId];
-  if (!p) return;
-  p.urgente = !p.urgente;
-  const btn = document.getElementById('btn-urgente');
-  if (btn) {
-    btn.style.background = p.urgente ? '#991b1b' : '#dc2626';
-    btn.textContent = p.urgente ? '🔴 Urgente ✓' : '🔴 Urgente';
-    btn.style.boxShadow = p.urgente ? '0 0 0 2px #fca5a5' : '';
-  }
-  const quem = getNomeUsuario();
-  const t = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
-  registrarAtividade(p.urgente ? 'urgente_on' : 'urgente_off', modalId, quem, t);
-  if (p.urgente) mostrarNotificacao('🔴 Urgente!', quem + ' · ' + (p.n||'').substring(0,40), '#dc2626');
-  if (window._db) {
-    window._db.collection('faltantes').doc(String(p._id)).set({urgente: p.urgente}, {merge:true});
-  }
-  renderGrid();
 }
 
 function toggleEstBr() {
@@ -2378,7 +2286,6 @@ function toggleEmCompraCard(id) {
   const _quemC = getNomeUsuario();
   const _tC = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
   registrarAtividade(p.em_compra ? 'compra_on' : 'compra_off', id, _quemC, _tC);
-  if (p.em_compra) mostrarNotificacao('🛒 Em compra', _quemC + ' · ' + (p.n||'').substring(0,40), '#d97706');
   fbSave(id);
   renderGrid();
   updateEmCompraBadge();
@@ -2568,7 +2475,7 @@ function exportarEstoquesPDF() {
   const makeRows = (prods, cor) => prods.map((p,i)=>`<tr><td style="text-align:center;color:#888">${i+1}</td><td><strong>${p.n}</strong><br><span style="font-size:11px;color:#888">${p.m||'—'}</span></td><td>${fmt(p.vt||p.v)}</td><td>${p.qty||p.q} un</td><td>${(p.vs||[]).map(v=>v.charAt(0)+v.slice(1).toLowerCase()).join(', ')||'—'}</td></tr>`).join('');
   const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Estoques — Bazaar</title><style>body{font-family:Arial,sans-serif;font-size:13px;padding:24px}h1{font-size:18px;margin:0 0 4px}h2{font-size:14px;margin:20px 0 8px;padding-bottom:4px;border-bottom:2px solid currentColor}.sub{color:#888;font-size:12px;margin-bottom:20px}table{width:100%;border-collapse:collapse;margin-bottom:8px}th{padding:8px 10px;text-align:left;font-size:12px;color:#fff}td{padding:8px 10px;border-bottom:0.5px solid #eee}@media print{body{padding:0}}</style></head><body>
   <h1>🌎 Estoques — Bazaar</h1><div class="sub">Gerado em ${now}</div>
-  ${eua.length?`<h2 style="color:#0f6b52">🇺🇸 Estoque USA — ${eua.length} item(s)</h2><table><thead><tr style="background:#0f6b52"><th>#</th><th>Produto</th><th>Valor</th><th>Qtd</th><th>Vendedora</th></tr></thead><tbody>${makeRows(eua,'#0f6b52')}</tbody></table>`:''}
+  ${eua.length?`<h2 style="color:#0f6b52">🇺🇸 Estoque EUA — ${eua.length} item(s)</h2><table><thead><tr style="background:#0f6b52"><th>#</th><th>Produto</th><th>Valor</th><th>Qtd</th><th>Vendedora</th></tr></thead><tbody>${makeRows(eua,'#0f6b52')}</tbody></table>`:''}
   ${br.length?`<h2 style="color:#783c18">🇧🇷 Estoque BR — ${br.length} item(s)</h2><table><thead><tr style="background:#783c18"><th>#</th><th>Produto</th><th>Valor</th><th>Qtd</th><th>Vendedora</th></tr></thead><tbody>${makeRows(br,'#783c18')}</tbody></table>`:''}
   <script>window.onload=()=>{window.print();}<\/script></body></html>`;
   const blob = new Blob([html], {type:'text/html'});
@@ -2717,9 +2624,9 @@ function renderMeta() {
       const ly = cy + (r+ri)/2 * Math.sin(midAngle);
       if (slice > 0.3) pizzaSlices += `<text x="${lx.toFixed(1)}" y="${(ly+3).toFixed(1)}" text-anchor="middle" font-size="9" font-weight="700" fill="#fff">${v.pct}%</text>`;
     }
-    legendaItems += `<div style="display:flex;align-items:center;gap:5px;margin-bottom:3px">
-      <div style="width:8px;height:8px;border-radius:2px;background:${v.cor};flex-shrink:0"></div>
-      <span style="font-size:10px;color:var(--text)">${v.nome.charAt(0)+v.nome.slice(1).toLowerCase()}</span>
+    legendaItems += `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+      <div style="width:10px;height:10px;border-radius:2px;background:${v.cor};flex-shrink:0"></div>
+      <span style="font-size:11px;color:var(--text)">${v.nome.charAt(0)+v.nome.slice(1).toLowerCase()}</span>
       <span style="font-size:10px;color:var(--text4);margin-left:auto">${v.pct}%</span>
     </div>`;
     angle += slice;
@@ -2732,68 +2639,50 @@ function renderMeta() {
   pizzaSlices += `<text x="${cx}" y="${cy-6}" text-anchor="middle" font-size="18" font-weight="700" fill="var(--text)">${pctTotal}%</text>`;
   pizzaSlices += `<text x="${cx}" y="${cy+10}" text-anchor="middle" font-size="8" fill="#b08070">da meta</text>`;
 
-  // Faltantes = Total - OKS direto da planilha (igual à planilha)
-  let _metaFalt = [];
-  try { _metaFalt = JSON.parse(localStorage.getItem('meta_vendedoras')||'[]'); } catch(e) {}
-  const faltantesApp = {};
-  _metaFalt.forEach(v => {
-    faltantesApp[v.nome.toUpperCase()] = v.faltantes !== undefined ? v.faltantes : Math.max(0,(v.total||0)-(v.oks||0));
-  });
-
-
   // --- Tabela ---
   let linhas = vendedoras.map(v => `
     <tr>
-      <td style="padding:4px 6px;font-weight:600;color:var(--text);font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${v.nome.charAt(0)+v.nome.slice(1).toLowerCase()}</td>
-      <td style="padding:4px 6px;text-align:right;color:#0f6b52;font-weight:600;font-size:10px">${fmt(v.oks)}</td>
-      <td style="padding:4px 6px;text-align:right;color:var(--red);font-weight:600;font-size:10px">${fmt(faltantesApp[v.nome.toUpperCase()]||0)}</td>
-      <td style="padding:4px 6px;text-align:right;color:var(--text4);font-size:10px">${fmt(v.meta)}</td>
-      <td style="padding:4px 6px;text-align:right">
-        <span style="background:${v.pct>=100?'#e8f5f1':v.pct>=70?'#fff8e8':'#fdf2f3'};color:${v.pct>=100?'#0f6b52':v.pct>=70?'#d97706':'#7a0b1e'};border-radius:8px;padding:2px 6px;font-size:10px;font-weight:700">${v.pct}%</span>
+      <td style="padding:8px 10px;font-weight:600;color:var(--text)">${v.nome.charAt(0)+v.nome.slice(1).toLowerCase()}</td>
+      <td style="padding:8px 10px;text-align:right;color:#0f6b52;font-weight:600">${fmt(v.oks)}</td>
+      <td style="padding:8px 10px;text-align:right;color:var(--red);font-weight:600">${fmt(v.faltantes)}</td>
+      <td style="padding:8px 10px;text-align:right;color:var(--text3)">${fmt(v.estGeral)}</td>
+      <td style="padding:8px 10px;text-align:right;color:#783c18">${fmt(v.estBR)}</td>
+      <td style="padding:8px 10px;text-align:right;color:var(--text4)">${fmt(v.meta)}</td>
+      <td style="padding:8px 10px;text-align:right">
+        <span style="background:${v.pct>=100?'#e8f5f1':v.pct>=70?'#fff8e8':'#fdf2f3'};color:${v.pct>=100?'#0f6b52':v.pct>=70?'#d97706':'#7a0b1e'};border-radius:8px;padding:2px 8px;font-size:10px;font-weight:700">${v.pct}%</span>
       </td>
     </tr>`).join('');
 
   // Total row
+  const tFalt = vendedoras.reduce((s,v)=>s+v.faltantes,0);
+  const tEstG = vendedoras.reduce((s,v)=>s+v.estGeral,0);
+  const tEstBR = vendedoras.reduce((s,v)=>s+v.estBR,0);
   linhas += `<tr style="border-top:1.5px solid var(--border)">
-    <td style="padding:4px 6px;font-weight:700;color:var(--text);font-size:10px">Total</td>
-    <td style="padding:4px 6px;text-align:right;font-weight:700;color:#0f6b52;font-size:10px">${fmt(totalOks)}</td>
-    <td style="padding:4px 6px;text-align:right;font-weight:700;color:var(--red);font-size:10px">${fmt(Object.values(faltantesApp).reduce((a,b)=>a+b,0))}</td>
-    <td style="padding:4px 6px;text-align:right;font-weight:700;font-size:10px">${fmt(totalMeta)}</td>
-    <td style="padding:4px 6px;text-align:right"><span style="background:#e8f5f1;color:#0f6b52;border-radius:8px;padding:2px 6px;font-size:10px;font-weight:700">${pctTotal}%</span></td>
+    <td style="padding:8px 10px;font-weight:700;color:var(--text)">Total</td>
+    <td style="padding:8px 10px;text-align:right;font-weight:700;color:#0f6b52">${fmt(totalOks)}</td>
+    <td style="padding:8px 10px;text-align:right;font-weight:700;color:var(--red)">${fmt(tFalt)}</td>
+    <td style="padding:8px 10px;text-align:right;font-weight:700">${fmt(tEstG)}</td>
+    <td style="padding:8px 10px;text-align:right;font-weight:700;color:#783c18">${fmt(tEstBR)}</td>
+    <td style="padding:8px 10px;text-align:right;font-weight:700">${fmt(totalMeta)}</td>
+    <td style="padding:8px 10px;text-align:right"><span style="background:#e8f5f1;color:#0f6b52;border-radius:8px;padding:2px 8px;font-size:10px;font-weight:700">${pctTotal}%</span></td>
   </tr>`;
 
   container.innerHTML = `
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
-      <button onclick="gerarPdfMeta('todas')" style="padding:10px;border-radius:12px;background:#7a0b1e;border:none;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px">📄 PDF</button>
-      <button onclick="enviarWppMeta('todas')" style="padding:10px;border-radius:12px;background:#0f6b52;border:none;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px">💬 WhatsApp</button>
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;flex-wrap:wrap">
+      <svg viewBox="0 0 200 200" width="180" height="180" style="flex-shrink:0">${pizzaSlices}</svg>
+      <div style="flex:1;min-width:120px">${legendaItems}</div>
     </div>
-    <div id="selecao-vend-pdf" style="display:none;background:var(--bg2);border:0.5px solid var(--border);border-radius:12px;padding:12px;margin-bottom:12px">
-      <div style="font-size:11px;color:var(--text4);margin-bottom:8px">Escolha a vendedora:</div>
-      <div id="selecao-vend-pdf-lista" style="display:flex;flex-direction:column;gap:6px"></div>
-    </div>
-    <div id="selecao-vend-wpp" style="display:none;background:var(--bg2);border:0.5px solid var(--border);border-radius:12px;padding:12px;margin-bottom:12px">
-      <div style="font-size:11px;color:var(--text4);margin-bottom:8px">Escolha a vendedora:</div>
-      <div id="selecao-vend-wpp-lista" style="display:flex;flex-direction:column;gap:6px"></div>
-    </div>
-    <div style="background:var(--bg2);border:0.5px solid var(--border);border-radius:10px;padding:8px 12px;margin-bottom:8px;font-size:10px;color:var(--text4)">
-      <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px"><span style="font-size:13px">📋</span><span>OKs, Meta e % da planilha · <strong style="color:var(--text3)">Faltantes calculados pelo app</strong></span></div>
-      <div style="margin-top:4px;font-size:11px;color:var(--text3)">
-        🇺🇸 ${localStorage.getItem('mes_label_usa')||'Mês USA'}
-      </div>
-    </div>
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">
-      <svg viewBox="0 0 200 200" width="140" height="140" style="flex-shrink:0">${pizzaSlices}</svg>
-      <div style="flex:1;min-width:100px">${legendaItems}</div>
-    </div>
-    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch">
-      <table style="width:100%;border-collapse:collapse;font-size:11px;table-layout:fixed">
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:11px">
         <thead>
           <tr style="background:var(--red)">
-            <th style="padding:4px 6px;text-align:left;color:#fff;font-size:9px;width:18%">Vendedora</th>
-            <th style="padding:4px 6px;text-align:right;color:#fff;font-size:9px;width:22%">OKs</th>
-            <th style="padding:4px 6px;text-align:right;color:#fff;font-size:9px;width:22%">Faltantes</th>
-            <th style="padding:4px 6px;text-align:right;color:#fff;font-size:9px;width:22%">Meta</th>
-            <th style="padding:4px 6px;text-align:right;color:#fff;font-size:9px;width:10%">%</th>
+            <th style="padding:8px 10px;text-align:left;color:#fff;font-size:10px">Vendedora</th>
+            <th style="padding:8px 10px;text-align:right;color:#fff;font-size:10px">OKs</th>
+            <th style="padding:8px 10px;text-align:right;color:#fff;font-size:10px">Faltantes</th>
+            <th style="padding:8px 10px;text-align:right;color:#fff;font-size:10px">Est. Geral</th>
+            <th style="padding:8px 10px;text-align:right;color:#fff;font-size:10px">Est. BR</th>
+            <th style="padding:8px 10px;text-align:right;color:#fff;font-size:10px">Meta</th>
+            <th style="padding:8px 10px;text-align:right;color:#fff;font-size:10px">%</th>
           </tr>
         </thead>
         <tbody>${linhas}</tbody>
@@ -2803,435 +2692,6 @@ function renderMeta() {
   // Atualizar subtítulo da aba
   const sub = document.getElementById('meta-sub');
   if (sub) sub.textContent = `${vendedoras.length} vendedoras · ${pctTotal}% da meta geral`;
-
-  // --- Cards mobile por vendedora ---
-  let vendasResumo = {};
-  try { vendasResumo = JSON.parse(localStorage.getItem('vendas_resumo')||'{}'); } catch(e) {}
-
-  const barCores = [
-    {fill:'#b8860b', text:'#7a5c00', medal:'🥇'},
-    {fill:'#c45b1a', text:'#7a3310', medal:'🥈'},
-    {fill:'#c4302b', text:'#8b1a16', medal:'🥉'},
-  ];
-  const turnoIcons = {MANHA:'🌅', TARDE:'☀️', NOITE:'🌙'};
-  const turnoLabel = {MANHA:'Manhã', TARDE:'Tarde', NOITE:'Noite'};
-
-  const cardsHtml = vendedoras.map(v => {
-    const pctOk = v.pct >= 100;
-    const pctBg = pctOk ? '#e8f5f1' : '#fdf2f3';
-    const pctCor = pctOk ? '#085041' : '#7a0b1e';
-    const falt = faltantesApp[v.nome.toUpperCase()]||0;
-    const vr = vendasResumo[v.nome.toUpperCase()] || null;
-    const vendKey = v.nome.toUpperCase().replace(/[^A-Z]/g,'');
-
-    const vrJson = vr ? JSON.stringify({top3marcas: vr.top3marcas||[], marcasPorTurno: vr.marcasPorTurno||{}}).replace(/"/g,'&quot;') : '';
-    const vendNomeCard = v.nome.charAt(0)+v.nome.slice(1).toLowerCase();
-    let marcasHtml = '';
-    if (vr && vr.top3marcas && vr.top3marcas.length) {
-      marcasHtml = `
-        <div style="height:0.5px;background:var(--border);margin:10px 0"></div>
-        <div id="marcas-bloco-${vendKey}" data-vr="${vrJson}" data-vend="${vendNomeCard}">
-          <div style="font-size:10px;color:var(--text4);margin-bottom:7px" id="marcas-titulo-${vendKey}">Top 3 marcas mais vendidas</div>
-        </div>`;
-    }
-
-     let turnosHtml = '';
-     if (vr && vr.periodos) {
-       const periodos = vr.periodos;
-       const maxTurno = Math.max(periodos.MANHA, periodos.TARDE, periodos.NOITE);
-       turnosHtml = `
-         <div style="height:0.5px;background:var(--border);margin:10px 0"></div>
-         <div style="font-size:10px;color:var(--text4);margin-bottom:7px">Turno de mais vendas <span style="font-size:9px;opacity:0.6">· toque para ver top marcas</span></div>
-         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-bottom:8px">
-           ${['MANHA','TARDE','NOITE'].map(t => {
-             const isMax = periodos[t] === maxTurno && maxTurno > 0;
-             return `<div onclick="mostrarMarcasTurno('${vendKey}','${t}',this)" data-turno="${t}" style="cursor:pointer;background:var(--bg2);border-radius:8px;padding:6px 8px;text-align:center;transition:border 0.15s;${isMax?'border:1.5px solid #185fa5;':'border:0.5px solid var(--border);'}">
-               <div style="font-size:14px;margin-bottom:2px">${turnoIcons[t]}</div>
-               <div style="font-size:9px;color:var(--text4)">${turnoLabel[t]}</div>
-               <div style="font-size:12px;font-weight:500;color:${isMax?'#185fa5':'var(--text)'}">${periodos[t]}</div>
-             </div>`;
-           }).join('')}
-         </div>
-         <div id="turno-marcas-${vendKey}" style="display:none;border-radius:10px;overflow:hidden;margin-bottom:8px"></div>
-         <div style="height:0.5px;background:var(--border);margin:10px 0"></div>
-         <div style="display:flex;justify-content:space-between;align-items:center">
-           <span style="font-size:11px;color:var(--text3)">Dia com mais vendas</span>
-           <span style="font-size:12px;font-weight:500;color:var(--text)">${vr.diaMais||'—'}</span>
-         </div>`;
-     }
-
-    return `<div style="background:var(--bg2);border:0.5px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-        <span style="font-size:14px;font-weight:500;color:var(--text)">${v.nome.charAt(0)+v.nome.slice(1).toLowerCase()}</span>
-        <span style="font-size:10px;font-weight:500;padding:3px 9px;border-radius:20px;background:${pctBg};color:${pctCor}">${v.pct}%</span>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:0">
-        <div style="background:var(--bg);border-radius:8px;padding:7px 9px"><div style="font-size:9px;color:var(--text4);margin-bottom:2px">Faltantes</div><div style="font-size:12px;font-weight:500;color:#a32d2d">${fmt(falt)}</div></div>
-        <div style="background:var(--bg);border-radius:8px;padding:7px 9px"><div style="font-size:9px;color:var(--text4);margin-bottom:2px">OKs</div><div style="font-size:12px;font-weight:500;color:#0f6b52">${fmt(v.oks)}</div></div>
-        <div style="background:var(--bg);border-radius:8px;padding:7px 9px"><div style="font-size:9px;color:var(--text4);margin-bottom:2px">Est. Geral</div><div style="font-size:12px;font-weight:500;color:var(--text)">${fmt(v.estGeral)}</div></div>
-        <div style="background:var(--bg);border-radius:8px;padding:7px 9px"><div style="font-size:9px;color:var(--text4);margin-bottom:2px">Meta</div><div style="font-size:12px;font-weight:500;color:var(--text)">${fmt(v.meta)}</div></div>
-      </div>
-      ${marcasHtml}
-      ${turnosHtml}
-    </div>`;
-  }).join('');
-
-  // Remove cards antigos se existirem para evitar duplicação
-  const oldBotoes = container.querySelector('[data-meta-botoes]');
-  if (oldBotoes) oldBotoes.remove();
-  const botoesDiv = document.createElement('div');
-  botoesDiv.setAttribute('data-meta-botoes','1');
-  botoesDiv.innerHTML = `<div style="margin-top:0">${cardsHtml}</div>
-  <div id="popup-meta-bg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:999;align-items:flex-end;justify-content:center" onclick="if(event.target===this)fecharPopupMeta()">
-    <div style="background:var(--bg2);border-radius:16px 16px 0 0;padding:16px;width:100%;max-width:480px">
-      <img id="popup-meta-foto" src="" style="width:100%;height:200px;object-fit:cover;border-radius:10px;background:var(--bg);margin-bottom:12px;display:block" onerror="this.style.display='none'">
-      <div id="popup-meta-nome" style="font-size:15px;font-weight:500;color:var(--text);margin-bottom:4px"></div>
-      <div id="popup-meta-marca" style="font-size:12px;color:var(--text4);margin-bottom:12px"></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px">
-        <div style="background:var(--bg);border-radius:8px;padding:7px 9px"><div style="font-size:9px;color:var(--text4);margin-bottom:2px">Vendas</div><div id="popup-meta-qt" style="font-size:13px;font-weight:500;color:var(--text)"></div></div>
-        <div style="background:var(--bg);border-radius:8px;padding:7px 9px"><div style="font-size:9px;color:var(--text4);margin-bottom:2px">Vendedora</div><div id="popup-meta-vend" style="font-size:13px;font-weight:500;color:var(--text)"></div></div>
-      </div>
-      <button onclick="fecharPopupMeta()" style="width:100%;padding:10px;background:var(--bg);border:0.5px solid var(--border);border-radius:10px;font-size:13px;color:var(--text3);cursor:pointer;font-family:inherit">Fechar</button>
-    </div>
-  </div>`;
-  container.appendChild(botoesDiv);
-  // Inicializar blocos de marcas via renderMarcasBloco
-  setTimeout(() => {
-    vendedoras.forEach(v => {
-      const vKey = v.nome.toUpperCase().replace(/[^A-Z]/g,'');
-      const bloco = document.getElementById('marcas-bloco-' + vKey);
-      const titulo = document.getElementById('marcas-titulo-' + vKey);
-      if (!bloco) return;
-      let vrData = {};
-      try { vrData = JSON.parse(bloco.dataset.vr.replace(/&quot;/g,'"')); } catch(e) {}
-      const vendNome = bloco.dataset.vend || '';
-      renderMarcasBloco(bloco, titulo, vrData.top3marcas||[], null, vendNome);
-    });
-  }, 0);
-}
-
-function abrirSelecaoVendedoraPdf() {
-  const el = document.getElementById('selecao-vend-pdf');
-  const lista = document.getElementById('selecao-vend-pdf-lista');
-  document.getElementById('selecao-vend-wpp').style.display = 'none';
-  if (el.style.display !== 'none') { el.style.display = 'none'; return; }
-  let data = [];
-  try { data = JSON.parse(localStorage.getItem('meta_vendedoras')||'[]'); } catch(e) {}
-  lista.innerHTML = data.map(v => `<button onclick="gerarPdfMeta('${v.nome}');document.getElementById('selecao-vend-pdf').style.display='none'" style="padding:10px 14px;border-radius:10px;background:var(--bg);border:0.5px solid var(--border);color:var(--text);font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;text-align:left">${v.nome.charAt(0)+v.nome.slice(1).toLowerCase()}</button>`).join('');
-  el.style.display = 'block';
-}
-
-function abrirSelecaoVendedoraWpp() {
-  const el = document.getElementById('selecao-vend-wpp');
-  const lista = document.getElementById('selecao-vend-wpp-lista');
-  document.getElementById('selecao-vend-pdf').style.display = 'none';
-  if (el.style.display !== 'none') { el.style.display = 'none'; return; }
-  let data = [];
-  try { data = JSON.parse(localStorage.getItem('meta_vendedoras')||'[]'); } catch(e) {}
-  lista.innerHTML = data.map(v => `<button onclick="enviarWppMeta('${v.nome}');document.getElementById('selecao-vend-wpp').style.display='none'" style="padding:10px 14px;border-radius:10px;background:var(--bg);border:0.5px solid var(--border);color:var(--text);font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;text-align:left">${v.nome.charAt(0)+v.nome.slice(1).toLowerCase()}</button>`).join('');
-  el.style.display = 'block';
-}
-
-function gerarPdfMeta(filtroVend) {
-  let metaData = [];
-  try { metaData = JSON.parse(localStorage.getItem('meta_vendedoras')||'[]'); } catch(e) {}
-  let vendasResumo = {};
-  try { vendasResumo = JSON.parse(localStorage.getItem('vendas_resumo')||'{}'); } catch(e) {}
-  const mes = localStorage.getItem('mes_label_usa') || 'Relatório';
-  const fmt = v => 'R$ ' + (v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
-
-  let _metaFalt2 = [];
-  try { _metaFalt2 = JSON.parse(localStorage.getItem('meta_vendedoras')||'[]'); } catch(e) {}
-  const faltantesApp = {};
-  _metaFalt2.forEach(v => {
-    faltantesApp[v.nome.toUpperCase()] = v.faltantes !== undefined ? v.faltantes : Math.max(0,(v.total||0)-(v.oks||0));
-  });
-
-  const lista = filtroVend === 'todas' ? metaData : metaData.filter(v => v.nome.toUpperCase() === filtroVend.toUpperCase());
-  const barCores = [{fill:'#b8860b',text:'#7a5c00',medal:'🥇'},{fill:'#c45b1a',text:'#7a3310',medal:'🥈'},{fill:'#7a0b1e',text:'#4a0812',medal:'🥉'}];
-  const turnoLabel = {MANHA:'Manhã',TARDE:'Tarde',NOITE:'Noite'};
-  const turnoIcons = {MANHA:'🌅',TARDE:'☀️',NOITE:'🌙'};
-
-  const cardsHtml = lista.map(v => {
-    const pct = v.meta > 0 ? Math.round(v.oks/v.meta*100) : 0;
-    const falt = faltantesApp[v.nome.toUpperCase()]||0;
-    const vr = vendasResumo[v.nome.toUpperCase()]||null;
-    const pctCor = pct >= 100 ? '#0f6b52' : '#7a0b1e';
-    const pctBg = pct >= 100 ? '#e8f5f1' : '#fdf2f3';
-
-    let marcasHtml = '';
-    if (vr && vr.top3marcas && vr.top3marcas.length) {
-      const maxQt = vr.top3marcas[0].qt;
-      marcasHtml = `<div style="margin-top:14px"><div style="font-size:10px;color:#888;margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Top 3 marcas mais vendidas</div>
-        ${vr.top3marcas.map((m,i) => {
-          const cor = barCores[i];
-          return `<div style="margin-bottom:10px">
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
-              <div style="font-size:11px;width:90px;flex-shrink:0;color:${cor.text};font-weight:600;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">${cor.medal} ${m.nome}</div>
-              <div style="flex:1;background:#f0ece8;border-radius:3px;height:7px;overflow:hidden"><div style="height:100%;background:${cor.fill};width:${Math.round(m.qt/maxQt*100)}%"></div></div>
-              <div style="font-size:10px;color:${cor.text};font-weight:600;width:22px;text-align:right">${m.qt}</div>
-            </div>
-            <div style="font-size:10px;color:#888;padding-left:2px">Total vendido: ${fmt(m.valorMarca||0)}</div>
-            ${m.item ? `<div style="font-size:10px;color:#555;padding-left:2px;margin-top:1px">⭐ ${m.item} (${m.itemQt} vendas)</div>` : ''}
-          </div>`;
-        }).join('')}
-      </div>`;
-    }
-
-    let turnosHtml = '';
-    if (vr && vr.periodos) {
-      const p = vr.periodos;
-      const maxT = Math.max(p.MANHA,p.TARDE,p.NOITE);
-      turnosHtml = `<div style="margin-top:14px"><div style="font-size:10px;color:#888;margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Turno de mais vendas</div>
-        <div style="display:flex;gap:8px;margin-bottom:10px">
-          ${['MANHA','TARDE','NOITE'].map(t => `<div style="flex:1;text-align:center;padding:8px 4px;border-radius:8px;background:${p[t]===maxT?'#fdf2f3':'#f9f5f2'};border:${p[t]===maxT?'1.5px solid #7a0b1e':'1px solid #e8e0d8'}">
-            <div style="font-size:16px;margin-bottom:2px">${turnoIcons[t]}</div>
-            <div style="font-size:9px;color:#888">${turnoLabel[t]}</div>
-            <div style="font-size:13px;font-weight:600;color:${p[t]===maxT?'#7a0b1e':'#333'}">${p[t]}</div>
-          </div>`).join('')}
-        </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;background:#f9f5f2;padding:8px 12px;border-radius:8px">
-          <span style="font-size:11px;color:#888">Dia com mais vendas</span>
-          <span style="font-size:12px;font-weight:600;color:#333">${vr.diaMais||'—'}</span>
-        </div>
-      </div>`;
-    }
-
-    return `<div style="background:#fff;border:1px solid #e8e0d8;border-radius:14px;padding:18px;margin-bottom:16px;page-break-inside:avoid">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid #f0ece8">
-        <div>
-          <div style="font-size:18px;font-weight:700;color:#1a1a1a">${v.nome.charAt(0)+v.nome.slice(1).toLowerCase()}</div>
-          <div style="font-size:11px;color:#888;margin-top:2px">${mes}</div>
-        </div>
-        <div style="background:${pctBg};color:${pctCor};font-size:22px;font-weight:700;padding:8px 16px;border-radius:10px">${pct}%</div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div style="background:#fdf2f3;border-radius:10px;padding:10px 14px"><div style="font-size:9px;color:#888;margin-bottom:3px;text-transform:uppercase;letter-spacing:0.4px">Faltantes</div><div style="font-size:15px;font-weight:700;color:#7a0b1e">${fmt(falt)}</div></div>
-        <div style="background:#f0faf6;border-radius:10px;padding:10px 14px"><div style="font-size:9px;color:#888;margin-bottom:3px;text-transform:uppercase;letter-spacing:0.4px">OKs</div><div style="font-size:15px;font-weight:700;color:#0f6b52">${fmt(v.oks)}</div></div>
-        <div style="background:#f9f5f2;border-radius:10px;padding:10px 14px"><div style="font-size:9px;color:#888;margin-bottom:3px;text-transform:uppercase;letter-spacing:0.4px">Est. Geral</div><div style="font-size:15px;font-weight:700;color:#333">${fmt(v.estGeral)}</div></div>
-        <div style="background:#f9f5f2;border-radius:10px;padding:10px 14px"><div style="font-size:9px;color:#888;margin-bottom:3px;text-transform:uppercase;letter-spacing:0.4px">Meta</div><div style="font-size:15px;font-weight:700;color:#333">${fmt(v.meta)}</div></div>
-      </div>
-      ${marcasHtml}${turnosHtml}
-    </div>`;
-  }).join('');
-
-  const totalOks = lista.reduce((s,v)=>s+v.oks,0);
-  const totalFalt = lista.reduce((s,v)=>s+(faltantesApp[v.nome.toUpperCase()]||0),0);
-  const totalMeta = lista.reduce((s,v)=>s+v.meta,0);
-  const totalPct = totalMeta > 0 ? Math.round(totalOks/totalMeta*100) : 0;
-
-  const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
-    <title>Relatório Meta — ${mes}</title>
-    <style>
-      * { box-sizing: border-box; margin: 0; padding: 0; }
-      body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f0eb; padding: 24px; color: #1a1a1a; }
-      @media print { body { background: #fff; padding: 0; } @page { margin: 20px; } }
-    </style>
-  </head><body>
-    <div style="max-width:680px;margin:0 auto">
-      <div style="background:#7a0b1e;color:#fff;border-radius:14px;padding:20px 24px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center">
-        <div>
-          <div style="font-size:22px;font-weight:700;letter-spacing:1px">BAZAAR</div>
-          <div style="font-size:13px;opacity:0.8;margin-top:2px">Relatório de Meta — ${mes}</div>
-        </div>
-        <div style="text-align:right">
-          <div style="font-size:28px;font-weight:700">${totalPct}%</div>
-          <div style="font-size:11px;opacity:0.8">da meta geral</div>
-        </div>
-      </div>
-      <div style="background:#fff;border:1px solid #e8e0d8;border-radius:14px;padding:16px 20px;margin-bottom:20px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
-        <div style="text-align:center"><div style="font-size:9px;color:#888;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:4px">OKs</div><div style="font-size:16px;font-weight:700;color:#0f6b52">${fmt(totalOks)}</div></div>
-        <div style="text-align:center;border-left:1px solid #f0ece8;border-right:1px solid #f0ece8"><div style="font-size:9px;color:#888;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:4px">Faltantes</div><div style="font-size:16px;font-weight:700;color:#7a0b1e">${fmt(totalFalt)}</div></div>
-        <div style="text-align:center"><div style="font-size:9px;color:#888;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:4px">Meta</div><div style="font-size:16px;font-weight:700;color:#333">${fmt(totalMeta)}</div></div>
-      </div>
-      ${cardsHtml}
-      <div style="text-align:center;font-size:10px;color:#aaa;margin-top:8px;padding-bottom:8px">Gerado em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})} · Bazaar App</div>
-    </div>
-  </body></html>`;
-
-  const win = window.open('','_blank');
-  if (win) {
-    win.document.write(html);
-    win.document.close();
-    setTimeout(() => win.print(), 800);
-  }
-}
-
-function enviarWppMeta(filtroVend) {
-  let metaData = [];
-  try { metaData = JSON.parse(localStorage.getItem('meta_vendedoras')||'[]'); } catch(e) {}
-  const mes = localStorage.getItem('mes_label_usa') || 'Mês USA';
-  const fmt = v => 'R$' + (v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
-
-  let _metaFalt2 = [];
-  try { _metaFalt2 = JSON.parse(localStorage.getItem('meta_vendedoras')||'[]'); } catch(e) {}
-  const faltantesApp = {};
-  _metaFalt2.forEach(v => {
-    faltantesApp[v.nome.toUpperCase()] = v.faltantes !== undefined ? v.faltantes : Math.max(0,(v.total||0)-(v.oks||0));
-  });
-
-  const lista = filtroVend === 'todas' ? metaData : metaData.filter(v => v.nome.toUpperCase() === filtroVend.toUpperCase());
-  let vendasResumo = {};
-  try { vendasResumo = JSON.parse(localStorage.getItem('vendas_resumo')||'{}'); } catch(e) {}
-
-  let texto = `📊 *Relatório Bazaar — ${mes}*
-
-`;
-
-  lista.forEach(v => {
-    const pct = v.meta > 0 ? Math.round(v.oks/v.meta*100) : 0;
-    const falt = faltantesApp[v.nome.toUpperCase()]||0;
-    const vr = vendasResumo[v.nome.toUpperCase()]||null;
-    const emoji = pct >= 100 ? '✅' : pct >= 70 ? '⚠️' : '❌';
-    texto += `${emoji} *${v.nome.charAt(0)+v.nome.slice(1).toLowerCase()}* — ${pct}% da meta
-`;
-    texto += '• OKs: ' + fmt(v.oks) + '\n';
-    texto += '• Faltantes: ' + fmt(falt) + '\n';
-    texto += '• Meta: ' + fmt(v.meta) + '\n';
-    if (vr && vr.top3marcas && vr.top3marcas.length) {
-      texto += '• Top marca: ' + vr.top3marcas[0].nome + ' (' + vr.top3marcas[0].qt + ' vendas · ' + fmt(vr.top3marcas[0].valorMarca||0) + ')\n';
-    }
-    if (vr && vr.diaMais) texto += '• Melhor dia: ' + vr.diaMais + '\n';
-    texto += '\n';
-  });
-
-  const totalOks = lista.reduce((s,v)=>s+v.oks,0);
-  const totalFalt = lista.reduce((s,v)=>s+(faltantesApp[v.nome.toUpperCase()]||0),0);
-  const totalMeta = lista.reduce((s,v)=>s+v.meta,0);
-  const totalPct = totalMeta > 0 ? Math.round(totalOks/totalMeta*100) : 0;
-
-  if (filtroVend === 'todas') {
-    texto += '-----------------\n';
-    texto += '📈 *Total geral: ' + totalPct + '% da meta*\n';
-    texto += 'OKs: ' + fmt(totalOks) + ' · Faltantes: ' + fmt(totalFalt) + '\n';
-  }
-
-  const agora = new Date();
-  const dataHora = agora.toLocaleDateString('pt-BR') + ' às ' + agora.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-  texto += '\n_Gerado pelo Bazaar App em ' + dataHora + '_';
-  window.open('https://wa.me/?text=' + encodeURIComponent(texto), '_blank');
-}
-
-function salvarLabelMes(tipo) {
-  const inp = document.getElementById('input-label-' + tipo);
-  if (!inp) return;
-  const val = inp.value.trim();
-  if (!val) { inp.style.borderColor = '#e24b4a'; setTimeout(()=>inp.style.borderColor='',1200); return; }
-  localStorage.setItem('mes_label_' + tipo, val);
-  const el = document.getElementById('label-mes-' + tipo);
-  if (el) el.textContent = val;
-  if (window._db) window._db.collection('config').doc('app').set({['mesLabel_'+tipo]: val}, {merge:true});
-  inp.value = '';
-  inp.placeholder = val;
-  inp.style.borderColor = '#0f6b52';
-  setTimeout(()=>inp.style.borderColor='', 1500);
-}
-
-function mostrarMarcasTurno(vendKey, turno, btn) {
-  const bloco = document.getElementById('marcas-bloco-' + vendKey);
-  const titulo = document.getElementById('marcas-titulo-' + vendKey);
-  if (!bloco) return;
-  const turnoLabels = {MANHA:'🌅 Manhã', TARDE:'☀️ Tarde', NOITE:'🌙 Noite'};
-  const barCores = [{fill:'#b8860b',text:'#7a5c00',medal:'🥇'},{fill:'#c45b1a',text:'#7a3310',medal:'🥈'},{fill:'#c4302b',text:'#8b1a16',medal:'🥉'}];
-  // Toggle — voltar ao geral se já mostrando esse turno
-  const grid = btn.parentElement;
-  if (bloco.dataset.turnoAtivo === turno) {
-    bloco.dataset.turnoAtivo = '';
-    grid.querySelectorAll('[data-turno]').forEach(b => { b.style.border = '0.5px solid var(--border)'; });
-    // Restaurar conteúdo original
-    let vr = {};
-    try { vr = JSON.parse(bloco.dataset.vr.replace(/&quot;/g,'"')); } catch(e) {}
-    const vendNomeRest = bloco.dataset.vend || (vend ? vend.charAt(0)+vend.slice(1).toLowerCase() : '');
-    renderMarcasBloco(bloco, titulo, vr.top3marcas||[], null, vendNomeRest);
-    return;
-  }
-  // Destacar botão ativo
-  grid.querySelectorAll('[data-turno]').forEach(b => { b.style.border = '0.5px solid var(--border)'; });
-  btn.style.border = '1.5px solid #7a0b1e';
-  bloco.dataset.turnoAtivo = turno;
-  // Buscar marcas do turno
-  let vr = {};
-  try { vr = JSON.parse(bloco.dataset.vr.replace(/&quot;/g,'"')); } catch(e) {}
-  const marcas = vr.marcasPorTurno?.[turno] || [];
-  const vendNomeTurno = bloco.dataset.vend || (vend ? vend.charAt(0)+vend.slice(1).toLowerCase() : vendKey);
-  renderMarcasBloco(bloco, titulo, marcas, turnoLabels[turno], vendNomeTurno);
-}
-
-function renderMarcasBloco(bloco, titulo, marcas, turnoLabel, vendNome) {
-  const barCores = [{fill:'#b8860b',text:'#7a5c00',medal:'🥇'},{fill:'#c45b1a',text:'#7a3310',medal:'🥈'},{fill:'#c4302b',text:'#8b1a16',medal:'🥉'}];
-  if (titulo) titulo.textContent = turnoLabel ? turnoLabel + ' — top marcas' : 'Top 3 marcas mais vendidas';
-  const filhos = Array.from(bloco.children).filter(el => !el.id || !el.id.startsWith('marcas-titulo'));
-  filhos.forEach(el => el.remove());
-  if (!marcas.length) {
-    const msg = document.createElement('div');
-    msg.style.cssText = 'font-size:11px;color:var(--text4);text-align:center;padding:8px 0';
-    msg.textContent = turnoLabel ? 'Reimporte o CSV para ver dados por turno' : 'Sem marcas';
-    bloco.appendChild(msg);
-    return;
-  }
-  const maxQt = marcas[0].qt;
-  const fmtV = v => 'R$ ' + (v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
-  marcas.forEach((m, i) => {
-    const cor = barCores[i] || barCores[2];
-    const fotoSrc = m.itemFoto ? resolverFotoMeta(m.itemFoto) : '';
-    const fotoHtml = fotoSrc
-      ? '<img src="' + fotoSrc + '" style="width:32px;height:32px;border-radius:6px;object-fit:cover;border:0.5px solid var(--border);flex-shrink:0" onerror="this.style.display=&quot;none&quot;">'
-      : '<div style="width:32px;height:32px;border-radius:6px;background:var(--bg2);border:0.5px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--text4)">?</div>';
-    const div = document.createElement('div');
-    div.style.cssText = 'margin-bottom:10px';
-    div.innerHTML =
-      '<div style="display:flex;align-items:center;gap:7px;margin-bottom:2px">' +
-        '<div style="font-size:11px;width:75px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:' + cor.text + ';font-weight:600">' + cor.medal + ' ' + m.nome + '</div>' +
-        '<div style="flex:1;background:var(--bg2);border-radius:4px;height:8px;overflow:hidden"><div style="height:100%;border-radius:4px;background:' + cor.fill + ';width:' + Math.round(m.qt/maxQt*100) + '%"></div></div>' +
-        '<div style="font-size:10px;width:20px;text-align:right;color:' + cor.text + ';font-weight:600">' + m.qt + '</div>' +
-      '</div>' +
-      '<div style="font-size:10px;color:' + cor.text + ';opacity:0.75;margin-bottom:6px;padding-left:2px">Total vendido: ' + fmtV(m.valorMarca||0) + '</div>' +
-      (m.item ? '<div style="display:flex;align-items:center;gap:7px;background:var(--bg);border-radius:8px;padding:6px 8px;cursor:pointer;border:0.5px solid var(--border)" onclick="abrirPopupMetaEl(this)"' +
-        ' data-marca="' + (m.nome||'').replace(/"/g,'&quot;') + '"' +
-        ' data-item="' + (m.item||'').replace(/"/g,'&quot;') + '"' +
-        ' data-foto="' + (m.itemFoto||'').replace(/"/g,'&quot;') + '"' +
-        ' data-qt="' + (m.itemQt||0) + '"' +
-        ' data-vend="' + (vendNome||'').replace(/"/g,'&quot;') + '">' +
-        fotoHtml +
-        '<div style="flex:1;min-width:0">' +
-          '<div style="font-size:9px;color:var(--text4);margin-bottom:2px">⭐ item mais vendido</div>' +
-          '<div style="font-size:11px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500">' + (m.item||'—') + '</div>' +
-          '<div style="font-size:9px;color:var(--text4);margin-top:1px">' + (m.itemQt||0) + ' vendas · toque para ver →</div>' +
-        '</div>' +
-      '</div>' : '');
-    bloco.appendChild(div);
-  });
-}
-
-function resolverFotoMeta(raw) {
-  if (!raw) return '';
-  if (raw.startsWith('http')) return raw;
-  try {
-    const fm = JSON.parse(localStorage.getItem('foto_map')||'{}');
-    return fm[raw] || fm[raw.replace(/\.[^.]+$/,'')] || '';
-  } catch(e) { return ''; }
-}
-
-function abrirPopupMetaEl(el) {
-  abrirPopupMeta(el.dataset.marca, el.dataset.item, el.dataset.foto, parseInt(el.dataset.qt)||0, el.dataset.vend);
-}
-
-function abrirPopupMeta(marca, item, fotoRaw, qt, vend) {
-  const foto = resolverFotoMeta(fotoRaw);
-  const el = document.getElementById('popup-meta-bg');
-  const fotoEl = document.getElementById('popup-meta-foto');
-  if (foto) { fotoEl.src = foto; fotoEl.style.display = 'block'; }
-  else fotoEl.style.display = 'none';
-  document.getElementById('popup-meta-nome').textContent = item || marca;
-  document.getElementById('popup-meta-marca').textContent = marca;
-  document.getElementById('popup-meta-qt').textContent = qt + ' vendas';
-  document.getElementById('popup-meta-vend').textContent = vend.charAt(0)+vend.slice(1).toLowerCase();
-  el.style.display = 'flex';
-}
-
-function fecharPopupMeta() {
-  const el = document.getElementById('popup-meta-bg');
-  if (el) el.style.display = 'none';
 }
 
 function renderNok() {
@@ -3458,14 +2918,13 @@ function fbListen() {
     }
   };
 
-  // Carregar foto_map USA e BR do Firebase
-  const p1 = window._db.collection('config').doc('fotos').get().then(doc => {
-    if (doc.exists && doc.data().map) localStorage.setItem('foto_map', JSON.stringify(JSON.parse(doc.data().map)));
-  }).catch(()=>{});
-  const p2 = window._db.collection('config').doc('fotos_br').get().then(doc => {
-    if (doc.exists && doc.data().map) localStorage.setItem('foto_map_br', JSON.stringify(JSON.parse(doc.data().map)));
-  }).catch(()=>{});
-  Promise.all([p1,p2]).finally(() => carregarCatalogo());
+  // Carregar foto_map do Firebase antes de tudo
+  window._db.collection('config').doc('fotos').get().then(doc => {
+    if (doc.exists && doc.data().map) {
+      const map = JSON.parse(doc.data().map);
+      localStorage.setItem('foto_map', JSON.stringify(map));
+    }
+  }).catch(()=>{}).finally(() => carregarCatalogo());
 }
 
 function _fbListenCore() {
@@ -3495,9 +2954,6 @@ function _fbListenCore() {
         localStorage.setItem('meta_vendedoras', data.meta_vendedoras);
         renderMeta();
       }
-      if (data.vendas_resumo) {
-        localStorage.setItem('vendas_resumo', data.vendas_resumo);
-      }
     }
   });
   fbUnsub = window._db.collection('faltantes').onSnapshot(snap => {
@@ -3517,7 +2973,6 @@ function _fbListenCore() {
         PRODUTOS[id].compraHistory = data.compraHistory || [];
         PRODUTOS[id].est_eua = data.est_eua || false;
         PRODUTOS[id].est_br  = data.est_br  || false;
-        PRODUTOS[id].urgente = data.urgente || false;
         if (data.qty !== undefined) PRODUTOS[id].qty = data.qty;
         if ((data.comments||[]).length > prevLen) notificarSeNovo(id, prevLen);
         // Notificar mudança de NOK
@@ -3613,27 +3068,6 @@ function setCat(c, btn) {
   renderGrid();
 }
 
-function togglePdfVend(vend) {
-  const chips = document.querySelectorAll('[id^="pdf-vchip-"]');
-  if (!vend) {
-    // Todas
-    chips.forEach(ch => { ch.style.background = ch.id === 'pdf-vchip-Todas' ? '#7a0b1e' : '#fdf8f4'; ch.style.color = ch.id === 'pdf-vchip-Todas' ? '#fff' : '#1a1a1a'; });
-    (document.getElementById('pdf-vend')||{}).value = '';
-  } else {
-    const chip = document.getElementById('pdf-vchip-' + vend.charAt(0)+vend.slice(1).toLowerCase());
-    const allChip = document.getElementById('pdf-vchip-Todas');
-    if (chip) {
-      const ativo = chip.style.background === 'rgb(122, 11, 30)' || chip.style.background === '#7a0b1e';
-      chip.style.background = ativo ? '#fdf8f4' : '#7a0b1e';
-      chip.style.color = ativo ? '#1a1a1a' : '#fff';
-    }
-    if (allChip) { allChip.style.background = '#fdf8f4'; allChip.style.color = '#1a1a1a'; }
-    // Collect selected
-    const selected = [...chips].filter(ch => ch.id !== 'pdf-vchip-Todas' && (ch.style.background === 'rgb(122, 11, 30)' || ch.style.background === '#7a0b1e')).map(ch => ch.textContent.toUpperCase());
-    (document.getElementById('pdf-vend')||{}).value = selected.join(',');
-  }
-}
-
 function filtrarPdfMarcas(q) {
   const ql = q.toLowerCase().trim();
   document.querySelectorAll('.pdf-marca-chip').forEach(btn => {
@@ -3642,14 +3076,11 @@ function filtrarPdfMarcas(q) {
 }
 
 function gerarPDF() {
-  const vendFiltroRaw = document.getElementById('pdf-vend')?.value || '';
-  const vendFiltros = vendFiltroRaw ? vendFiltroRaw.split(',').filter(Boolean) : [];
-  const vendFiltro = vendFiltros.length === 1 ? vendFiltros[0] : vendFiltroRaw;
+  const vendFiltro  = document.getElementById('pdf-vend')?.value || '';
   const marcaFiltro = document.getElementById('pdf-marca')?.value || '';
 
   let prods = PRODUTOS.filter(p => !p.nok);
-  if (vendFiltros.length > 0) prods = prods.filter(p => (p.vs||[]).some(v => vendFiltros.includes(v)));
-  else if (vendFiltro && !vendFiltros.length) prods = prods.filter(p => (p.vs||[]).some(v => v === vendFiltro));
+  if (vendFiltro) prods = prods.filter(p => (p.vs||[]).some(v => v === vendFiltro));
   if (window._pdfMarcasSel && window._pdfMarcasSel.size > 0) {
     prods = prods.filter(p => window._pdfMarcasSel.has((p.m||'').trim()));
   }
@@ -3663,10 +3094,9 @@ function gerarPDF() {
   const now = new Date().toLocaleDateString('pt-BR');
   const titulo = document.getElementById('subtitulo')?.textContent || 'Faltantes';
   const marcaFiltroLabel = window._pdfMarcasSel && window._pdfMarcasSel.size > 0 ? [...window._pdfMarcasSel].join(', ') : '';
-  const vendLabel = vendFiltros.length > 1 ? vendFiltros.map(v=>v.charAt(0)+v.slice(1).toLowerCase()).join(', ') : vendFiltro ? vendFiltro.charAt(0)+vendFiltro.slice(1).toLowerCase() : '';
-  const subtit = [vendLabel, marcaFiltroLabel].filter(Boolean).join(' · ') || 'Todos';
+  const subtit = [vendFiltro, marcaFiltroLabel].filter(Boolean).join(' · ') || 'Todos';
   const totalUn  = prods.reduce((a,p)=>a+(p.qty||p.q||0),0);
-  const totalVal = prods.reduce((a,p)=>a+(parseFloat(p.vmin||p.vt||p.v)||0)*(p.qty||p.q||0),0);
+  const totalVal = prods.reduce((a,p)=>a+(parseFloat(p.vt||p.v)||0)*(p.qty||p.q||0),0);
 
   // Group by marca
   const byMarca = {};
@@ -3676,63 +3106,28 @@ function gerarPDF() {
     byMarca[m].push(p);
   });
 
-  const rows = Object.entries(byMarca).map(([m, items]) => {
-    const mTotal = items.reduce((s,p)=>s+(parseFloat(p.vmin||p.vt||p.v)||0)*(p.qty||p.q||0),0);
-    const mUn = items.reduce((s,p)=>s+(p.qty||p.q||0),0);
-    return `
-    <tr><td colspan="3" style="background:#7a0b1e;color:#fff;font-size:11px;font-weight:700;padding:8px 12px;text-transform:uppercase;letter-spacing:0.8px;border-radius:0">
-      <span>${m}</span><span style="float:right;font-weight:400;opacity:0.85">${mUn} un · ${fmt(mTotal)}</span>
-    </td></tr>
-    ${items.map(p => {
-      const tamsStr = p.tams && Object.keys(p.tams).length > 0
-        ? Object.entries(p.tams).filter(([t])=>!(p.nokTams||{})[t]).map(([t,q])=>`<span style="display:inline-block;background:#f5ede8;border-radius:4px;padding:1px 5px;font-size:10px;margin-right:2px">${t}: ${q}</span>`).join('')
-        : '';
-      return `<tr style="border-bottom:0.5px solid #f0e8e0">
-        <td style="padding:8px 12px;font-size:12px;color:#1a1a1a">
-          <div style="font-weight:500">${p.n}</div>
-          ${tamsStr ? '<div style="margin-top:3px">'+tamsStr+'</div>' : ''}
-          ${p.cor ? '<div style="font-size:10px;color:#b08070;margin-top:2px">'+p.cor+'</div>' : ''}
-        </td>
-        <td style="padding:8px 12px;font-size:11px;color:#888;text-align:center;white-space:nowrap">
-          ${(p.vs||[]).map(v=>v.charAt(0)+v.slice(1).toLowerCase()).join('<br>')}
-        </td>
-        <td style="padding:8px 12px;font-size:12px;font-weight:600;color:#7a0b1e;text-align:right;white-space:nowrap">
-          ${fmt(p.vmin||p.vt||p.v)}<br><span style="font-size:10px;font-weight:400;color:#999">${p.qty||p.q} un</span>
-        </td>
-      </tr>`;
-    }).join('')}`;
-  }).join('');
+  const rows = Object.entries(byMarca).map(([m, items]) => `
+    <tr><td colspan="3" style="background:#fdf2f3;color:#7a0b1e;font-size:11px;font-weight:700;padding:8px 10px;text-transform:uppercase;letter-spacing:0.5px">${m}</td></tr>
+    ${items.map(p => `<tr>
+      <td style="padding:7px 10px;font-size:12px;color:#1a1a1a;border-bottom:0.5px solid #f5ede8">${p.n}</td>
+      <td style="padding:7px 10px;font-size:12px;color:#888;border-bottom:0.5px solid #f5ede8;text-align:center">${p.qty||p.q} un</td>
+      <td style="padding:7px 10px;font-size:12px;font-weight:600;color:#7a0b1e;border-bottom:0.5px solid #f5ede8;text-align:right">${fmt(p.vt||p.v)}</td>
+    </tr>`).join('')}
+  `).join('');
 
   const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${titulo}</title>
   <style>
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#faf7f5;color:#1a1a1a;padding:0}
-    .page{max-width:680px;margin:0 auto;padding:32px 24px}
-    table{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.08)}
-    @media print{body{background:#fff}.page{padding:16px}}
-  </style></head><body><div class="page">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;padding-bottom:16px;border-bottom:2px solid #7a0b1e">
-      <div>
-        <div style="font-size:28px;font-weight:800;color:#7a0b1e;letter-spacing:3px">BAZAAR</div>
-        <div style="font-size:13px;color:#888;margin-top:4px">${titulo}</div>
-        ${subtit !== 'Todos' ? '<div style="font-size:12px;color:#7a0b1e;margin-top:2px;font-weight:600">'+subtit+'</div>' : ''}
-      </div>
-      <div style="text-align:right">
-        <div style="font-size:22px;font-weight:700;color:#1a1a1a">${fmt(totalVal)}</div>
-        <div style="font-size:11px;color:#aaa;margin-top:2px">${prods.length} produtos · ${totalUn} unidades</div>
-        <div style="font-size:11px;color:#aaa">${now}</div>
-      </div>
+    body{font-family:-apple-system,sans-serif;background:#fff;color:#1a1a1a;padding:32px;max-width:600px;margin:0 auto}
+    table{width:100%;border-collapse:collapse;margin-top:16px}
+  </style></head><body>
+    <div style="border-bottom:2px solid #7a0b1e;padding-bottom:12px;margin-bottom:16px">
+      <div style="font-size:22px;font-weight:700;color:#7a0b1e;letter-spacing:2px">BAZAAR</div>
+      <div style="font-size:13px;color:#888;margin-top:2px">${titulo} · ${subtit}</div>
+      <div style="font-size:11px;color:#bbb;margin-top:2px">${now} · ${prods.length} produtos · ${totalUn} unidades · ${fmt(totalVal)}</div>
     </div>
-    <table>
-      <thead><tr style="background:#f5ede8">
-        <th style="padding:8px 12px;text-align:left;font-size:10px;color:#b08070;font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Produto</th>
-        <th style="padding:8px 12px;text-align:center;font-size:10px;color:#b08070;font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Vendedora</th>
-        <th style="padding:8px 12px;text-align:right;font-size:10px;color:#b08070;font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Valor</th>
-      </tr></thead>
-      <tbody>${rows}</tbody>
-    </table>
-    <div style="margin-top:16px;font-size:11px;color:#aaa;text-align:center">Gerado pelo Bazaar App · ${now}</div>
-  </div></body></html>`;
+    <table>${rows}</table>
+    <div style="margin-top:24px;font-size:11px;color:#bbb;text-align:center">Total: ${prods.length} produtos · ${totalUn} unidades · ${fmt(totalVal)}</div>
+  </body></html>`;
 
   const blob = new Blob([html], {type:'text/html'});
   const url = URL.createObjectURL(blob);
@@ -3748,16 +3143,6 @@ function handleCSV(input) {
 function processarCSVUSA(input) {
   const file = input.files[0];
   if (!file) return;
-  // Salvar label do mês se preenchido
-  const inpLabelUsa = document.getElementById('input-label-usa');
-  const novoLabelUsa = inpLabelUsa ? inpLabelUsa.value.trim() : '';
-  if (novoLabelUsa) {
-    localStorage.setItem('mes_label_usa', novoLabelUsa);
-    const elUsa = document.getElementById('label-mes-usa');
-    if (elUsa) elUsa.textContent = novoLabelUsa;
-    if (window._db) window._db.collection('config').doc('app').set({mesLabel_usa: novoLabelUsa}, {merge:true});
-    if (inpLabelUsa) { inpLabelUsa.value = ''; inpLabelUsa.placeholder = novoLabelUsa; }
-  }
   document.getElementById('csv-progress').style.display = '';
   document.getElementById('csv-fill').style.width = '30%';
   (document.getElementById('csv-status')||{}).textContent = 'Lendo arquivo...';
@@ -3824,13 +3209,10 @@ function processarCSVUSA(input) {
           const row = rows[i];
           const nome = (row[12]||'').trim();
           if (!nome || nome.toLowerCase() === 'total') continue;
-          const oksVal = pv(row[colOks]);
-          const faltVal = pv(row[colFalt]);
           metaVendedoras.push({
             nome,
-            oks:       oksVal,
-            total:     oksVal + faltVal,
-            faltantes: faltVal,
+            oks:       pv(row[colOks]),
+            faltantes: pv(row[colFalt]),
             estGeral:  pv(row[colEstGeral]),
             estBR:     pv(row[colEstBR]),
             meta:      pv(row[colMeta]),
@@ -3858,112 +3240,23 @@ function processarCSVUSA(input) {
       const h = rows[headerIdx];
       const iItem=h.indexOf('ITEM'), iVal=h.indexOf('VALOR'), iConf=h.indexOf('CONF');
       const iMarca=h.indexOf('MARCA'), iCat=h.indexOf('CATEGORIA'), iVend=h.indexOf('VENDEDORA'), iFoto=h.indexOf('FOTO'), iCor=h.indexOf('COR'), iTam=h.indexOf('TAM');
-      const iData=h.indexOf('DATA'), iPer=h.indexOf('PERÍODO');
-
-      // Calcular resumo de vendas por vendedora (todos os itens exceto NOK)
-      const vendasResumo = {};
-      rows.slice(headerIdx+1).forEach(row => {
-        if (!row[iItem]?.trim()) return;
-        const conf = (row[iConf]||'').trim().toUpperCase();
-        if (conf === 'NOK') return; // só exclui NOK, SOS e tudo mais conta
-        const vend = (row[iVend]||'').trim().toUpperCase();
-        if (!vend) return;
-        const itemRaw = row[iItem].trim();
-        // Extrair multiplicador do nome (ex: "Produto 2x" = 2 unidades)
-        const multMatch = itemRaw.match(/\s+(\d+)x\s*$/i);
-        const mult = multMatch ? parseInt(multMatch[1]) : 1;
-        const marca = (row[iMarca]||'').trim();
-        // Nome limpo sem tam/multiplicador
-        const item = itemRaw.replace(/\s+tam\s+.+?(\s+\d+x)?\s*$/i,'').replace(/\s+\d+x\s*$/i,'').trim();
-        const data = iData>-1 ? (row[iData]||'').trim() : '';
-        const periodo = iPer>-1 ? (row[iPer]||'').trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'') : '';
-        const foto = iFoto>-1 ? (row[iFoto]||'').trim() : '';
-        const valBruto = pv(row[iVal]||'');
-        if (!vendasResumo[vend]) vendasResumo[vend] = {marcas:{}, marcasVal:{}, itens:{}, periodos:{MANHA:0,TARDE:0,NOITE:0}, marcasPorTurno:{MANHA:{},TARDE:{},NOITE:{}}, dias:{}};
-        const vr = vendasResumo[vend];
-        if (marca) {
-          vr.marcas[marca] = (vr.marcas[marca]||0) + mult;
-          vr.marcasVal[marca] = (vr.marcasVal[marca]||0) + valBruto;
-        }
-        if (item && marca) {
-          const key = marca+'||'+item;
-          if (!vr.itens[key]) vr.itens[key] = {nome:item, marca, qt:0, foto:''};
-          vr.itens[key].qt += mult;
-          if (foto && !vr.itens[key].foto) vr.itens[key].foto = foto;
-        }
-        let turnoAtual = null;
-        if (periodo.includes('MANHA') || periodo === 'MANHA') { vr.periodos.MANHA += mult; turnoAtual = 'MANHA'; }
-        else if (periodo.includes('TARDE')) { vr.periodos.TARDE += mult; turnoAtual = 'TARDE'; }
-        else if (periodo.includes('NOITE')) { vr.periodos.NOITE += mult; turnoAtual = 'NOITE'; }
-        if (turnoAtual && marca) {
-          if (!vr.marcasPorTurno[turnoAtual][marca]) vr.marcasPorTurno[turnoAtual][marca] = {qt:0, val:0, itens:{}};
-          vr.marcasPorTurno[turnoAtual][marca].qt += mult;
-          vr.marcasPorTurno[turnoAtual][marca].val += valBruto;
-          if (item) {
-            const ikey = item;
-            if (!vr.marcasPorTurno[turnoAtual][marca].itens[ikey]) vr.marcasPorTurno[turnoAtual][marca].itens[ikey] = {qt:0, foto:foto};
-            vr.marcasPorTurno[turnoAtual][marca].itens[ikey].qt += mult;
-          }
-        }
-        if (data) {
-          const dow = (() => { try { const [d,m] = data.split('/'); const dt = new Date(2026,parseInt(m)-1,parseInt(d)); return ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'][dt.getDay()]; } catch(e){return '';} })();
-          if (dow) vr.dias[dow] = (vr.dias[dow]||0) + mult;
-        }
-      });
-      // Converter para top3 marcas com top item de cada
-      const vendasResumoFinal = {};
-      Object.entries(vendasResumo).forEach(([vend, vr]) => {
-        const top3marcas = Object.entries(vr.marcas).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([marca,qt]) => {
-          const topItem = Object.values(vr.itens).filter(i=>i.marca===marca).sort((a,b)=>b.qt-a.qt)[0];
-          return {nome:marca, qt, valorMarca:Math.round((vr.marcasVal[marca]||0)*100)/100, item:topItem?.nome||'', itemFoto:topItem?.foto||'', itemQt:topItem?.qt||0};
-        });
-        const diaMais = Object.entries(vr.dias).sort((a,b)=>b[1]-a[1])[0]?.[0]||'';
-        const marcasPorTurno = {};
-        ['MANHA','TARDE','NOITE'].forEach(t => {
-          marcasPorTurno[t] = Object.entries(vr.marcasPorTurno[t]||{})
-            .sort((a,b)=>(b[1].qt||0)-(a[1].qt||0)).slice(0,3).map(([nome,obj]) => {
-              const topItem = Object.entries(obj.itens||{}).sort((a,b)=>b[1].qt-a[1].qt)[0];
-              return {nome, qt:obj.qt||0, valorMarca:Math.round((obj.val||0)*100)/100, item:topItem?.[0]||'', itemFoto:topItem?.[1]?.foto||'', itemQt:topItem?.[1]?.qt||0};
-            });
-        });
-        vendasResumoFinal[vend] = {top3marcas, periodos:vr.periodos, marcasPorTurno, diaMais};
-      });
-      localStorage.setItem('vendas_resumo', JSON.stringify(vendasResumoFinal));
-      if (window._db) {
-        window._db.collection('config').doc('app').set({vendas_resumo: JSON.stringify(vendasResumoFinal)}, {merge:true});
-      }
-      // Registrar importação no histórico de versões
-      const importTs = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
-      const importEntry = {nome: '🇺🇸 Planilha USA importada', ts: importTs, uid: getNomeUsuario()};
-      const versoes = JSON.parse(localStorage.getItem('versao_hist')||'[]');
-      versoes.unshift(importEntry);
-      if (versoes.length > 30) versoes.pop();
-      localStorage.setItem('versao_hist', JSON.stringify(versoes));
-      if (window._db) window._db.collection('config').doc('versoes').set({list: JSON.stringify(versoes)});
 
       function extrairTamMult(nome) {
         var m = nome.match(/\s+tam\s+(.+?)(\s+(\d+)x)?\s*$/i);
         if (m) return {base: nome.slice(0,m.index).trim(), tam: m[1].trim(), mult: m[3]?parseInt(m[3]):1};
+        var mg = nome.match(/\s+grau\s+(.+?)(\s+(\d+)x)?\s*$/i);
+        if (mg) return {base: nome.slice(0,mg.index).trim(), tam: 'Grau '+mg[1].trim(), mult: mg[3]?parseInt(mg[3]):1};
         var m2 = nome.match(/\s+(\d+)x\s*$/i);
         if (m2) return {base: nome.slice(0,m2.index).trim(), tam: null, mult: parseInt(m2[1])};
         return {base: nome, tam: null, mult: 1};
       }
 
       const groups = {};
-      const itemsNaoValidos = /^(CORREIO|CORREIOS|ENTREGA PARCIAL|FABI LEVOU|OPEN|SACOLA|FRETE|CRÉDITO|DESC PG|DESCONTO|PARCIAL|DEVOLUÇÃO|TROCA|TAXA)/i;
       rows.slice(headerIdx+1).forEach(row => {
         if (!row[iItem]?.trim()) return;
         const item = row[iItem].trim();
-        // Ignorar linhas que não são produtos reais
-        if (itemsNaoValidos.test(item)) return;
-        const marca = (row[iMarca]?.trim()||'');
-        const fotoRaw = iFoto > -1 ? (row[iFoto]?.trim()||'') : '';
-        if (!marca && !fotoRaw) return; // ignorar sem marca E sem foto
         const conf = (row[iConf]||'').trim().toUpperCase();
         const confParcialMatch = conf.match(/^(\d+)\s+(OK|BR|ONLINE|ENT)$/i);
-        const isEstEua = conf === 'EST' || conf === 'EST EUA' || conf === 'EST USA';
-        const isEstBr  = conf === 'EST BR';
-        // EST USA/BR = já comprados, não são faltantes — só ignorar como os outros CONF preenchidos
         if (conf !== '' && !confParcialMatch) return;
         const obs = (row[iItem+2]||'').trim().toUpperCase();
         const temDesconto = obs.includes('COM DESCONTO');
@@ -3980,10 +3273,8 @@ function processarCSVUSA(input) {
         const valTotal = pv(row[iVal]);
         const valUnit = (mult > 1 && valTotal > 0) ? Math.round(valTotal/mult*100)/100 : valTotal;
         const key = base.toLowerCase().trim() + '||' + (row[iMarca]?.trim()||'').toLowerCase();
-        if (!groups[key]) groups[key] = {n:base,m:row[iMarca]?.trim()||'',c:row[iCat]?.trim()||'',cor:(iCor>-1?row[iCor]?.trim():'')||'',vs:[],v:valUnit,q:0,_vals:[],f:resolverFoto(row[iFoto]?.trim()||''),tams:{},tams_por_vend:{},est_eua:false,est_br:false,origem:'usa'};
+        if (!groups[key]) groups[key] = {n:base,m:row[iMarca]?.trim()||'',c:row[iCat]?.trim()||'',cor:(iCor>-1?row[iCor]?.trim():'')||'',vs:[],v:valUnit,q:0,_vals:[],f:resolverFoto(row[iFoto]?.trim()||''),tams:{},tams_por_vend:{},origem:'usa'};
         const g = groups[key];
-        if (isEstEua) g.est_eua = true;
-        if (isEstBr)  g.est_br  = true;
         const vend = row[iVend]?.trim()||'';
         if (vend && !g.vs.includes(vend)) g.vs.push(vend);
         if (!g.f && row[iFoto]?.trim()) g.f = resolverFoto(row[iFoto].trim());
@@ -4014,20 +3305,6 @@ function processarCSVUSA(input) {
         return p;
       });
       newData.sort((a,b)=>a.n.localeCompare(b.n,'pt-BR'));
-
-      // Detectar duplicatas (mesmo nome base ignorando tamanho)
-      const nomeCount = {};
-      newData.forEach(p => {
-        const nBase = p.n.toLowerCase().replace(/\s+tam\s+\S+/i,'').replace(/\s+\d+x\s*$/i,'').trim();
-        nomeCount[nBase] = (nomeCount[nBase]||[]);
-        nomeCount[nBase].push(p.n);
-      });
-      const duplicatas = Object.entries(nomeCount).filter(([,arr]) => arr.length > 1);
-      if (duplicatas.length > 0) {
-        const statusEl = document.getElementById('csv-status');
-        const dupMsg = duplicatas.slice(0,3).map(([n,arr]) => arr[0].substring(0,30)).join(', ');
-        if (statusEl) statusEl.innerHTML += '<br><span style="color:#d97706">⚠️ ' + duplicatas.length + ' possíveis duplicatas: ' + dupMsg + (duplicatas.length>3?'...':'') + '</span>';
-      }
 
       salvarOrigemNoFirebase(newData, 'usa', () => {
         const now = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
@@ -4116,29 +3393,9 @@ function salvarOrigemNoFirebase(newData, origem, onDone) {
   });
 }
 
-function registrarImportacao(tipo, nome) {
-  const ts = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
-  const entry = {nome, ts, uid: getNomeUsuario()};
-  const list = JSON.parse(localStorage.getItem('versao_hist')||'[]');
-  list.unshift(entry);
-  if (list.length > 30) list.pop();
-  localStorage.setItem('versao_hist', JSON.stringify(list));
-  if (window._db) window._db.collection('config').doc('versoes').set({list: JSON.stringify(list)});
-}
-
 function processarCSVBR(input) {
   const file = input.files[0];
   if (!file) return;
-  // Salvar label do mês se preenchido
-  const inpLabelBr = document.getElementById('input-label-br');
-  const novoLabelBr = inpLabelBr ? inpLabelBr.value.trim() : '';
-  if (novoLabelBr) {
-    localStorage.setItem('mes_label_br', novoLabelBr);
-    const elBr = document.getElementById('label-mes-br');
-    if (elBr) elBr.textContent = novoLabelBr;
-    if (window._db) window._db.collection('config').doc('app').set({mesLabel_br: novoLabelBr}, {merge:true});
-    if (inpLabelBr) { inpLabelBr.value = ''; inpLabelBr.placeholder = novoLabelBr; }
-  }
   const progEl = document.getElementById('csv-progress-br');
   const fillEl = document.getElementById('csv-fill-br');
   const statusEl = document.getElementById('csv-status-br');
@@ -4276,13 +3533,10 @@ function salvarVersao() {
   if (vStatus) vStatus.textContent = '✅ Salvo e sincronizado!';
 }
 
-function handleFotos(input, origem) {
+function handleFotos(input) {
   const file = input.files[0];
   if (!file) return;
-  const statusId = origem === 'br' ? 'foto-status-br' : 'foto-status-usa';
-  const fbDoc = origem === 'br' ? 'fotos_br' : 'fotos';
-  const lsKey = origem === 'br' ? 'foto_map_br' : 'foto_map';
-  (document.getElementById(statusId)||{}).textContent = 'Lendo...';
+  (document.getElementById('foto-status')||{}).textContent = 'Lendo...';
   const reader = new FileReader();
   reader.onload = e => {
     const lines = e.target.result.split(/\r?\n/).slice(1);
@@ -4291,25 +3545,22 @@ function handleFotos(input, origem) {
       const [nome,id] = l.split(',');
       if (nome&&id) map[nome.trim()] = 'https://drive.google.com/thumbnail?id='+id.trim()+'&sz=w400';
     });
-    localStorage.setItem(lsKey, JSON.stringify(map));
+    localStorage.setItem('foto_map', JSON.stringify(map));
+    // Sync to Firebase so all devices get the foto map
     if (window._db) {
-      window._db.collection('config').doc(fbDoc).set({map: JSON.stringify(map), updatedAt: new Date().toISOString()});
+      window._db.collection('config').doc('fotos').set({map: JSON.stringify(map), updatedAt: new Date().toISOString()});
     }
+    // Reimportar CSV pra resolver as fotos com o mapa novo
+    // (produtos já em memória precisam ser recarregados do Firebase)
     if (PRODUTOS.length > 0) {
       PRODUTOS.forEach(p => {
+        // p._fOriginal é o nome original do arquivo (se foi preservado)
         const fOriginal = p._fOriginal || p.f;
         const resolved = resolverFoto(fOriginal);
         if (resolved) { p._fOriginal = fOriginal; p.f = resolved; }
       });
     }
-    const fotoTs = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
-    const fotoEntry = {nome: (origem==='br'?'🇧🇷':'🇺🇸') + ' Fotos ' + (origem||'usa').toUpperCase() + ' atualizadas (' + Object.keys(map).length + ')', ts: fotoTs, uid: getNomeUsuario()};
-    const versoesFoto = JSON.parse(localStorage.getItem('versao_hist')||'[]');
-    versoesFoto.unshift(fotoEntry);
-    if (versoesFoto.length > 30) versoesFoto.pop();
-    localStorage.setItem('versao_hist', JSON.stringify(versoesFoto));
-    if (window._db) window._db.collection('config').doc('versoes').set({list: JSON.stringify(versoesFoto)});
-    (document.getElementById(statusId)||{}).textContent = '✅ ' + Object.keys(map).length + ' fotos mapeadas (' + (origem||'usa').toUpperCase() + ')';
+    (document.getElementById('foto-status')||{}).textContent = '✅ ' + Object.keys(map).length + ' fotos mapeadas';
     renderGrid();
   };
   reader.readAsText(file);
@@ -4375,7 +3626,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function updateOnlineStatus() {
     if (!navigator.onLine) {
       offlineBanner.style.background = '#1a1a1a';
-      offlineBanner.textContent = '⚠️ Sem conexão com a internet — dados em cache';
+      offlineBanner.textContent = '⚠️ Sem conexão — alterações serão salvas quando voltar';
       offlineBanner.style.display = 'block';
     } else {
       offlineBanner.textContent = '✓ Conexão restaurada';
@@ -4402,10 +3653,6 @@ document.addEventListener('DOMContentLoaded', () => {
   if (savedBr) (document.getElementById('label-mes-br')||{}).textContent = savedBr;
   const savedUsa = localStorage.getItem('mes_label_usa');
   if (savedUsa) (document.getElementById('label-mes-usa')||{}).textContent = savedUsa;
-  const inpLabelBr = document.getElementById('input-label-br');
-  if (inpLabelBr) inpLabelBr.placeholder = savedBr || 'ex: Julho BR';
-  const inpLabelUsa = document.getElementById('input-label-usa');
-  if (inpLabelUsa) inpLabelUsa.placeholder = savedUsa || 'ex: Julho USA';
 
   // Header hide on scroll down, show on scroll up
   let _lastScroll = 0;
