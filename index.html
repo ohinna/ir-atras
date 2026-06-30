@@ -619,10 +619,7 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
         <div style="font-size:9px;color:var(--text4);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:5px">Cor</div>
         <div id="modal-cor" style="display:inline-block;background:var(--bg2);border:0.5px solid var(--border);border-radius:8px;padding:4px 12px;font-size:12px;font-weight:600;color:var(--text)"></div>
       </div>
-      <div id="modal-grau-wrap" style="display:none;margin-top:8px;padding-top:8px;border-top:0.5px solid var(--border2)">
-        <div style="font-size:9px;color:var(--text4);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:5px">Grau</div>
-        <div id="modal-grau" style="display:inline-block;background:var(--bg2);border:0.5px solid var(--border);border-radius:8px;padding:4px 12px;font-size:12px;font-weight:600;color:var(--text)"></div>
-      </div>
+
     </div>
     <div style="display:flex;gap:8px;margin-bottom:16px">
       <div style="flex:1;background:var(--bg2);border:0.5px solid var(--border);border-radius:12px;padding:10px 14px;text-align:center">
@@ -1646,14 +1643,7 @@ function openModal(id, focusComment=false) {
     if (p.cor) { corEl.textContent = p.cor; corWrap.style.display = ''; }
     else corWrap.style.display = 'none';
   }
-  // Grau (extraído do nome do produto, ex: "grau 2.00")
-  const grauWrap = document.getElementById('modal-grau-wrap');
-  const grauEl = document.getElementById('modal-grau');
-  if (grauWrap && grauEl) {
-    const grauMatch = (p.n||'').match(/grau\s+([\d.,]+)/i);
-    if (grauMatch) { grauEl.textContent = grauMatch[1]; grauWrap.style.display = ''; }
-    else grauWrap.style.display = 'none';
-  }
+
   const btnEc = document.getElementById('btn-em-compra');
   if (btnEc) {
     btnEc.style.background = p.em_compra ? '#d97706' : '#f59e0b';
@@ -3958,6 +3948,9 @@ function processarCSVUSA(input) {
         if (m) return {base: nome.slice(0,m.index).trim(), tam: m[1].trim(), mult: m[3]?parseInt(m[3]):1};
         var m2 = nome.match(/\s+(\d+)x\s*$/i);
         if (m2) return {base: nome.slice(0,m2.index).trim(), tam: null, mult: parseInt(m2[1])};
+        // Grau funciona como "tamanho" para agrupar produtos com o mesmo nome mas grau diferente
+        var m3 = nome.match(/\s+grau\s+([\d.,]+)\s*$/i);
+        if (m3) return {base: nome.slice(0,m3.index).trim(), tam: 'Grau ' + m3[1], mult: 1};
         return {base: nome, tam: null, mult: 1};
       }
 
