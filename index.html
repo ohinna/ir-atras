@@ -3747,6 +3747,18 @@ function handleCSV(input) {
   processarCSVUSA(input);
 }
 
+function extrairTamMult(nomeRaw) {
+  // Normalizar espaços invisíveis (NBSP, tabs, espaços múltiplos)
+  var nome = nomeRaw.replace(/[\u00A0\u200B\t]/g, ' ').replace(/\s+/g, ' ').trim();
+  var m = nome.match(/\s*tam\s+(.+?)(\s*(\d+)x)?\s*$/i);
+  if (m) return {base: nome.slice(0,m.index).trim(), tam: m[1].trim(), mult: m[3]?parseInt(m[3]):1};
+  var m2 = nome.match(/\s*(\d+)x\s*$/i);
+  if (m2) return {base: nome.slice(0,m2.index).trim(), tam: null, mult: parseInt(m2[1])};
+  var m3 = nome.match(/\s*grau\s+([\d.,]+)\s*$/i);
+  if (m3) return {base: nome.slice(0,m3.index).trim(), tam: 'Grau ' + m3[1], mult: 1};
+  return {base: nome, tam: null, mult: 1};
+}
+
 function processarCSVUSA(input) {
   const file = input.files[0];
   if (!file) return;
@@ -3943,18 +3955,7 @@ function processarCSVUSA(input) {
       localStorage.setItem('versao_hist', JSON.stringify(versoes));
       if (window._db) window._db.collection('config').doc('versoes').set({list: JSON.stringify(versoes)});
 
-      function extrairTamMult(nomeRaw) {
-        // Normalizar espaços invisíveis (NBSP, tabs, espaços múltiplos)
-        var nome = nomeRaw.replace(/[\u00A0\u200B\t]/g, ' ').replace(/\s+/g, ' ').trim();
-        var m = nome.match(/\s*tam\s+(.+?)(\s*(\d+)x)?\s*$/i);
-        if (m) return {base: nome.slice(0,m.index).trim(), tam: m[1].trim(), mult: m[3]?parseInt(m[3]):1};
-        var m2 = nome.match(/\s*(\d+)x\s*$/i);
-        if (m2) return {base: nome.slice(0,m2.index).trim(), tam: null, mult: parseInt(m2[1])};
-        // Grau funciona como "tamanho" para agrupar produtos com o mesmo nome mas grau diferente
-        var m3 = nome.match(/\s*grau\s+([\d.,]+)\s*$/i);
-        if (m3) return {base: nome.slice(0,m3.index).trim(), tam: 'Grau ' + m3[1], mult: 1};
-        return {base: nome, tam: null, mult: 1};
-      }
+
 
       const groups = {};
       const itemsNaoValidos = /^(CORREIO|CORREIOS|ENTREGA PARCIAL|FABI LEVOU|OPEN|SACOLA|FRETE|CRÉDITO|DESC PG|DESCONTO|PARCIAL|DEVOLUÇÃO|TROCA|TAXA)/i;
@@ -4197,19 +4198,22 @@ function processarCSVBR(input) {
 
         const marca = row[iMarca]?.trim() || '';
         const cat = row[iCat]?.trim() || '';
-        const tam = row[iTam]?.trim() || '';
+        const tamCol = row[iTam]?.trim() || '';
         const cor = row[iCor]?.trim() || '';
         const vend = row[iVend]?.trim() || '';
         const valUnit = pv(row[iVal]);
         const foto = resolverFoto(row[iFoto]?.trim() || '');
 
-        const key = item.toLowerCase() + '||' + marca.toLowerCase();
-        if (!groups[key]) groups[key] = {n:item,m:marca,c:cat,cor:cor,vs:[],v:valUnit,q:0,_vals:[],f:foto,tams:{},tams_por_vend:{},origem:'br'};
+        // Extrair nome base e multiplicador (igual USA)
+        const {base: itemBase, tam: itemTam, mult: itemMult} = extrairTamMult(item);
+        const tamKey = tamCol || itemTam || 'Único';
+        const mult = itemMult;
+
+        const key = itemBase.toLowerCase() + '||' + marca.toLowerCase();
+        if (!groups[key]) groups[key] = {n:itemBase,m:marca,c:cat,cor:cor,vs:[],v:valUnit,q:0,_vals:[],f:foto,tams:{},tams_por_vend:{},origem:'br'};
         const g = groups[key];
         if (vend && !g.vs.includes(vend)) g.vs.push(vend);
         if (!g.f && foto) g.f = foto;
-        const tamKey = tam || 'Único';
-        const mult = 1; // QTDA sempre considerado 1 por linha
         g.tams[tamKey] = (g.tams[tamKey]||0) + mult;
         if (vend) {
           if (!g.tams_por_vend[vend]) g.tams_por_vend[vend] = {};
