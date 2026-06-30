@@ -3943,13 +3943,15 @@ function processarCSVUSA(input) {
       localStorage.setItem('versao_hist', JSON.stringify(versoes));
       if (window._db) window._db.collection('config').doc('versoes').set({list: JSON.stringify(versoes)});
 
-      function extrairTamMult(nome) {
-        var m = nome.match(/\s+tam\s+(.+?)(\s+(\d+)x)?\s*$/i);
+      function extrairTamMult(nomeRaw) {
+        // Normalizar espaços invisíveis (NBSP, tabs, espaços múltiplos)
+        var nome = nomeRaw.replace(/[\u00A0\u200B\t]/g, ' ').replace(/\s+/g, ' ').trim();
+        var m = nome.match(/\s*tam\s+(.+?)(\s*(\d+)x)?\s*$/i);
         if (m) return {base: nome.slice(0,m.index).trim(), tam: m[1].trim(), mult: m[3]?parseInt(m[3]):1};
-        var m2 = nome.match(/\s+(\d+)x\s*$/i);
+        var m2 = nome.match(/\s*(\d+)x\s*$/i);
         if (m2) return {base: nome.slice(0,m2.index).trim(), tam: null, mult: parseInt(m2[1])};
         // Grau funciona como "tamanho" para agrupar produtos com o mesmo nome mas grau diferente
-        var m3 = nome.match(/\s+grau\s+([\d.,]+)\s*$/i);
+        var m3 = nome.match(/\s*grau\s+([\d.,]+)\s*$/i);
         if (m3) return {base: nome.slice(0,m3.index).trim(), tam: 'Grau ' + m3[1], mult: 1};
         return {base: nome, tam: null, mult: 1};
       }
