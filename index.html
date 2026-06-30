@@ -619,6 +619,10 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
         <div style="font-size:9px;color:var(--text4);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:5px">Cor</div>
         <div id="modal-cor" style="display:inline-block;background:var(--bg2);border:0.5px solid var(--border);border-radius:8px;padding:4px 12px;font-size:12px;font-weight:600;color:var(--text)"></div>
       </div>
+      <div id="modal-grau-wrap" style="display:none;margin-top:8px;padding-top:8px;border-top:0.5px solid var(--border2)">
+        <div style="font-size:9px;color:var(--text4);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:5px">Grau</div>
+        <div id="modal-grau" style="display:inline-block;background:var(--bg2);border:0.5px solid var(--border);border-radius:8px;padding:4px 12px;font-size:12px;font-weight:600;color:var(--text)"></div>
+      </div>
     </div>
     <div style="display:flex;gap:8px;margin-bottom:16px">
       <div style="flex:1;background:var(--bg2);border:0.5px solid var(--border);border-radius:12px;padding:10px 14px;text-align:center">
@@ -1641,6 +1645,14 @@ function openModal(id, focusComment=false) {
   if (corWrap && corEl) {
     if (p.cor) { corEl.textContent = p.cor; corWrap.style.display = ''; }
     else corWrap.style.display = 'none';
+  }
+  // Grau (extraído do nome do produto, ex: "grau 2.00")
+  const grauWrap = document.getElementById('modal-grau-wrap');
+  const grauEl = document.getElementById('modal-grau');
+  if (grauWrap && grauEl) {
+    const grauMatch = (p.n||'').match(/grau\s+([\d.,]+)/i);
+    if (grauMatch) { grauEl.textContent = grauMatch[1]; grauWrap.style.display = ''; }
+    else grauWrap.style.display = 'none';
   }
   const btnEc = document.getElementById('btn-em-compra');
   if (btnEc) {
