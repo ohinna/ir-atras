@@ -391,7 +391,6 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
       </label>
       <div id="foto-status-br" style="font-size:11px;color:#b08070;margin-top:8px"></div>
     </div>
->
     <div id="ultima-atualizacao" style="font-size:11px;color:#c4a898;text-align:center;margin-top:8px"></div>
 
     <div class="upload-card" style="margin-top:12px">
@@ -1203,6 +1202,15 @@ function renderGrid() {
   }).join('');
   updateChatBadge();
   updateNokBadge();
+  // Repopular filtros da aba Dados se estiver aberta
+  if (document.getElementById('page-upload')?.style.display !== 'none') {
+    const vendas2 = [...new Set(PRODUTOS.flatMap(p=>p.vs||[]).filter(Boolean))].sort();
+    const pdfVendChips2 = document.getElementById('pdf-vend-chips');
+    if (pdfVendChips2 && vendas2.length && pdfVendChips2.children.length <= 1) {
+      const allVends2 = ['Todas', ...vendas2.map(v=>v.charAt(0)+v.slice(1).toLowerCase())];
+      pdfVendChips2.innerHTML = allVends2.map((v,i) => `<button onclick="togglePdfVend('${v==='Todas'?'':vendas2[i-1]||''}')" id="pdf-vchip-${v}" style="font-size:11px;padding:4px 12px;border-radius:20px;border:0.5px solid #ede0d4;background:${v==='Todas'?'#7a0b1e':'#fdf8f4'};color:${v==='Todas'?'#fff':'#1a1a1a'};cursor:pointer;font-family:inherit">${v}</button>`).join('');
+    }
+  }
   // Atualizar contadores nos chips de vendedora
   const vendChips = document.querySelectorAll('#vend-row .chip:not(#chip-todas)');
   vendChips.forEach(btn => {
@@ -1353,7 +1361,7 @@ function goTab(tab) {
   if (tab==='chat') renderChat();
   if (tab==='nok') renderNok();
   if (tab==='compra') renderCompra();
-  if (tab==='hist') renderHist();
+  if (tab==='hist') { renderHist(); setTimeout(renderHist, 800); }
   if (tab==='eua') renderEua();
   if (tab==='upload') {
     const ua = localStorage.getItem('ultima_atualizacao');
