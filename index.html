@@ -3731,42 +3731,76 @@ function gerarPDF() {
     }).join('');
   }
 
-  // Separar USA e BR
-  const prodsUSA = prods.filter(p => (p.origem||'usa') === 'usa');
-  const prodsBR  = prods.filter(p => p.origem === 'br');
-  const rowsUSA = gerarTabelaRows(prodsUSA);
-  const rowsBR  = gerarTabelaRows(prodsBR);
-  const totalUnUSA = prodsUSA.reduce((a,p)=>a+(p.qty||p.q||0),0);
-  const totalValUSA = prodsUSA.reduce((a,p)=>a+(parseFloat(p.vmin||p.vt||p.v)||0)*(p.qty||p.q||0),0);
-  const totalUnBR = prodsBR.reduce((a,p)=>a+(p.qty||p.q||0),0);
-  const totalValBR = prodsBR.reduce((a,p)=>a+(parseFloat(p.vmin||p.vt||p.v)||0)*(p.qty||p.q||0),0);
   const mesUSA = localStorage.getItem('mes_label_usa')||'USA';
   const mesBR  = localStorage.getItem('mes_label_br')||'BR';
+  const todasVends = [...new Set(prods.flatMap(p=>p.vs||[]).filter(Boolean))].sort();
 
-  function secaoOrigem(flag, label, rowsHtml, total, un) {
-    if (!rowsHtml) return '';
+  function rowsMarcaVend(lista) {
+    const byMarca = {};
+    lista.forEach(p => {
+      const m = (p.m||'Sem marca').trim();
+      if (!byMarca[m]) byMarca[m] = [];
+      byMarca[m].push(p);
+    });
+    return Object.entries(byMarca).map(([m, items]) => {
+      const mTotal = items.reduce((s,p)=>s+(parseFloat(p.vmin||p.vt||p.v)||0)*(p.qty||p.q||0),0);
+      const mUn = items.reduce((s,p)=>s+(p.qty||p.q||0),0);
+      return `<tr><td colspan="2" style="background:#3a1520;color:#fff;font-size:10px;font-weight:700;padding:5px 10px;text-transform:uppercase;letter-spacing:0.5px">
+        <span>${m}</span><span style="float:right;font-weight:400;opacity:0.8">${mUn} un · ${fmt(mTotal)}</span>
+      </td></tr>
+      ${items.map(p => {
+        const tamsStr = p.tams && Object.keys(p.tams).length > 0
+          ? Object.entries(p.tams).filter(([t])=>!(p.nokTams||{})[t]).map(([t,q])=>`<span style="display:inline-block;background:#f5ede8;border-radius:3px;padding:1px 4px;font-size:9px;margin-right:2px">${t}: ${q}</span>`).join('') : '';
+        return `<tr style="border-bottom:0.5px solid #f0e8e0">
+          <td style="padding:5px 10px;font-size:11px;color:#1a1a1a">
+            <div style="font-weight:500">${p.n}</div>
+            ${tamsStr ? '<div style="margin-top:2px">'+tamsStr+'</div>' : ''}
+            ${p.cor ? '<div style="font-size:9px;color:#b08070">'+p.cor+'</div>' : ''}
+          </td>
+          <td style="padding:5px 10px;font-size:11px;font-weight:600;color:#7a0b1e;text-align:right;white-space:nowrap">
+            ${fmt(p.vmin||p.vt||p.v)}<br><span style="font-size:9px;font-weight:400;color:#999">${p.qty||p.q} un</span>
+          </td>
+        </tr>`;
+      }).join('')}`;
+    }).join('');
+  }
+
+  function secaoOrigem(flag, label, prodsOrigem, cor) {
+    if (!prodsOrigem.length) return '';
+    const total = prodsOrigem.reduce((s,p)=>s+(parseFloat(p.vmin||p.vt||p.v)||0)*(p.qty||p.q||0),0);
+    const un = prodsOrigem.reduce((s,p)=>s+(p.qty||p.q||0),0);
     return `
-      <div style="margin-top:28px">
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:#1a1a1a;border-radius:10px 10px 0 0">
-          <div style="font-size:15px;font-weight:700;color:#fff;letter-spacing:1px">${flag} ${label}</div>
-          <div style="text-align:right">
-            <div style="font-size:15px;font-weight:700;color:#fff">${fmt(total)}</div>
-            <div style="font-size:10px;color:#aaa">${un} unidades</div>
+      <div style="margin-top:20px;page-break-inside:avoid">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:${cor};border-radius:10px 10px 0 0">
+          <div style="font-size:15px;font-weight:800;color:#fff;letter-spacing:1px">${flag} ${label}</div>
+          <div style="text-align:right;color:#fff">
+            <div style="font-size:14px;font-weight:700">${fmt(total)}</div>
+            <div style="font-size:10px;opacity:0.8">${un} unidades</div>
           </div>
         </div>
-        <table style="width:100%;border-collapse:collapse;background:#fff;border-radius:0 0 10px 10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.08)">
-          <thead><tr style="background:#f5ede8">
-            <th style="padding:8px 12px;text-align:left;font-size:10px;color:#b08070;font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Produto</th>
-            <th style="padding:8px 12px;text-align:center;font-size:10px;color:#b08070;font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Vendedora</th>
-            <th style="padding:8px 12px;text-align:right;font-size:10px;color:#b08070;font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Valor</th>
-          </thead>
-          <tbody>${rowsHtml}</tbody>
-        </table>
+        ${todasVends.map(vend => {
+          const vProds = prodsOrigem.filter(p=>(p.vs||[]).includes(vend));
+          if (!vProds.length) return '';
+          const vTotal = vProds.reduce((s,p)=>s+(parseFloat(p.vmin||p.vt||p.v)||0)*(p.qty||p.q||0),0);
+          const vUn = vProds.reduce((s,p)=>s+(p.qty||p.q||0),0);
+          const vendNome = vend.charAt(0)+vend.slice(1).toLowerCase();
+          return `
+            <div style="background:#f9f5f2;border-left:1px solid ${cor};border-right:1px solid ${cor};border-bottom:1px solid #f0e8e0">
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 14px;background:#fdf8f4;border-bottom:0.5px solid #ede0d4">
+                <div style="font-size:13px;font-weight:700;color:#1a1a1a">${vendNome}</div>
+                <div style="font-size:12px;font-weight:600;color:${cor}">${fmt(vTotal)} · ${vUn} un</div>
+              </div>
+              <table style="width:100%;border-collapse:collapse;background:#fff">
+                <tbody>${rowsMarcaVend(vProds)}</tbody>
+              </table>
+            </div>`;
+        }).join('')}
+        <div style="height:4px;background:${cor};border-radius:0 0 10px 10px;opacity:0.3"></div>
       </div>`;
   }
 
-  const rows = secaoOrigem('🇺🇸', mesUSA, rowsUSA, totalValUSA, totalUnUSA) +
-               secaoOrigem('🇧🇷', mesBR,  rowsBR,  totalValBR,  totalUnBR);
+  const rows = secaoOrigem('🇺🇸', mesUSA, prods.filter(p=>(p.origem||'usa')==='usa'), '#7a0b1e') +
+               secaoOrigem('🇧🇷', mesBR,  prods.filter(p=>p.origem==='br'), '#0f6b52');
 
   const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${titulo}</title>
   <style>
