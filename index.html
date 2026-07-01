@@ -1448,6 +1448,9 @@ function iniciarPresenca(nome, avatar) {
   const ref = window._db.collection('presenca').doc(nome.replace(/\s+/g,'_'));
   _presenceRef = ref;
   ref.set({ nome, avatar: avatar||'', at: new Date().toISOString() });
+  // Registrar entrada no histórico
+  const _entradaT = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+  registrarAtividade('entrou', null, nome, _entradaT);
   if (_presenceInterval) clearInterval(_presenceInterval);
   _presenceInterval = setInterval(() => {
     ref.set({ nome, avatar: avatar||'', at: new Date().toISOString() });
@@ -1480,7 +1483,17 @@ function atualizarListaOnline(snap) {
 
 function encerrarPresenca() {
   if (_presenceInterval) clearInterval(_presenceInterval);
-  if (_presenceRef) _presenceRef.delete().catch(()=>{});
+  if (_presenceRef) {
+    // Registrar saída no histórico
+    try {
+      const _saidaT = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+      const _nome = getNomeUsuario();
+      if (_nome && window._db) {
+        window._db.collection('atividade').add({tipo:'saiu', quem:_nome, time:_saidaT, ts: Date.now()});
+      }
+    } catch(e) {}
+    _presenceRef.delete().catch(()=>{});
+  }
 }
 window.addEventListener('beforeunload', encerrarPresenca);
 
@@ -1878,9 +1891,9 @@ function renderTimeline() {
   el.innerHTML = '<div style="text-align:center;padding:40px;color:#c4a898;font-size:13px">Carregando...</div>';
   window._db.collection('atividade').orderBy('ts','desc').limit(100).get().then(snap => {
     if (snap.empty) { el.innerHTML = '<div style="text-align:center;padding:40px;color:#c4a898;font-size:13px">Nenhuma atividade registrada ainda</div>'; return; }
-    const icons = { nok_on:'🚫', nok_off:'✅', compra_on:'🛒', compra_off:'↩️', comentario:'💬', nok_clear:'🗑', est_usa_on:'🇺🇸', est_usa_off:'🇺🇸', eua_on:'🇺🇸', eua_off:'🇺🇸', est_br_on:'🇧🇷', est_br_off:'🇧🇷', urgente_on:'🔴', urgente_off:'⚪' };
-    const labels = { nok_on:'marcou NOK', nok_off:'removeu NOK', compra_on:'colocou em compra', compra_off:'removeu de compra', comentario:'comentou em', nok_clear:'limpou NOK em', est_usa_on:'marcou Est USA em', est_usa_off:'removeu Est USA de', eua_on:'marcou Est USA em', eua_off:'removeu Est USA de', est_br_on:'marcou Est BR em', est_br_off:'removeu Est BR de', urgente_on:'marcou como urgente', urgente_off:'removeu urgente de' };
-    const colors = { nok_on:'#7a0b1e', nok_off:'#1D9E75', compra_on:'#d97706', compra_off:'#888', comentario:'#6366f1', nok_clear:'#888', est_usa_on:'#0f6b52', est_usa_off:'#888', eua_on:'#0f6b52', eua_off:'#888', est_br_on:'#783c18', est_br_off:'#888', urgente_on:'#dc2626', urgente_off:'#888' };
+    const icons = { nok_on:'🚫', nok_off:'✅', compra_on:'🛒', compra_off:'↩️', comentario:'💬', nok_clear:'🗑', est_usa_on:'🇺🇸', est_usa_off:'🇺🇸', eua_on:'🇺🇸', eua_off:'🇺🇸', est_br_on:'🇧🇷', est_br_off:'🇧🇷', urgente_on:'🔴', urgente_off:'⚪', entrou:'🟢', saiu:'🔴' };
+    const labels = { nok_on:'marcou NOK', nok_off:'removeu NOK', compra_on:'colocou em compra', compra_off:'removeu de compra', comentario:'comentou em', nok_clear:'limpou NOK em', est_usa_on:'marcou Est USA em', est_usa_off:'removeu Est USA de', eua_on:'marcou Est USA em', eua_off:'removeu Est USA de', est_br_on:'marcou Est BR em', est_br_off:'removeu Est BR de', urgente_on:'marcou como urgente', urgente_off:'removeu urgente de', entrou:'entrou no app', saiu:'saiu do app' };
+    const colors = { nok_on:'#7a0b1e', nok_off:'#1D9E75', compra_on:'#d97706', compra_off:'#888', comentario:'#6366f1', nok_clear:'#888', est_usa_on:'#0f6b52', est_usa_off:'#888', eua_on:'#0f6b52', eua_off:'#888', est_br_on:'#783c18', est_br_off:'#888', urgente_on:'#dc2626', urgente_off:'#888', entrou:'#1D9E75', saiu:'#888' };
     (document.getElementById('hist-sub')||{}).textContent = snap.size + ' evento(s)';
     el.innerHTML = snap.docs.map(doc => {
       const d = doc.data();
