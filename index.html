@@ -3813,6 +3813,40 @@ function gerarPDF() {
   const rows = gerarSecaoOrigem('🇺🇸', mesUSA, prods.filter(p=>(p.origem||'usa')==='usa'), COR_USA) +
                gerarSecaoOrigem('🇧🇷', mesBR,  prods.filter(p=>p.origem==='br'),            COR_BR);
 
+  // Gráfico de barras por vendedora
+  const coresGraf = ['#7a0b1e','#c45b1a','#0f6b52','#b8860b','#6366f1'];
+  const dadosGraf = todasVends.map((vend,i) => {
+    const pV = prods.filter(p=>(p.vs||[]).includes(vend));
+    const tUSA = pV.filter(p=>(p.origem||'usa')==='usa').reduce((s,p)=>s+(parseFloat(p.vmin||p.vt||p.v)||0)*(p.qty||p.q||0),0);
+    const tBR  = pV.filter(p=>p.origem==='br').reduce((s,p)=>s+(parseFloat(p.vmin||p.vt||p.v)||0)*(p.qty||p.q||0),0);
+    return {nome: vend.charAt(0)+vend.slice(1).toLowerCase(), usa: tUSA, br: tBR, total: tUSA+tBR};
+  }).filter(d=>d.total>0);
+  let graficoHtml = '';
+  if (dadosGraf.length) {
+    const maxVal = Math.max(...dadosGraf.map(d=>d.total));
+    const barW = Math.floor(520 / dadosGraf.length) - 12;
+    let svgBars = '';
+    dadosGraf.forEach((d,i) => {
+      const hUSA = Math.round((d.usa/maxVal)*150);
+      const hBR  = Math.round((d.br/maxVal)*150);
+      const x = i*(barW+12) + 6;
+      if (d.br > 0)  svgBars += '<rect x="'+x+'" y="'+(160-hBR)+'" width="'+barW+'" height="'+hBR+'" fill="#0f6b52" rx="3"/>';
+      if (d.usa > 0) svgBars += '<rect x="'+x+'" y="'+(160-hBR-hUSA)+'" width="'+barW+'" height="'+hUSA+'" fill="#7a0b1e" rx="3"/>';
+      svgBars += '<text x="'+(x+barW/2)+'" y="175" text-anchor="middle" font-size="11" font-family="Arial" font-weight="700" fill="#1a1a1a">'+d.nome+'</text>';
+      svgBars += '<text x="'+(x+barW/2)+'" y="188" text-anchor="middle" font-size="9" font-family="Arial" fill="#888">R$'+Math.round(d.total/1000)+'k</text>';
+    });
+    graficoHtml = '<div style="margin-bottom:24px;background:#fff;border-radius:12px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,0.08)">'
+      + '<div style="font-size:13px;font-weight:700;color:#1a1a1a;margin-bottom:8px">Faltantes por vendedora</div>'
+      + '<div style="display:flex;gap:16px;margin-bottom:12px">'
+      + '<span style="display:flex;align-items:center;gap:5px;font-size:10px;color:#555"><span style="display:inline-block;width:10px;height:10px;background:#7a0b1e;border-radius:2px"></span>USA</span>'
+      + '<span style="display:flex;align-items:center;gap:5px;font-size:10px;color:#555"><span style="display:inline-block;width:10px;height:10px;background:#0f6b52;border-radius:2px"></span>BR</span>'
+      + '</div>'
+      + '<svg width="100%" viewBox="0 0 540 200" xmlns="http://www.w3.org/2000/svg">'
+      + '<line x1="0" y1="160" x2="540" y2="160" stroke="#f0e8e0" stroke-width="1"/>'
+      + svgBars
+      + '</svg></div>';
+  }
+
   const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${titulo}</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
@@ -3833,6 +3867,7 @@ function gerarPDF() {
         <div style="font-size:11px;color:#aaa">${now}</div>
       </div>
     </div>
+    ${graficoHtml}
     ${rows}
     <div style="margin-top:16px;font-size:11px;color:#aaa;text-align:center">Gerado pelo Bazaar App · ${now}</div>
   </div></body></html>`;
@@ -3840,7 +3875,7 @@ function gerarPDF() {
   const blob = new Blob([html], {type:'text/html'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url; a.target = '_blank'; a.click();
+  a.href = url; a.download = 'bazaar-faltantes.html'; a.click();
   setTimeout(() => URL.revokeObjectURL(url), 5000);
 }
 
