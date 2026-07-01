@@ -2047,10 +2047,14 @@ function confirmarLimparNok() {
 
 function registrarAtividade(tipo, prodId, quem, time) {
   if (!window._db) return;
-  const p = PRODUTOS[prodId];
-  if (!p) return;
+  const p = prodId !== null && prodId !== undefined ? PRODUTOS[prodId] : null;
+  // Eventos sem produto (entrou, saiu) não precisam de p
+  const precisaProd = !['entrou','saiu'].includes(tipo);
+  if (precisaProd && !p) return;
   window._db.collection('atividade').add({
-    tipo, prodId, prodNome: p.n, prodMarca: p.m||'', quem, time,
+    tipo, prodId: prodId ?? null,
+    prodNome: p ? p.n : '', prodMarca: p ? (p.m||'') : '',
+    quem, time,
     ts: new Date().toISOString()
   }).catch(()=>{});
 }
