@@ -637,9 +637,15 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
       <button class="comment-send" onclick="sendComment()">➤</button>
     </div>
     <div style="display:flex;flex-direction:column;gap:8px;margin-top:16px">
-      <div style="display:flex;gap:8px">
+      <div style="display:flex;gap:8px;position:relative">
         <button class="btn-secondary" onclick="toggleNok()" style="flex:1;padding:12px">✕ NOK</button>
-        <button id="btn-em-compra" onclick="toggleEmCompra()" style="flex:1;padding:12px;border-radius:12px;background:#f59e0b;border:none;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🛒 Em compra</button>
+        <button id="btn-em-compra" onclick="abrirSelecaoCompra()" style="flex:1;padding:12px;border-radius:12px;background:#f59e0b;border:none;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🛒 Em compra</button>
+        <!-- Seleção de tamanhos em compra -->
+        <div id="modal-compra-selecao" style="display:none;position:absolute;bottom:70px;left:0;right:0;background:var(--bg);border:2px solid #f59e0b;border-radius:14px;padding:14px;z-index:10;margin:0 8px;box-shadow:0 4px 20px rgba(0,0,0,0.3)">
+          <div style="font-size:11px;color:#d97706;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">Selecionar para compra</div>
+          <div id="modal-compra-tams" style="display:flex;flex-direction:column;gap:6px"></div>
+          <button onclick="confirmarSelecaoCompra()" style="width:100%;margin-top:12px;padding:10px;border-radius:10px;background:#f59e0b;border:none;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">🛒 Confirmar em compra</button>
+        </div>
       </div>
       <div style="display:flex;gap:8px">
         <button id="btn-est-eua" onclick="toggleEstEua()" style="flex:1;padding:12px;border-radius:12px;background:#0f6b52;border:none;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🇺🇸 Est USA</button>
@@ -1024,7 +1030,7 @@ function getFiltered() {
     if (fMarcas.size > 0 && !fMarcas.has((p.m||'').trim())) return false;
     if (fCat && (p.c||'').trim() !== fCat) return false;
     if (fStatus === 'nok'    && !p.nok) return false;
-    if (fStatus === 'compra' && !p.em_compra) return false;
+    if (fStatus === 'compra') { const ec = p.em_compra; const temCompra = ec && (typeof ec === 'object' ? Object.values(ec).some(v=>v>0) : true); if (!temCompra) return false; }
     if (fStatus === 'eua'    && !p.est_eua) return false;
     if (fStatus === 'br'     && !p.est_br) return false;
     if (fStatus === 'urgente' && !p.urgente) return false;
@@ -1167,7 +1173,13 @@ function renderGrid() {
       <div class="card-img" onclick="openModal(${p._id})">
         ${img}
         ${p.nok ? '<div class="nok-overlay show"><div class="nok-bg"></div><div class="nok-content"><div class="nok-label">✕ NOK</div>' + (p.nokWho ? '<div style="font-size:9px;color:rgba(255,255,255,0.75);margin-top:2px">'+p.nokWho+'</div>' : '') + '</div></div>' : ''}
-        ${p.em_compra ? '<div class="compra-overlay show"><div class="compra-bg"></div><div class="compra-content"><div class="compra-label">🛒 Em compra</div></div></div>' : ''}
+        ${(() => {
+          const ec = p.em_compra;
+          if (!ec) return '';
+          const temCompra = typeof ec === 'object' ? Object.values(ec).some(v=>v>0) : ec === true;
+          if (!temCompra) return '';
+          return '<div class="compra-overlay show"><div class="compra-bg"></div><div class="compra-content"><div class="compra-label">🛒</div></div></div>';
+        })()}
         ${p.est_eua ? '<div class="eua-overlay show"><div class="eua-bg"></div><div class="eua-content"><div class="eua-label">🇺🇸 Est USA</div></div></div>' : ''}
         ${p.est_br ? '<div class="br-overlay show"><div class="br-bg"></div><div class="br-content"><div class="br-label">🇧🇷 Est BR</div></div></div>' : ''}
         <button class="btn-nok" onclick="event.stopPropagation();confirmNok(${p._id})">✕</button>
@@ -1188,9 +1200,15 @@ function renderGrid() {
           Object.entries(p.tams).map(([t,q]) => {
             const isUndef = t === '??? (a definir)';
             const isNok = (p.nokTams||{})[t];
-            return '<div style="border:0.5px solid ' + (isNok?'rgba(192,57,43,0.3)':isUndef?'#f5d4a4':'var(--border)') + ';border-radius:6px;padding:3px 2px;text-align:center;background:' + (isNok?'rgba(192,57,43,0.06)':isUndef?'#fff8e8':'transparent') + '">' +
-              '<div style="font-size:10px;font-weight:600;color:' + (isNok?'#c0392b':isUndef?'#8a5000':'var(--text)') + ';' + (isNok?'text-decoration:line-through':'') + '">' + (isUndef?'???':t) + '</div>' +
-              '<div style="font-size:9px;color:' + (isNok?'rgba(192,57,43,0.5)':isUndef?'#b08070':'var(--text2)') + '">' + (isNok?'NOK':q+' un') + '</div>' +
+            const ecObj = (p.em_compra && typeof p.em_compra === 'object') ? p.em_compra : {};
+            const ecQty = ecObj[t] || 0;
+            const isCompra = ecQty > 0;
+            const border = isNok?'rgba(192,57,43,0.3)':isCompra?'#f59e0b':isUndef?'#f5d4a4':'var(--border)';
+            const bg = isNok?'rgba(192,57,43,0.06)':isCompra?'rgba(245,158,11,0.08)':isUndef?'#fff8e8':'transparent';
+            const textCol = isNok?'#c0392b':isCompra?'#d97706':isUndef?'#8a5000':'var(--text)';
+            return '<div style="border:0.5px solid ' + border + ';border-radius:6px;padding:3px 2px;text-align:center;background:' + bg + '">' +
+              '<div style="font-size:10px;font-weight:600;color:' + textCol + ';' + (isNok?'text-decoration:line-through':'') + '">' + (isUndef?'???':t) + '</div>' +
+              '<div style="font-size:9px;color:' + (isNok?'rgba(192,57,43,0.5)':isCompra?'#d97706':isUndef?'#b08070':'var(--text2)') + '">' + (isNok?'NOK':isCompra?'🛒'+ecQty:q+' un') + '</div>' +
             '</div>';
           }).join('') + '</div>' : ''}
         <div style="margin-top:2px;font-size:9px;color:#c4a898;display:flex;justify-content:space-between;align-items:center">
@@ -1667,9 +1685,14 @@ function openModal(id, focusComment=false) {
 
   const btnEc = document.getElementById('btn-em-compra');
   if (btnEc) {
-    btnEc.style.background = p.em_compra ? '#d97706' : '#f59e0b';
-    btnEc.textContent = p.em_compra ? '🛒 Em compra ✓' : '🛒 Em compra';
+    const ec = p.em_compra;
+    const ecTotal = ec && typeof ec === 'object' ? Object.values(ec).reduce((s,v)=>s+v,0) : (ec ? 1 : 0);
+    btnEc.style.background = ecTotal > 0 ? '#d97706' : '#f59e0b';
+    btnEc.textContent = ecTotal > 0 ? '🛒 Em compra (' + ecTotal + ')' : '🛒 Em compra';
   }
+  const selEl = document.getElementById('modal-compra-selecao');
+  if (selEl) selEl.style.display = 'none';
+  window._selecaoCompra = {};
   const btnEua = document.getElementById('btn-est-eua');
   if (btnEua) {
     btnEua.style.background = p.est_eua ? '#0a6648' : '#0f6b52';
@@ -2411,17 +2434,106 @@ function toggleEmCompraCard(id) {
   updateEmCompraBadge();
 }
 
-function toggleEmCompra() {
+function abrirSelecaoCompra() {
   if (modalId === null) return;
   const p = PRODUTOS[modalId];
-  p.em_compra = !p.em_compra;
+  const sel = document.getElementById('modal-compra-selecao');
+  if (!sel) return;
+
+  // Se já aberto, fechar
+  if (sel.style.display !== 'none') {
+    sel.style.display = 'none';
+    return;
+  }
+
+  const tams = p.tams && Object.keys(p.tams).length > 0 ? p.tams : {'Único': p.qty||p.q||1};
+  const ecAtual = (typeof p.em_compra === 'object' && p.em_compra) ? p.em_compra : {};
+  const container = document.getElementById('modal-compra-tams');
+  container.innerHTML = '';
+
+  Object.entries(tams).forEach(([tam, qTotal]) => {
+    const emCompraQty = ecAtual[tam] || 0;
+    const faltantes = Math.max(0, qTotal - emCompraQty);
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--bg2);border-radius:8px;gap:10px';
+    row.innerHTML =
+      '<div style="flex:1">' +
+        '<div style="font-size:12px;font-weight:700;color:var(--text)">' + tam + '</div>' +
+        '<div style="font-size:10px;color:var(--text4)">' +
+          (emCompraQty > 0 ? '<span style="color:#d97706">🛒 '+emCompraQty+' em compra</span> · ' : '') +
+          faltantes + ' faltante' + (faltantes !== 1 ? 's' : '') +
+        '</div>' +
+      '</div>' +
+      '<div style="display:flex;align-items:center;gap:8px">' +
+        '<button data-tam="'+tam+'" data-delta="-1" data-max="'+qTotal+'" onclick="ajustarCompraBtn(this)" style="width:28px;height:28px;border-radius:50%;background:var(--bg);border:1px solid var(--border);color:var(--text);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit">−</button>' +
+        '<div id="compra-qty-'+tam+'" style="font-size:14px;font-weight:700;color:#d97706;min-width:20px;text-align:center">0</div>' +
+        '<button data-tam="'+tam+'" data-delta="1" data-max="'+qTotal+'" onclick="ajustarCompraBtn(this)" style="width:28px;height:28px;border-radius:50%;background:#f59e0b;border:none;color:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit">+</button>' +
+      '</div>';
+    container.appendChild(row);
+  });
+
+  sel.style.display = 'block';
+}
+
+// Armazena seleção temporária
+window._selecaoCompra = {};
+
+function ajustarCompraBtn(btn) {
+  ajustarCompra(btn.dataset.tam, parseInt(btn.dataset.delta), parseInt(btn.dataset.max));
+}
+
+function ajustarCompra(tam, delta, maxTotal) {
+  const p = PRODUTOS[modalId];
+  const ecAtual = (typeof p.em_compra === 'object' && p.em_compra) ? p.em_compra : {};
+  const emCompraQty = ecAtual[tam] || 0;
+  const faltantes = Math.max(0, (p.tams?.[tam] || p.qty || 1) - emCompraQty);
+  if (!window._selecaoCompra) window._selecaoCompra = {};
+  const atual = window._selecaoCompra[tam] || 0;
+  const novo = Math.max(0, Math.min(atual + delta, faltantes));
+  window._selecaoCompra[tam] = novo;
+  const el = document.getElementById('compra-qty-' + tam);
+  if (el) el.textContent = novo;
+}
+
+function confirmarSelecaoCompra() {
+  if (modalId === null) return;
+  const p = PRODUTOS[modalId];
+  const sel = window._selecaoCompra || {};
+  // Somar com o que já está em compra
+  const ecAtual = (typeof p.em_compra === 'object' && p.em_compra) ? {...p.em_compra} : {};
+  let adicionou = false;
+  Object.entries(sel).forEach(([tam, qty]) => {
+    if (qty > 0) {
+      ecAtual[tam] = (ecAtual[tam] || 0) + qty;
+      adicionou = true;
+    }
+  });
+  if (!adicionou) {
+    document.getElementById('modal-compra-selecao').style.display = 'none';
+    return;
+  }
+  p.em_compra = ecAtual;
+  window._selecaoCompra = {};
+  document.getElementById('modal-compra-selecao').style.display = 'none';
+  // Atualizar botão
   const btn = document.getElementById('btn-em-compra');
   if (btn) {
-    btn.style.background = p.em_compra ? '#d97706' : '#f59e0b';
-    btn.textContent = p.em_compra ? '🛒 Em compra ✓' : '🛒 Em compra';
+    const total = Object.values(ecAtual).reduce((s,v)=>s+v,0);
+    btn.style.background = '#d97706';
+    btn.textContent = '🛒 Em compra (' + total + ')';
   }
+  const quem = getNomeUsuario();
+  const t = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+  registrarAtividade('compra_on', modalId, quem, t);
+  mostrarNotificacao('🛒 Em compra', quem + ' · ' + (p.n||'').substring(0,40), '#d97706');
   fbSave(modalId);
   renderGrid();
+}
+
+function toggleEmCompra() {
+  // Mantido para compatibilidade com toggleEmCompraCard
+  if (modalId === null) return;
+  abrirSelecaoCompra();
 }
 
 function toggleNok() {
