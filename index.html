@@ -4227,8 +4227,28 @@ function salvarOrigemNoFirebase(newData, origem, onDone) {
     docsToDelete.forEach(doc => batch.delete(doc.ref));
     return batch.commit();
   }).then(() => {
-    // Limpar faltantes da origem — se USA, também limpar legados sem origem
+    // Salvar status antes de limpar faltantes para reaplicar depois
     return window._db.collection('faltantes').get().then(snap => {
+      // Guardar status ativos (em_compra, nok, urgente, est_eua, est_br) por nome de produto
+      window._statusBackup = {};
+      snap.docs.forEach(doc => {
+        const d = doc.data();
+        const o = doc.data().origem;
+        const pertenceOrigem = origem === 'usa' ? (!o || o === 'usa') : o === 'br';
+        if (pertenceOrigem && PRODUTOS[parseInt(doc.id)]) {
+          const p = PRODUTOS[parseInt(doc.id)];
+          const key = (p.n||'').toLowerCase().trim() + '||' + (p.m||'').toLowerCase().trim();
+          window._statusBackup[key] = {
+            em_compra: d.em_compra || false,
+            nok: d.nok || false,
+            urgente: d.urgente || false,
+            est_eua: d.est_eua || false,
+            est_br: d.est_br || false,
+            nokTams: d.nokTams || {},
+            nokWho: d.nokWho || '',
+          };
+        }
+      });
       const toDelete = snap.docs.filter(doc => {
         const o = doc.data().origem;
         return origem === 'usa' ? (!o || o === 'usa') : o === 'br';
@@ -4260,6 +4280,38 @@ function salvarOrigemNoFirebase(newData, origem, onDone) {
   }).then(() => {
     setStatus('✅ ' + newData.length + ' produtos salvos (' + origem.toUpperCase() + ')');
     fbListen();
+    // Reaplicar status salvos nos novos produtos pelo nome+marca
+    if (window._statusBackup && Object.keys(window._statusBackup).length > 0) {
+      setTimeout(() => {
+        const batch2 = window._db.batch();
+        let restored = 0;
+        PRODUTOS.forEach(p => {
+          if ((p.origem||'usa') !== origem) return;
+          const key = (p.n||'').toLowerCase().trim() + '||' + (p.m||'').toLowerCase().trim();
+          const bk = window._statusBackup[key];
+          if (!bk) return;
+          if (bk.em_compra || bk.nok || bk.urgente || bk.est_eua || bk.est_br) {
+            p.em_compra = bk.em_compra;
+            p.nok = bk.nok;
+            p.urgente = bk.urgente;
+            p.est_eua = bk.est_eua;
+            p.est_br = bk.est_br;
+            p.nokTams = bk.nokTams;
+            p.nokWho = bk.nokWho;
+            const ref = window._db.collection('faltantes').doc(String(p._id));
+            batch2.set(ref, {...bk, origem}, {merge:true});
+            restored++;
+          }
+        });
+        if (restored > 0) {
+          batch2.commit().then(() => {
+            setStatus('✅ ' + newData.length + ' produtos · ' + restored + ' status restaurados');
+            renderGrid();
+          });
+        }
+        window._statusBackup = {};
+      }, 1500);
+    }
     if (onDone) onDone();
   }).catch(e => {
     setStatus('❌ Erro ao salvar: ' + e.message);
