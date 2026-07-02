@@ -4323,12 +4323,21 @@ function processarCSVBR(input) {
       const iCliente=h.indexOf('CLIENTE'), iItem=h.indexOf('ITEM'), iVal=h.indexOf('VALOR'), iConf=h.indexOf('CONF');
       const iMarca=h.indexOf('MARCA'), iCat=h.lastIndexOf('CATEGORIA'), iVend=h.indexOf('VENDEDORA'), iFoto=h.indexOf('FOTO');
       const iTam=h.indexOf('TAM'), iCor=h.indexOf('COR');
+      // Segunda coluna COD (lastIndexOf) tem o valor real do item IA
+      const iCodVal = h.lastIndexOf('COD');
 
       const pv = (v) => {
         let s = String(v||'').replace(/R\$\s*/g,'').trim();
         if (s.includes('.') && s.includes(',')) { s = s.replace(/\./g,'').replace(',','.'); }
         else if (s.includes(',') && !s.includes('.')) { const p=s.split(','); s = (p[1]&&p[1].length===3) ? s.replace(',','') : s.replace(',','.'); }
         const n = parseFloat(s); return isNaN(n) ? 0 : n;
+      };
+      
+      // Pega o valor do item: prefere COD (segunda coluna), cai para VALOR se vazio
+      const pvBR = (row) => {
+        const vCod = iCodVal > -1 ? pv(row[iCodVal]) : 0;
+        if (vCod > 0) return vCod;
+        return pv(row[iVal]);
       };
 
       const groups = {};
@@ -4346,7 +4355,7 @@ function processarCSVBR(input) {
         const cor = row[iCor]?.trim() || '';
         const vend = row[iVend]?.trim() || '';
         const valUnit = (() => {
-          const v = pv(row[iVal]);
+          const v = pvBR(row);
           const vendRaw = row[iVend]?.trim().toUpperCase() || '';
           return vendRaw.includes('BAZAAR') ? Math.round(v / 0.8 * 100) / 100 : v;
         })();
