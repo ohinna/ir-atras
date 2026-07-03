@@ -1589,7 +1589,7 @@ function openModal(id, focusComment=false) {
     imgEl.onclick = () => abrirFotoCheia(p.f, p.n, p.m||'');
     const img = document.createElement('img');
     img.src = p.f;
-    img.style.cssText = 'width:100%;height:100%;object-fit:contain;border-radius:14px;pointer-events:none;background:var(--bg3)';
+    img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:14px;pointer-events:none';
     const driveId = (p.f||'').match(/(?:lh3\.googleusercontent\.com\/d\/|drive\.google\.com\/thumbnail\?id=)([a-zA-Z0-9_-]+)/)?.[1];
     img.onerror = () => {
       if (driveId && !img.dataset.fb) {
