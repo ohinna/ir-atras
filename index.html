@@ -4990,11 +4990,7 @@ if ('serviceWorker' in navigator) {
       const nw = reg.installing;
       nw.addEventListener('statechange', () => {
         if (nw.state === 'installed' && navigator.serviceWorker.controller) {
-          const banner = document.createElement('div');
-          banner.style.cssText = 'position:fixed;bottom:75px;left:50%;transform:translateX(-50%);z-index:9999;background:#1a1a1a;color:#fff;border-radius:20px;padding:10px 20px;font-size:12px;font-weight:600;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,0.3);white-space:nowrap;display:flex;align-items:center;gap:10px';
-          banner.innerHTML = '🔄 Nova versão disponível <span style="background:#7a0b1e;border-radius:10px;padding:3px 10px">Atualizar</span>';
-          banner.onclick = () => { nw.postMessage('skipWaiting'); window.location.reload(); };
-          document.body.appendChild(banner);
+          nw.postMessage('skipWaiting');
         }
       });
     });
