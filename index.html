@@ -340,6 +340,15 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
     </div>
 
     <div class="upload-card">
+      <div class="upload-title">📊 Importar Relatório de Vendas</div>
+      <div class="upload-sub">Importa o CSV de relatório com % Budget e barras de progresso por vendedora.</div>
+      <label class="upload-btn">
+        ⬆ Selecionar CSV Relatório
+        <input type="file" accept=".csv" style="display:none" onchange="processarCSVRelatorio(this)">
+      </label>
+      <div id="relatorio-status" style="font-size:11px;color:#b08070;margin-top:8px"></div>
+    </div>
+    <div class="upload-card">
       <div class="upload-title">🇺🇸 Importar Planilha USA</div>
       <div class="upload-sub">Importe o CSV da planilha EUA para atualizar os produtos faltantes dessa origem.</div>
       <div style="margin-bottom:10px">
@@ -2821,7 +2830,12 @@ function renderMeta() {
   }
 
   const fmt = v => 'R$ ' + (v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const fmtPct = v => (v >= 0 ? '+' : '') + v.toFixed(2).replace('.',',') + '%';
   const cores = ['#7a0b1e','#f59e0b','#0f6b52','#6366f1','#783c18','#ea580c'];
+
+  // Dados do relatório de vendas
+  let relatorio = null;
+  try { relatorio = JSON.parse(localStorage.getItem('relatorio_vendas')||'null'); } catch(e) {}
 
   // Calcular % atingido de cada vendedora
   const vendedoras = data.map((v,i) => ({
@@ -2901,11 +2915,52 @@ function renderMeta() {
     <td style="padding:4px 6px;text-align:right"><span style="background:#e8f5f1;color:#0f6b52;border-radius:8px;padding:2px 6px;font-size:10px;font-weight:700">${pctTotal}%</span></td>
   </tr>`;
 
+  // Bloco % Budget
+  let budgetHtml = '';
+  if (relatorio) {
+    const bud = relatorio.budget;
+    const budCor = bud >= 0 ? '#0f6b52' : '#dc2626';
+    const budEmoji = bud >= 0 ? '✅' : '🚨';
+    budgetHtml = `<div style="background:var(--bg2);border:0.5px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div style="font-size:11px;color:var(--text4);font-weight:600;text-transform:uppercase;letter-spacing:0.5px">% Budget</div>
+        <div style="font-size:18px;font-weight:800;color:${budCor}">${budEmoji} ${fmtPct(bud)}</div>
+      </div>
+      ${Object.entries(relatorio.vendedoras).map(([nome, vd]) => {
+        if (!vd.meta) return '';
+        const pReal = Math.min(100, Math.round((vd.realizadas||0)/vd.meta*100));
+        const pMais = Math.min(100, Math.round((vd.realizadoMais||0)/vd.meta*100));
+        const vBud = vd.budget || 0;
+        const vBudCor = vBud >= 0 ? '#0f6b52' : '#dc2626';
+        const nomeF = nome.charAt(0)+nome.slice(1).toLowerCase();
+        return '<div style="margin-bottom:10px">' +
+          '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">' +
+            '<div style="font-size:12px;font-weight:700;color:var(--text)">'+nomeF+'</div>' +
+            '<div style="font-size:10px;font-weight:600;color:'+vBudCor+'">'+fmtPct(vBud)+'</div>' +
+          '</div>' +
+          '<div style="background:var(--bg);border-radius:6px;height:10px;overflow:hidden;position:relative">' +
+            '<div style="position:absolute;left:0;top:0;height:100%;width:'+pMais+'%;background:#f59e0b33;border-radius:6px"></div>' +
+            '<div style="position:absolute;left:0;top:0;height:100%;width:'+pReal+'%;background:#0f6b52;border-radius:6px"></div>' +
+          '</div>' +
+          '<div style="display:flex;gap:10px;margin-top:3px">' +
+            '<span style="font-size:9px;color:#0f6b52">🟢 '+pReal+'% vendido</span>' +
+            '<span style="font-size:9px;color:#d97706">🟡 '+pMais+'% c/ compras</span>' +
+          '</div>' +
+        '</div>';
+      }).join('')}
+      <div style="margin-top:8px;padding-top:8px;border-top:0.5px solid var(--border);display:flex;gap:10px;font-size:9px;color:var(--text4)">
+        <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;background:#0f6b52;border-radius:2px;display:inline-block"></span>Vendas realizadas</span>
+        <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;background:#f59e0b44;border-radius:2px;display:inline-block"></span>+ a comprar</span>
+      </div>
+    </div>`;
+  }
+
   container.innerHTML = `
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
       <button onclick="gerarPdfMeta('todas')" style="padding:10px;border-radius:12px;background:#7a0b1e;border:none;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px">📄 PDF</button>
       <button onclick="enviarWppMeta('todas')" style="padding:10px;border-radius:12px;background:#0f6b52;border:none;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px">💬 WhatsApp</button>
     </div>
+    ${budgetHtml}
     <div id="selecao-vend-pdf" style="display:none;background:var(--bg2);border:0.5px solid var(--border);border-radius:12px;padding:12px;margin-bottom:12px">
       <div style="font-size:11px;color:var(--text4);margin-bottom:8px">Escolha a vendedora:</div>
       <div id="selecao-vend-pdf-lista" style="display:flex;flex-direction:column;gap:6px"></div>
@@ -4430,6 +4485,87 @@ function salvarOrigemNoFirebase(newData, origem, onDone) {
     fbListen();
     if (onDone) onDone();
   });
+}
+
+function processarCSVRelatorio(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const status = document.getElementById('relatorio-status');
+  if (status) status.textContent = 'Lendo...';
+  const reader = new FileReader();
+  reader.onload = e => {
+    const rows = e.target.result.replace(/\r/g,'').split('\n').map(l => {
+      const cells = []; let cur = '', inQ = false;
+      for (const ch of l) {
+        if (ch === '"') inQ = !inQ;
+        else if (ch === ',' && !inQ) { cells.push(cur.trim()); cur = ''; }
+        else cur += ch;
+      }
+      cells.push(cur.trim());
+      return cells;
+    });
+
+    const pv = s => { let v = String(s||'').replace(/R\$\s*/g,'').replace(/\./g,'').replace(',','.').trim(); const n=parseFloat(v); return isNaN(n)?0:n; };
+    const pp = s => { let v = String(s||'').replace('%','').replace(',','.').trim(); const n=parseFloat(v); return isNaN(n)?0:n; };
+
+    const dados = { budget: 0, geral: {}, vendedoras: {} };
+
+    // Parse geral
+    for (const r of rows) {
+      const label = (r[0]||'').trim().toUpperCase();
+      if (label === '% BUDGET' && !Object.keys(dados.vendedoras).length) {
+        dados.budget = pp(r[5]);
+      }
+      if (label === 'VENDAS REALIZADAS' && !Object.keys(dados.vendedoras).length) dados.geral.realizadas = pv(r[5]);
+      if (label === 'REALIZADO + A COMPRAR' && !Object.keys(dados.vendedoras).length) dados.geral.realizadoMais = pv(r[5]);
+      if (label === 'PEDIDOS EM ABERTO' && !Object.keys(dados.vendedoras).length) dados.geral.emAberto = pv(r[5]);
+      if (label.startsWith('FALTAM PARA') && !Object.keys(dados.vendedoras).length) dados.geral.faltam = pv(r[5]);
+    }
+
+    // Parse por vendedora
+    let currentVend = null;
+    for (const r of rows) {
+      const label = (r[0]||'').trim().toUpperCase();
+      const label2 = (r[10]||'').trim().toUpperCase();
+      // Nomes de vendedoras
+      ['THAIS','FABI','FABIANA','JESSICA','JÉSSICA','SABRINA'].forEach(v => {
+        if (label === v) currentVend = v === 'FABI' ? 'FABIANA' : v;
+        if (label2 === v) {
+          const v2 = v === 'FABI' ? 'FABIANA' : v;
+          if (!dados.vendedoras[v2]) dados.vendedoras[v2] = {};
+        }
+      });
+      if (currentVend) {
+        if (!dados.vendedoras[currentVend]) dados.vendedoras[currentVend] = {};
+        const vd = dados.vendedoras[currentVend];
+        if (label === 'META') vd.meta = pv(r[5]);
+        if (label === 'VENDAS REALIZADAS') vd.realizadas = pv(r[5]);
+        if (label === 'REALIZADO + A COMPRAR') vd.realizadoMais = pv(r[5]);
+        if (label === 'PEDIDOS EM ABERTO') vd.emAberto = pv(r[5]);
+        if (label === '% BUDGET') { vd.budget = pp(r[5]); currentVend = null; }
+      }
+      // Segunda coluna de vendedora
+      if (label2) {
+        ['THAIS','JESSICA','JÉSSICA','SABRINA','FABI','FABIANA'].forEach(v => {
+          if (label2 === v) {
+            const v2 = v === 'FABI' ? 'FABIANA' : v === 'JESSICA' ? 'JÉSSICA' : v;
+            if (!dados.vendedoras[v2]) dados.vendedoras[v2] = {};
+            if (label === 'META') dados.vendedoras[v2].meta = pv(r[15]);
+            if (label === 'VENDAS REALIZADAS') dados.vendedoras[v2].realizadas = pv(r[15]);
+            if (label === 'REALIZADO + A COMPRAR') dados.vendedoras[v2].realizadoMais = pv(r[15]);
+            if (label === 'PEDIDOS EM ABERTO') dados.vendedoras[v2].emAberto = pv(r[15]);
+            if (label === '% BUDGET') dados.vendedoras[v2].budget = pp(r[15]);
+          }
+        });
+      }
+    }
+
+    localStorage.setItem('relatorio_vendas', JSON.stringify(dados));
+    if (window._db) window._db.collection('config').doc('relatorio').set({dados: JSON.stringify(dados), updatedAt: new Date().toISOString()});
+    if (status) status.textContent = '✅ Relatório importado com sucesso!';
+    renderMeta();
+  };
+  reader.readAsText(file);
 }
 
 function registrarImportacao(tipo, nome) {
