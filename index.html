@@ -239,6 +239,7 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
     <div>
       <span class="logo">BAZAAR</span>
       <div id="subtitulo" onclick="editarSubtitulo()" style="font-size:10px;color:#b08070;margin-top:2px;cursor:pointer;letter-spacing:0.5px;word-break:break-word;max-width:200px;line-height:1.3" title="Clique para editar">Faltantes — Junho 2026</div>
+      <div id="versao-header" style="font-size:9px;color:#b08070;opacity:0.7;margin-top:2px;line-height:1.3;max-width:200px"></div>
     </div>
     <div style="display:flex;align-items:center;gap:8px">
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:1px">
@@ -3729,7 +3730,13 @@ function fbListen() {
   const p3 = window._db.collection('config').doc('relatorio').get().then(doc => {
     if (doc.exists && doc.data().dados) localStorage.setItem('relatorio_vendas', doc.data().dados);
   }).catch(()=>{});
-  Promise.all([p1,p2,p3]).finally(() => carregarCatalogo());
+  const p4 = window._db.collection('config').doc('import_ts').get().then(doc => {
+    if (doc.exists) {
+      if (doc.data().usa) localStorage.setItem('import_ts_usa', doc.data().usa);
+      if (doc.data().br)  localStorage.setItem('import_ts_br',  doc.data().br);
+    }
+  }).catch(()=>{});
+  Promise.all([p1,p2,p3,p4]).finally(() => { carregarCatalogo(); setTimeout(atualizarVersaoHeader, 500); });
 }
 
 function _fbListenCore() {
@@ -4421,6 +4428,8 @@ function processarCSVUSA(input) {
       salvarOrigemNoFirebase(newData, 'usa', () => {
         const now = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
         localStorage.setItem('ultima_atualizacao', now);
+        localStorage.setItem('import_ts_usa', now);
+        atualizarVersaoHeader();
         document.getElementById('csv-fill').style.width = '100%';
         setTimeout(() => { document.getElementById('csv-progress').style.display='none'; }, 3000);
       });
@@ -4644,6 +4653,21 @@ function processarCSVRelatorio(input) {
   reader.readAsText(file);
 }
 
+function atualizarVersaoHeader() {
+  const el = document.getElementById('versao-header');
+  if (!el) return;
+  const tsUSA = localStorage.getItem('import_ts_usa');
+  const tsBR  = localStorage.getItem('import_ts_br');
+  const partes = [];
+  if (tsUSA) partes.push('🇺🇸 Tabela USA enviada às ' + tsUSA);
+  if (tsBR)  partes.push('🇧🇷 Tabela BR enviada às ' + tsBR);
+  el.innerHTML = partes.join('<br>');
+  // Sincronizar no Firebase
+  if (window._db && (tsUSA || tsBR)) {
+    window._db.collection('config').doc('import_ts').set({usa: tsUSA||'', br: tsBR||''}, {merge:true});
+  }
+}
+
 function registrarImportacao(tipo, nome) {
   const ts = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
   const entry = {nome, ts, uid: getNomeUsuario()};
@@ -4774,6 +4798,9 @@ function processarCSVBR(input) {
       const now = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
 
       salvarOrigemNoFirebase(newData, 'br', () => {
+        const tsBR = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+        localStorage.setItem('import_ts_br', tsBR);
+        atualizarVersaoHeader();
         localStorage.setItem('ultima_atualizacao_br', now);
         setTimeout(() => { if (progEl) progEl.style.display='none'; }, 3000);
       });
