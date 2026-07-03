@@ -4984,17 +4984,20 @@ document.addEventListener('DOMContentLoaded', () => {
 </div>
 <script>
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/ir-atras/sw.js').then(reg => {
-    reg.update();
-    reg.addEventListener('updatefound', () => {
-      const nw = reg.installing;
-      nw.addEventListener('statechange', () => {
-        if (nw.state === 'installed' && navigator.serviceWorker.controller) {
-          nw.postMessage('skipWaiting');
-        }
+  // Desregistrar SWs antigos e registrar o novo
+  navigator.serviceWorker.getRegistrations().then(regs => {
+    regs.forEach(r => r.unregister());
+  }).then(() => {
+    navigator.serviceWorker.register('/ir-atras/sw.js').then(reg => {
+      reg.update();
+      reg.addEventListener('updatefound', () => {
+        const nw = reg.installing;
+        nw.addEventListener('statechange', () => {
+          if (nw.state === 'installed') nw.postMessage('skipWaiting');
+        });
       });
-    });
-  }).catch(() => {});
+    }).catch(() => {});
+  });
   navigator.serviceWorker.addEventListener('controllerchange', () => window.location.reload());
 }
 </script>
