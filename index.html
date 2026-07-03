@@ -3131,8 +3131,11 @@ function gerarPdfMeta(filtroVend) {
   try { metaData = JSON.parse(localStorage.getItem('meta_vendedoras')||'[]'); } catch(e) {}
   let vendasResumo = {};
   try { vendasResumo = JSON.parse(localStorage.getItem('vendas_resumo')||'{}'); } catch(e) {}
+  let relatorio = null;
+  try { relatorio = JSON.parse(localStorage.getItem('relatorio_vendas')||'null'); } catch(e) {}
   const mes = localStorage.getItem('mes_label_usa') || 'Relatório';
   const fmt = v => 'R$ ' + (v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const fmtBud = v => (v >= 0 ? '+' : '') + v.toFixed(2).replace('.',',') + '%';
 
   let _metaFalt2 = [];
   try { _metaFalt2 = JSON.parse(localStorage.getItem('meta_vendedoras')||'[]'); } catch(e) {}
@@ -3145,6 +3148,46 @@ function gerarPdfMeta(filtroVend) {
   const barCores = [{fill:'#b8860b',text:'#7a5c00',medal:'🥇'},{fill:'#c45b1a',text:'#7a3310',medal:'🥈'},{fill:'#7a0b1e',text:'#4a0812',medal:'🥉'}];
   const turnoLabel = {MANHA:'Manhã',TARDE:'Tarde',NOITE:'Noite'};
   const turnoIcons = {MANHA:'🌅',TARDE:'☀️',NOITE:'🌙'};
+
+  // Budget block para PDF
+  let budgetPdfHtml = '';
+  if (relatorio) {
+    const bud = relatorio.budget;
+    const budCor = bud >= 0 ? '#0f6b52' : '#dc2626';
+    const budEmoji = bud >= 0 ? '✅' : '🚨';
+    const vendsRel = Object.entries(relatorio.vendedoras || {});
+    const barrasHtml = vendsRel.map(([nome, vd]) => {
+      if (!vd.meta) return '';
+      const pReal = Math.min(100, Math.round((vd.realizadas||0)/vd.meta*100));
+      const pMais = Math.min(100, Math.round((vd.realizadoMais||0)/vd.meta*100));
+      const vBud = vd.budget || 0;
+      const vBudCor = vBud >= 0 ? '#0f6b52' : '#dc2626';
+      const nomeF = nome.charAt(0)+nome.slice(1).toLowerCase();
+      return '<tr><td style="padding:6px 10px;font-size:11px;font-weight:700;color:#1a1a1a;width:90px">'+nomeF+'</td>' +
+        '<td style="padding:6px 10px">' +
+          '<div style="background:#f0ece8;border-radius:4px;height:8px;overflow:hidden;position:relative;min-width:120px">' +
+            '<div style="position:absolute;left:0;top:0;height:100%;width:'+pMais+'%;background:#f59e0b33;border-radius:4px"></div>' +
+            '<div style="position:absolute;left:0;top:0;height:100%;width:'+pReal+'%;background:#0f6b52;border-radius:4px"></div>' +
+          '</div>' +
+          '<div style="display:flex;gap:8px;margin-top:2px">' +
+            '<span style="font-size:9px;color:#0f6b52">🟢 '+pReal+'% vendido</span>' +
+            '<span style="font-size:9px;color:#d97706">🟡 '+pMais+'% c/ compras</span>' +
+          '</div>' +
+        '</td>' +
+        '<td style="padding:6px 10px;font-size:11px;font-weight:700;color:'+vBudCor+';white-space:nowrap;text-align:right">Budget: '+fmtBud(vBud)+'</td>' +
+      '</tr>';
+    }).join('');
+    budgetPdfHtml = '<div style="background:#fff;border-radius:12px;padding:16px;margin-bottom:20px;box-shadow:0 1px 4px rgba(0,0,0,0.08)">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">' +
+        '<div style="font-size:12px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.5px">% Budget Geral</div>' +
+        '<div style="font-size:20px;font-weight:800;color:'+budCor+'">'+budEmoji+' '+fmtBud(bud)+'</div>' +
+      '</div>' +
+      '<table style="width:100%;border-collapse:collapse"><tbody>'+barrasHtml+'</tbody></table>' +
+      '<div style="margin-top:10px;display:flex;gap:14px;font-size:9px;color:#888">' +
+        '<span>🟢 Vendas realizadas</span><span>🟡 Realizado + a comprar</span>' +
+      '</div>' +
+    '</div>';
+  }
 
   const cardsHtml = lista.map(v => {
     const pct = v.meta > 0 ? Math.round(v.oks/v.meta*100) : 0;
@@ -3238,6 +3281,7 @@ function gerarPdfMeta(filtroVend) {
         <div style="text-align:center;border-left:1px solid #f0ece8;border-right:1px solid #f0ece8"><div style="font-size:9px;color:#888;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:4px">Faltantes</div><div style="font-size:16px;font-weight:700;color:#7a0b1e">${fmt(totalFalt)}</div></div>
         <div style="text-align:center"><div style="font-size:9px;color:#888;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:4px">Meta</div><div style="font-size:16px;font-weight:700;color:#333">${fmt(totalMeta)}</div></div>
       </div>
+      ${budgetPdfHtml}
       ${cardsHtml}
       <div style="text-align:center;font-size:10px;color:#aaa;margin-top:8px;padding-bottom:8px">Gerado em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})} · Bazaar App</div>
     </div>
@@ -3252,6 +3296,8 @@ function gerarPdfMeta(filtroVend) {
 }
 
 function enviarWppMeta(filtroVend) {
+  let relatorioWpp = null;
+  try { relatorioWpp = JSON.parse(localStorage.getItem('relatorio_vendas')||'null'); } catch(e) {}
   let metaData = [];
   try { metaData = JSON.parse(localStorage.getItem('meta_vendedoras')||'[]'); } catch(e) {}
   const mes = localStorage.getItem('mes_label_usa') || 'Mês USA';
@@ -3272,6 +3318,15 @@ function enviarWppMeta(filtroVend) {
 
 `;
 
+  // Budget geral
+  if (relatorioWpp) {
+    const bud = relatorioWpp.budget;
+    const budEmoji = bud >= 0 ? '✅' : '🚨';
+    texto += `${budEmoji} *% Budget Geral: ${bud >= 0 ? '+' : ''}${bud.toFixed(2).replace('.',',')}%*
+
+`;
+  }
+
   lista.forEach(v => {
     const pct = v.meta > 0 ? Math.round(v.oks/v.meta*100) : 0;
     const falt = faltantesApp[v.nome.toUpperCase()]||0;
@@ -3286,6 +3341,18 @@ function enviarWppMeta(filtroVend) {
       texto += '• Top marca: ' + vr.top3marcas[0].nome + ' (' + vr.top3marcas[0].qt + ' vendas · ' + fmt(vr.top3marcas[0].valorMarca||0) + ')\n';
     }
     if (vr && vr.diaMais) texto += '• Melhor dia: ' + vr.diaMais + '\n';
+    // Budget individual
+    if (relatorioWpp && relatorioWpp.vendedoras) {
+      const nomeUp = v.nome.toUpperCase();
+      const vdRel = Object.entries(relatorioWpp.vendedoras).find(([k]) => k.toUpperCase() === nomeUp || k.toUpperCase().startsWith(nomeUp.slice(0,4)));
+      if (vdRel) {
+        const vBud = vdRel[1].budget || 0;
+        const pReal = vdRel[1].meta > 0 ? Math.round((vdRel[1].realizadas||0)/vdRel[1].meta*100) : 0;
+        const pMais = vdRel[1].meta > 0 ? Math.round((vdRel[1].realizadoMais||0)/vdRel[1].meta*100) : 0;
+        texto += '• Budget: ' + (vBud >= 0 ? '+' : '') + vBud.toFixed(2).replace('.',',') + '%\n';
+        texto += '• Progresso: 🟢 ' + pReal + '% vendido · 🟡 ' + pMais + '% c/ compras\n';
+      }
+    }
     texto += '\n';
   });
 
@@ -4522,41 +4589,45 @@ function processarCSVRelatorio(input) {
       if (label.startsWith('FALTAM PARA') && !Object.keys(dados.vendedoras).length) dados.geral.faltam = pv(r[5]);
     }
 
-    // Parse por vendedora
-    let currentVend = null;
+    // Parse por vendedora — detecta automaticamente qualquer nome após "DESEMPENHO POR VENDEDORA"
+    const normVend = s => {
+      const m = {'FABI':'FABIANA','JESSICA':'JÉSSICA'};
+      const u = s.trim().toUpperCase();
+      return m[u] || (u.charAt(0) + u.slice(1).toLowerCase());
+    };
+    let vEnd1 = null, vEnd2 = null, inVend = false;
     for (const r of rows) {
       const label = (r[0]||'').trim().toUpperCase();
       const label2 = (r[10]||'').trim().toUpperCase();
-      // Nomes de vendedoras
-      ['THAIS','FABI','FABIANA','JESSICA','JÉSSICA','SABRINA'].forEach(v => {
-        if (label === v) currentVend = v === 'FABI' ? 'FABIANA' : v;
-        if (label2 === v) {
-          const v2 = v === 'FABI' ? 'FABIANA' : v;
-          if (!dados.vendedoras[v2]) dados.vendedoras[v2] = {};
-        }
-      });
-      if (currentVend) {
-        if (!dados.vendedoras[currentVend]) dados.vendedoras[currentVend] = {};
-        const vd = dados.vendedoras[currentVend];
+      // Detectar seção de desempenho por vendedora
+      if (label.startsWith('DESEMPENHO POR VENDEDORA')) { inVend = true; vEnd1 = null; vEnd2 = null; continue; }
+      if (!inVend) continue;
+      // Detectar nomes de vendedoras (linha com nome em col 0 e/ou col 10)
+      const temValor1 = r.some((v,i) => i > 0 && i < 8 && v && v.trim());
+      const temValor2 = r.some((v,i) => i > 10 && v && v.trim());
+      if (!temValor1 && label && !label.includes('VENDAS') && !label.includes('META') && !label.includes('REALIZ') && !label.includes('PEDIDO') && !label.includes('FALTAM') && !label.includes('BUDGET') && !label.includes('DESEM')) {
+        vEnd1 = normVend(r[0]);
+        if (!dados.vendedoras[vEnd1]) dados.vendedoras[vEnd1] = {};
+      }
+      if (!temValor2 && label2 && !label2.includes('VENDAS') && !label2.includes('META') && !label2.includes('REALIZ') && !label2.includes('PEDIDO') && !label2.includes('FALTAM') && !label2.includes('BUDGET') && !label2.includes('DESEM')) {
+        vEnd2 = normVend(r[10]);
+        if (!dados.vendedoras[vEnd2]) dados.vendedoras[vEnd2] = {};
+      }
+      if (vEnd1) {
+        const vd = dados.vendedoras[vEnd1];
         if (label === 'META') vd.meta = pv(r[5]);
         if (label === 'VENDAS REALIZADAS') vd.realizadas = pv(r[5]);
         if (label === 'REALIZADO + A COMPRAR') vd.realizadoMais = pv(r[5]);
         if (label === 'PEDIDOS EM ABERTO') vd.emAberto = pv(r[5]);
-        if (label === '% BUDGET') { vd.budget = pp(r[5]); currentVend = null; }
+        if (label === '% BUDGET') { vd.budget = pp(r[5]); }
       }
-      // Segunda coluna de vendedora
-      if (label2) {
-        ['THAIS','JESSICA','JÉSSICA','SABRINA','FABI','FABIANA'].forEach(v => {
-          if (label2 === v) {
-            const v2 = v === 'FABI' ? 'FABIANA' : v === 'JESSICA' ? 'JÉSSICA' : v;
-            if (!dados.vendedoras[v2]) dados.vendedoras[v2] = {};
-            if (label === 'META') dados.vendedoras[v2].meta = pv(r[15]);
-            if (label === 'VENDAS REALIZADAS') dados.vendedoras[v2].realizadas = pv(r[15]);
-            if (label === 'REALIZADO + A COMPRAR') dados.vendedoras[v2].realizadoMais = pv(r[15]);
-            if (label === 'PEDIDOS EM ABERTO') dados.vendedoras[v2].emAberto = pv(r[15]);
-            if (label === '% BUDGET') dados.vendedoras[v2].budget = pp(r[15]);
-          }
-        });
+      if (vEnd2) {
+        const vd2 = dados.vendedoras[vEnd2];
+        if (label === 'META') vd2.meta = pv(r[15]);
+        if (label === 'VENDAS REALIZADAS') vd2.realizadas = pv(r[15]);
+        if (label === 'REALIZADO + A COMPRAR') vd2.realizadoMais = pv(r[15]);
+        if (label === 'PEDIDOS EM ABERTO') vd2.emAberto = pv(r[15]);
+        if (label === '% BUDGET') { vd2.budget = pp(r[15]); vEnd1 = null; vEnd2 = null; }
       }
     }
 
