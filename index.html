@@ -3696,7 +3696,8 @@ function fbListen() {
 
   // Carregar foto_map PRIMEIRO, depois o catálogo
   const carregarCatalogo = () => {
-    if (PRODUTOS.length === 0) {
+    // Sempre recarregar do Firebase para garantir BR e USA atualizados
+    {
       window._db.collection('catalogo').get().then(snap => {
         if (!snap.empty) {
           const raw = [];
@@ -3715,8 +3716,6 @@ function fbListen() {
         }
         _fbListenCore();
       }).catch(() => _fbListenCore());
-    } else {
-      _fbListenCore();
     }
   };
 
@@ -4463,11 +4462,11 @@ function salvarOrigemNoFirebase(newData, origem, onDone) {
   if (fbUnsub) { fbUnsub(); fbUnsub = null; }
   setStatus('🧹 Limpando produtos antigos (' + origem.toUpperCase() + ')...');
   window._db.collection('catalogo').get().then(snap => {
-    // Se importando USA: deleta TUDO (produtos sem origem são todos USA legados)
-    // Se importando BR: deleta só os que têm origem == 'br'
-    const docsToDelete = origem === 'usa'
-      ? snap.docs
-      : snap.docs.filter(doc => doc.data().origem === 'br');
+    // Cada origem só apaga os seus próprios produtos
+    const docsToDelete = snap.docs.filter(doc => {
+      const o = doc.data().origem || 'usa';
+      return o === origem;
+    });
     if (!docsToDelete.length) return;
     const batch = window._db.batch();
     docsToDelete.forEach(doc => batch.delete(doc.ref));
