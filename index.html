@@ -4474,7 +4474,7 @@ function salvarOrigemNoFirebase(newData, origem, onDone) {
         const pertenceOrigem = origem === 'usa' ? (!o || o === 'usa') : o === 'br';
         if (pertenceOrigem && PRODUTOS[parseInt(doc.id)]) {
           const p = PRODUTOS[parseInt(doc.id)];
-          const key = (p.n||'').toLowerCase().trim() + '||' + (p.f||'').trim();
+          const key = (p.n||'').toLowerCase().trim() + '||' + (p.m||'').toLowerCase().trim();
           window._statusBackup[key] = {
             em_compra: d.em_compra || false,
             nok: d.nok || false,
@@ -4483,6 +4483,7 @@ function salvarOrigemNoFirebase(newData, origem, onDone) {
             est_br: d.est_br || false,
             nokTams: d.nokTams || {},
             nokWho: d.nokWho || '',
+            _nome: (p.n||'').toLowerCase().trim(),
           };
         }
       });
@@ -4524,7 +4525,7 @@ function salvarOrigemNoFirebase(newData, origem, onDone) {
         let restored = 0;
         PRODUTOS.forEach(p => {
           if ((p.origem||'usa') !== origem) return;
-          const key = (p.n||'').toLowerCase().trim() + '||' + (p.f||'').trim();
+          const key = (p.n||'').toLowerCase().trim() + '||' + (p.m||'').toLowerCase().trim();
           const bk = window._statusBackup[key];
           if (!bk) return;
           // Restaura tudo — chave nome+foto garante produto correto
