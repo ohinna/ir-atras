@@ -3726,7 +3726,10 @@ function fbListen() {
   const p2 = window._db.collection('config').doc('fotos_br').get().then(doc => {
     if (doc.exists && doc.data().map) localStorage.setItem('foto_map_br', JSON.stringify(JSON.parse(doc.data().map)));
   }).catch(()=>{});
-  Promise.all([p1,p2]).finally(() => carregarCatalogo());
+  const p3 = window._db.collection('config').doc('relatorio').get().then(doc => {
+    if (doc.exists && doc.data().dados) localStorage.setItem('relatorio_vendas', doc.data().dados);
+  }).catch(()=>{});
+  Promise.all([p1,p2,p3]).finally(() => carregarCatalogo());
 }
 
 function _fbListenCore() {
