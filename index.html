@@ -648,7 +648,7 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
     </div>
     <div style="display:flex;flex-direction:column;gap:8px;margin-top:16px">
       <div style="display:flex;gap:8px;position:relative">
-        <button class="btn-secondary" onclick="toggleNok()" style="flex:1;padding:12px">✕ NOK</button>
+        <button class="btn-secondary" onclick="abrirStatusSelecao('nok')" style="flex:1;padding:12px">✕ NOK</button>
         <button id="btn-em-compra" onclick="abrirSelecaoCompra()" style="flex:1;padding:12px;border-radius:12px;background:#f59e0b;border:none;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🛒 Em compra</button>
         <!-- Seleção de tamanhos em compra -->
         <div id="modal-compra-selecao" style="display:none;position:absolute;bottom:70px;left:0;right:0;background:var(--bg);border:2px solid #f59e0b;border-radius:14px;padding:14px;z-index:10;margin:0 8px;box-shadow:0 4px 20px rgba(0,0,0,0.3)">
@@ -656,11 +656,20 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
           <div id="modal-compra-tams" style="display:flex;flex-direction:column;gap:6px"></div>
           <button onclick="confirmarSelecaoCompra()" style="width:100%;margin-top:12px;padding:10px;border-radius:10px;background:#f59e0b;border:none;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">🛒 Confirmar em compra</button>
         </div>
+        <!-- Seleção de tamanhos genérica (NOK, Est USA, Est BR, Urgente) -->
+        <div id="modal-status-selecao" style="display:none;position:absolute;bottom:70px;left:0;right:0;background:var(--bg);border:2px solid #888;border-radius:14px;padding:14px;z-index:10;margin:0 8px;box-shadow:0 4px 20px rgba(0,0,0,0.3)">
+          <div id="modal-status-titulo" style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">Selecionar tamanhos</div>
+          <div id="modal-status-tams" style="display:flex;flex-direction:column;gap:6px"></div>
+          <div style="display:flex;gap:8px;margin-top:12px">
+            <button onclick="fecharStatusSelecao()" style="flex:1;padding:10px;border-radius:10px;background:var(--bg2);border:0.5px solid var(--border);color:var(--text);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Cancelar</button>
+            <button id="modal-status-confirmar" onclick="confirmarStatusSelecao()" style="flex:2;padding:10px;border-radius:10px;background:#888;border:none;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Confirmar</button>
+          </div>
+        </div>
       </div>
       <div style="display:flex;gap:8px">
-        <button id="btn-est-eua" onclick="toggleEstEua()" style="flex:1;padding:12px;border-radius:12px;background:#0f6b52;border:none;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🇺🇸 Est USA</button>
-        <button id="btn-est-br" onclick="toggleEstBr()" style="flex:1;padding:12px;border-radius:12px;background:#783c18;border:none;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🇧🇷 Est BR</button>
-        <button id="btn-urgente" onclick="toggleUrgente()" style="flex:1;padding:12px;border-radius:12px;background:#dc2626;border:none;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🔴 Urgente</button>
+        <button id="btn-est-eua" onclick="abrirStatusSelecao('est_eua')" style="flex:1;padding:12px;border-radius:12px;background:#0f6b52;border:none;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🇺🇸 Est USA</button>
+        <button id="btn-est-br" onclick="abrirStatusSelecao('est_br')" style="flex:1;padding:12px;border-radius:12px;background:#783c18;border:none;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🇧🇷 Est BR</button>
+        <button id="btn-urgente" onclick="abrirStatusSelecao('urgente')" style="flex:1;padding:12px;border-radius:12px;background:#dc2626;border:none;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🔴 Urgente</button>
       </div>
       <div style="display:flex;gap:8px">
         <button onclick="compartilharWhatsApp()" style="flex:1;padding:12px;border-radius:12px;background:#25d366;border:none;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">📲 WhatsApp</button>
@@ -2551,6 +2560,130 @@ function toggleEmCompra() {
   abrirSelecaoCompra();
 }
 
+// ── Sistema de seleção por tamanho para todos os status ──
+let _statusAtivo = null; // {tipo, cor, emoji, label, campo}
+
+const STATUS_CONFIG = {
+  nok:      {cor:'#7a0b1e', emoji:'✕', label:'Marcar NOK',    campo:'nokTams'},
+  est_eua:  {cor:'#0f6b52', emoji:'🇺🇸', label:'Est USA',     campo:'estEuaTams'},
+  est_br:   {cor:'#783c18', emoji:'🇧🇷', label:'Est BR',      campo:'estBrTams'},
+  urgente:  {cor:'#dc2626', emoji:'🔴', label:'Urgente',      campo:'urgenteTams'},
+};
+
+function abrirStatusSelecao(tipo) {
+  const p = PRODUTOS.find(x => x._id === modalId) || PRODUTOS[modalId];
+  if (!p) return;
+  const cfg = STATUS_CONFIG[tipo];
+  const sel = document.getElementById('modal-status-selecao');
+  const titulo = document.getElementById('modal-status-titulo');
+  const confirmar = document.getElementById('modal-status-confirmar');
+  // Toggle — fechar se já está aberto com mesmo tipo
+  if (sel.style.display !== 'none' && _statusAtivo === tipo) {
+    fecharStatusSelecao(); return;
+  }
+  fecharStatusSelecao();
+  _statusAtivo = tipo;
+  sel.style.borderColor = cfg.cor;
+  titulo.style.color = cfg.cor;
+  titulo.textContent = cfg.emoji + ' ' + cfg.label;
+  confirmar.style.background = cfg.cor;
+  confirmar.textContent = cfg.emoji + ' Confirmar ' + cfg.label;
+
+  const tams = p.tams && Object.keys(p.tams).length > 0 ? p.tams : {'Único': p.qty||p.q||1};
+  const campoAtual = p[cfg.campo] || {};
+  const container = document.getElementById('modal-status-tams');
+  container.innerHTML = '';
+
+  Object.entries(tams).forEach(([tam, qty]) => {
+    const jaAtivo = campoAtual[tam] || false;
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--bg2);border-radius:10px;border:1.5px solid ' + (jaAtivo ? cfg.cor : 'var(--border)');
+    row.innerHTML =
+      '<div>' +
+        '<div style="font-size:13px;font-weight:700;color:var(--text)">' + tam + '</div>' +
+        '<div style="font-size:10px;color:' + (jaAtivo ? cfg.cor : 'var(--text4)') + '">' + (jaAtivo ? cfg.emoji + ' já marcado' : qty + ' un') + '</div>' +
+      '</div>' +
+      '<div id="status-tam-toggle-' + tam + '" data-tam="' + tam + '" onclick="toggleStatusTamEl(this)" style="width:44px;height:24px;border-radius:12px;background:' + (jaAtivo ? cfg.cor : 'var(--bg)') + ';border:1.5px solid ' + cfg.cor + ';cursor:pointer;display:flex;align-items:center;justify-content:' + (jaAtivo ? 'flex-end' : 'flex-start') + ';padding:2px;transition:all 0.2s">' +
+        '<div style="width:18px;height:18px;border-radius:50%;background:' + (jaAtivo ? '#fff' : cfg.cor) + '"></div>' +
+      '</div>';
+    container.appendChild(row);
+  });
+
+  sel.style.display = 'block';
+}
+
+function toggleStatusTamEl(el) { toggleStatusTam(el.dataset.tam); }
+
+function toggleStatusTam(tam) {
+  if (!_statusAtivo) return;
+  const p = PRODUTOS.find(x => x._id === modalId) || PRODUTOS[modalId];
+  if (!p) return;
+  const cfg = STATUS_CONFIG[_statusAtivo];
+  if (!p[cfg.campo]) p[cfg.campo] = {};
+  p[cfg.campo][tam] = !p[cfg.campo][tam];
+  // Reatualizar o botão
+  const toggle = document.getElementById('status-tam-toggle-' + tam);
+  if (toggle) {
+    const ativo = p[cfg.campo][tam];
+    toggle.style.background = ativo ? cfg.cor : 'var(--bg)';
+    toggle.style.justifyContent = ativo ? 'flex-end' : 'flex-start';
+    toggle.children[0].style.background = ativo ? '#fff' : cfg.cor;
+    const infoEl = toggle.parentElement.querySelector('div > div:last-child');
+    if (infoEl) { infoEl.style.color = ativo ? cfg.cor : 'var(--text4)'; infoEl.textContent = ativo ? cfg.emoji + ' marcado' : ''; }
+    toggle.parentElement.style.borderColor = ativo ? cfg.cor : 'var(--border)';
+  }
+}
+
+function confirmarStatusSelecao() {
+  if (!_statusAtivo) return;
+  const p = PRODUTOS.find(x => x._id === modalId) || PRODUTOS[modalId];
+  if (!p) return;
+  const cfg = STATUS_CONFIG[_statusAtivo];
+  const tams = p.tams && Object.keys(p.tams).length > 0 ? p.tams : {'Único': 1};
+  const campo = p[cfg.campo] || {};
+  // Se todos os tamanhos estão marcados, marcar o produto inteiro também
+  const todosAtivos = Object.keys(tams).every(t => campo[t]);
+  if (_statusAtivo === 'nok') {
+    p.nok = todosAtivos;
+    p.nokTams = campo;
+    p.nokWho = getNomeUsuario();
+  } else if (_statusAtivo === 'est_eua') {
+    p.est_eua = todosAtivos;
+    p.estEuaTams = campo;
+  } else if (_statusAtivo === 'est_br') {
+    p.est_br = todosAtivos;
+    p.estBrTams = campo;
+  } else if (_statusAtivo === 'urgente') {
+    p.urgente = Object.values(campo).some(v => v);
+    p.urgenteTams = campo;
+  }
+  fecharStatusSelecao();
+  fbSave(modalId);
+  renderGrid();
+  // Atualizar botões do modal
+  atualizarBotoesModal(p);
+  const quem = getNomeUsuario();
+  const t = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+  registrarAtividade(_statusAtivo + '_on', modalId, quem, t);
+}
+
+function fecharStatusSelecao() {
+  const sel = document.getElementById('modal-status-selecao');
+  if (sel) sel.style.display = 'none';
+  _statusAtivo = null;
+}
+
+function atualizarBotoesModal(p) {
+  const btnNok = document.querySelector('[onclick="toggleNok()"]');
+  if (btnNok) { const ativo = p.nok || (p.nokTams && Object.values(p.nokTams).some(v=>v)); btnNok.style.background = ativo ? '#5a0810' : ''; }
+  const btnEua = document.getElementById('btn-est-eua');
+  if (btnEua) { btnEua.style.background = p.est_eua ? '#0a6648' : '#0f6b52'; btnEua.textContent = p.est_eua ? '🇺🇸 Est USA ✓' : '🇺🇸 Est USA'; }
+  const btnBr = document.getElementById('btn-est-br');
+  if (btnBr) { btnBr.style.background = p.est_br ? '#7a4615' : '#783c18'; btnBr.textContent = p.est_br ? '🇧🇷 Est BR ✓' : '🇧🇷 Est BR'; }
+  const btnUrg = document.getElementById('btn-urgente');
+  if (btnUrg) { btnUrg.style.background = p.urgente ? '#991b1b' : '#dc2626'; btnUrg.textContent = p.urgente ? '🔴 Urgente ✓' : '🔴 Urgente'; }
+}
+
 function toggleNok() {
   const p = PRODUTOS.find(x => x._id === modalId) || PRODUTOS[modalId];
   p.nok = !p.nok;
@@ -3503,7 +3636,15 @@ function fecharPopupMeta() {
 
 function renderNok() {
   const list = document.getElementById('nok-list');
-  const prods = PRODUTOS.filter(p => p.nok || (p.nokTams && Object.keys(p.nokTams).some(t => p.nokTams[t])));
+  const prods = PRODUTOS.filter(p => {
+    if (p.nok) return true; // produto inteiro NOK
+    if (!p.nokTams || !Object.keys(p.nokTams).some(t => p.nokTams[t])) return false;
+    // Só mostra na aba NOK se TODOS os tamanhos estão NOK
+    if (p.tams && Object.keys(p.tams).length > 0) {
+      return Object.keys(p.tams).every(t => p.nokTams[t]);
+    }
+    return true;
+  });
   prods.sort((a,b) => (parseFloat(b.vt||b.v)||0) - (parseFloat(a.vt||a.v)||0));
   (document.getElementById('nok-sub')||{}).textContent = prods.length + ' item(s) marcado(s)';
   if (!prods.length) { list.innerHTML = '<div style="text-align:center;padding:60px 20px;color:#c4a898;font-size:13px">Nenhum item marcado como NOK</div>'; return; }
