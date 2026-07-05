@@ -4913,7 +4913,17 @@ function logoutGoogle() {
 
 if (typeof firebase !== 'undefined' && firebase.apps.length) {
   firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL).then(() => {});
+
+  // Se ficar preso no "Conectando..." por mais de 12s, recarrega automaticamente
+  const _loadTimeout = setTimeout(() => {
+    const ls = document.getElementById('loading-screen');
+    if (ls && ls.style.display !== 'none') {
+      window.location.reload();
+    }
+  }, 12000);
+
   firebase.auth().onAuthStateChanged(user => {
+    clearTimeout(_loadTimeout);
     // Hide loading screen
     const ls = document.getElementById('loading-screen');
     if (ls) ls.style.display = 'none';
