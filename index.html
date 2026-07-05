@@ -203,8 +203,8 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
 <!-- LOADING SCREEN -->
 <div id="loading-screen" style="position:fixed;inset:0;z-index:9998;background:#f9f2ee;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px">
   <div style="font-size:28px;font-weight:800;color:#7a0b1e;letter-spacing:-1px">bazaar</div>
-  <div style="font-size:13px;color:#c4a898">Conectando...</div>
-  <div style="width:40px;height:4px;background:#ede0d4;border-radius:4px;overflow:hidden">
+  <div id="loading-msg" style="font-size:13px;color:#c4a898">Conectando...</div>
+  <div style="width:120px;height:3px;background:#ede0d4;border-radius:4px;overflow:hidden">
     <div style="height:100%;width:40%;background:#7a0b1e;border-radius:4px;animation:loadbar 1s ease-in-out infinite alternate"></div>
   </div>
 </div>
@@ -3865,6 +3865,9 @@ function fbListen() {
     // Sempre recarregar do Firebase para garantir BR e USA atualizados
     {
       window._db.collection('catalogo').get().then(snap => {
+        // Esconder loading screen agora que os dados chegaram
+        const ls = document.getElementById('loading-screen');
+        if (ls) ls.style.display = 'none';
         if (!snap.empty) {
           const raw = [];
           snap.forEach(doc => { raw.push({...doc.data(), _id: parseInt(doc.id)}); });
@@ -3879,9 +3882,18 @@ function fbListen() {
           updateNokBadge();
           updateEmCompraBadge();
           abrirProdutoPorHash();
+        } else {
+          // Catálogo vazio mas carregou — esconde loading
+          const ls2 = document.getElementById('loading-screen');
+          if (ls2) ls2.style.display = 'none';
         }
         _fbListenCore();
-      }).catch(() => _fbListenCore());
+      }).catch(() => {
+        // Erro no Firebase — esconde loading e mostra catálogo vazio
+        const ls = document.getElementById('loading-screen');
+        if (ls) ls.style.display = 'none';
+        _fbListenCore();
+      });
     }
   };
 
@@ -5076,9 +5088,10 @@ if (typeof firebase !== 'undefined' && firebase.apps.length) {
   firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL).then(() => {});
 
   firebase.auth().onAuthStateChanged(user => {
-    // Hide loading screen
-    const ls = document.getElementById('loading-screen');
-    if (ls) ls.style.display = 'none';
+    // Loading screen só some quando dados carregarem (ver fbListen)
+    const loadMsg = document.getElementById('loading-msg');
+    if (loadMsg && user) loadMsg.textContent = 'Carregando produtos...';
+    if (loadMsg && !user) loadMsg.textContent = 'Faça login para continuar';
 
     const overlay = document.getElementById('login-overlay');
     const userBar = document.getElementById('user-bar');
@@ -5106,6 +5119,9 @@ if (typeof firebase !== 'undefined' && firebase.apps.length) {
       pedirPermissaoNotificacao();
       iniciarPresenca(user.displayName || user.email, user.photoURL || '');
     } else {
+      // Não logado — esconde loading e mostra tela de login
+      const lsOut = document.getElementById('loading-screen');
+      if (lsOut) lsOut.style.display = 'none';
       overlay.style.display = 'flex';
       userBar.style.display = 'none';
       document.body.classList.remove('user-bar-visible');
