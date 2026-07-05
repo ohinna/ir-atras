@@ -5075,16 +5075,7 @@ function logoutGoogle() {
 if (typeof firebase !== 'undefined' && firebase.apps.length) {
   firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL).then(() => {});
 
-  // Se ficar preso no "Conectando..." por mais de 12s, recarrega automaticamente
-  const _loadTimeout = setTimeout(() => {
-    const ls = document.getElementById('loading-screen');
-    if (ls && ls.style.display !== 'none') {
-      window.location.reload();
-    }
-  }, 12000);
-
   firebase.auth().onAuthStateChanged(user => {
-    clearTimeout(_loadTimeout);
     // Hide loading screen
     const ls = document.getElementById('loading-screen');
     if (ls) ls.style.display = 'none';
@@ -5190,20 +5181,17 @@ document.addEventListener('DOMContentLoaded', () => {
 </div>
 <script>
 if ('serviceWorker' in navigator) {
-  // Desregistrar SWs antigos e registrar o novo
-  navigator.serviceWorker.getRegistrations().then(regs => {
-    regs.forEach(r => r.unregister());
-  }).then(() => {
-    navigator.serviceWorker.register('/ir-atras/sw.js').then(reg => {
-      reg.update();
-      reg.addEventListener('updatefound', () => {
-        const nw = reg.installing;
-        nw.addEventListener('statechange', () => {
-          if (nw.state === 'installed') nw.postMessage('skipWaiting');
-        });
+  navigator.serviceWorker.register('/ir-atras/sw.js').then(reg => {
+    reg.update();
+    reg.addEventListener('updatefound', () => {
+      const nw = reg.installing;
+      nw.addEventListener('statechange', () => {
+        if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+          nw.postMessage('skipWaiting');
+        }
       });
-    }).catch(() => {});
-  });
+    });
+  }).catch(() => {});
   navigator.serviceWorker.addEventListener('controllerchange', () => window.location.reload());
 }
 </script>
