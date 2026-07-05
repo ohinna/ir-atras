@@ -2594,17 +2594,21 @@ function abrirStatusSelecao(tipo) {
   const container = document.getElementById('modal-status-tams');
   container.innerHTML = '';
 
+  if (!window._statusQty) window._statusQty = {};
+  window._statusQty = {};
   Object.entries(tams).forEach(([tam, qty]) => {
-    const jaAtivo = campoAtual[tam] || false;
+    const jaAtivo = campoAtual[tam] || 0;
     const row = document.createElement('div');
-    row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--bg2);border-radius:10px;border:1.5px solid ' + (jaAtivo ? cfg.cor : 'var(--border)');
+    row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--bg2);border-radius:10px;border:1.5px solid ' + (jaAtivo > 0 ? cfg.cor : 'var(--border)');
     row.innerHTML =
-      '<div>' +
-        '<div style="font-size:13px;font-weight:700;color:var(--text)">' + tam + '</div>' +
-        '<div style="font-size:10px;color:' + (jaAtivo ? cfg.cor : 'var(--text4)') + '">' + (jaAtivo ? cfg.emoji + ' já marcado' : qty + ' un') + '</div>' +
+      '<div style="flex:1">' +
+        '<div style="font-size:12px;font-weight:700;color:var(--text)">' + tam + '</div>' +
+        '<div style="font-size:10px;color:var(--text4)">' + (jaAtivo > 0 ? '<span style="color:' + cfg.cor + '">' + cfg.emoji + ' ' + jaAtivo + ' marcado</span> · ' : '') + qty + ' disponível</div>' +
       '</div>' +
-      '<div id="status-tam-toggle-' + tam + '" data-tam="' + tam + '" onclick="toggleStatusTamEl(this)" style="width:44px;height:24px;border-radius:12px;background:' + (jaAtivo ? cfg.cor : 'var(--bg)') + ';border:1.5px solid ' + cfg.cor + ';cursor:pointer;display:flex;align-items:center;justify-content:' + (jaAtivo ? 'flex-end' : 'flex-start') + ';padding:2px;transition:all 0.2s">' +
-        '<div style="width:18px;height:18px;border-radius:50%;background:' + (jaAtivo ? '#fff' : cfg.cor) + '"></div>' +
+      '<div style="display:flex;align-items:center;gap:8px">' +
+        '<button data-tam="' + tam + '" data-delta="-1" data-max="' + qty + '" data-status="1" onclick="ajustarStatusQtyBtn(this)" style="width:28px;height:28px;border-radius:50%;background:var(--bg);border:1px solid var(--border);color:var(--text);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center">−</button>' +
+        '<div id="status-qty-' + tam + '" style="font-size:14px;font-weight:700;color:' + cfg.cor + ';min-width:20px;text-align:center">0</div>' +
+        '<button data-tam="' + tam + '" data-delta="1" data-max="' + qty + '" data-status="1" onclick="ajustarStatusQtyBtn(this)" style="width:28px;height:28px;border-radius:50%;background:' + cfg.cor + ';border:none;color:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center">+</button>' +
       '</div>';
     container.appendChild(row);
   });
@@ -2613,6 +2617,18 @@ function abrirStatusSelecao(tipo) {
 }
 
 function toggleStatusTamEl(el) { toggleStatusTam(el.dataset.tam); }
+
+function ajustarStatusQtyBtn(btn) {
+  if (!_statusAtivo) return;
+  const tam = btn.dataset.tam;
+  const delta = parseInt(btn.dataset.delta);
+  const max = parseInt(btn.dataset.max);
+  if (!window._statusQty) window._statusQty = {};
+  const atual = window._statusQty[tam] || 0;
+  window._statusQty[tam] = Math.max(0, Math.min(atual + delta, max));
+  const el = document.getElementById('status-qty-' + tam);
+  if (el) el.textContent = window._statusQty[tam];
+}
 
 function toggleStatusTam(tam) {
   if (!_statusAtivo) return;
@@ -2639,23 +2655,27 @@ function confirmarStatusSelecao() {
   const p = PRODUTOS.find(x => x._id === modalId) || PRODUTOS[modalId];
   if (!p) return;
   const cfg = STATUS_CONFIG[_statusAtivo];
-  const tams = p.tams && Object.keys(p.tams).length > 0 ? p.tams : {'Único': 1};
-  const campo = p[cfg.campo] || {};
-  // Se todos os tamanhos estão marcados, marcar o produto inteiro também
-  const todosAtivos = Object.keys(tams).every(t => campo[t]);
+  const tams = p.tams && Object.keys(p.tams).length > 0 ? p.tams : {'Único': p.qty||1};
+  const qty = window._statusQty || {};
+  // Somar com o que já está marcado
+  const campoAtual = p[cfg.campo] || {};
+  const novoQty = {...campoAtual};
+  Object.entries(qty).forEach(([t, q]) => { if (q > 0) novoQty[t] = (novoQty[t]||0) + q; });
+  const temAlgo = Object.values(novoQty).some(v => v > 0);
+  const todosAtivos = Object.keys(tams).every(t => (novoQty[t]||0) >= (tams[t]||1));
   if (_statusAtivo === 'nok') {
     p.nok = todosAtivos;
-    p.nokTams = campo;
+    p.nokTams = novoQty;
     p.nokWho = getNomeUsuario();
   } else if (_statusAtivo === 'est_eua') {
     p.est_eua = todosAtivos;
-    p.estEuaTams = campo;
+    p.estEuaTams = novoQty;
   } else if (_statusAtivo === 'est_br') {
     p.est_br = todosAtivos;
-    p.estBrTams = campo;
+    p.estBrTams = novoQty;
   } else if (_statusAtivo === 'urgente') {
-    p.urgente = Object.values(campo).some(v => v);
-    p.urgenteTams = campo;
+    p.urgente = temAlgo;
+    p.urgenteTams = novoQty;
   }
   fecharStatusSelecao();
   fbSave(modalId);
