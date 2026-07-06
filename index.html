@@ -2776,7 +2776,7 @@ function mostrarNotificacao(titulo, texto, cor) {
 }
 
 function notificarSeNovo(prodId, prevLen) {
-  const p = PRODUTOS[prodId];
+  const p = PRODUTOS.find(x => x._id === prodId) || PRODUTOS[prodId];
   if (!p || !p.comments) return;
   const meuNome = getNomeUsuario();
   const novos = p.comments.slice(prevLen);
@@ -3838,7 +3838,8 @@ function mostrarSyncToast(ok) {
 
 function fbSave(id) {
   if (!window._db) return;
-  const p = PRODUTOS[id];
+  const p = PRODUTOS.find(x => x._id === id) || PRODUTOS[id];
+  if (!p) return;
   _pendingSaves.add(id);
   // Show saving indicator on sync dot
   const dot = document.querySelector('.sync-dot');
@@ -3951,31 +3952,32 @@ function _fbListenCore() {
   fbUnsub = window._db.collection('faltantes').onSnapshot(snap => {
     snap.forEach(doc => {
       const id = parseInt(doc.id);
-      if (!isNaN(id) && PRODUTOS[id] && !_pendingSaves.has(id)) {
+      const p = !isNaN(id) ? (PRODUTOS.find(x => x._id === id) || PRODUTOS[id]) : null;
+      if (p && !_pendingSaves.has(id)) {
         const data = doc.data();
-        const prevLen = (PRODUTOS[id].comments||[]).length;
-        const prevNok = PRODUTOS[id].nok;
-        const prevCompra = PRODUTOS[id].em_compra;
-        PRODUTOS[id].nok        = data.nok        || false;
-        PRODUTOS[id].nokWho    = data.nokWho     || '';
-        PRODUTOS[id].nokHistory = data.nokHistory || [];
-        PRODUTOS[id].nokTams   = data.nokTams    || {};
-        PRODUTOS[id].comments = data.comments || [];
-        PRODUTOS[id].em_compra = data.em_compra || false;
-        PRODUTOS[id].compraHistory = data.compraHistory || [];
-        PRODUTOS[id].est_eua = data.est_eua || false;
-        PRODUTOS[id].est_br  = data.est_br  || false;
-        PRODUTOS[id].urgente = data.urgente || false;
-        if (data.qty !== undefined) PRODUTOS[id].qty = data.qty;
+        const prevLen = (p.comments||[]).length;
+        const prevNok = p.nok;
+        const prevCompra = p.em_compra;
+        p.nok        = data.nok        || false;
+        p.nokWho    = data.nokWho     || '';
+        p.nokHistory = data.nokHistory || [];
+        p.nokTams   = data.nokTams    || {};
+        p.comments = data.comments || [];
+        p.em_compra = data.em_compra || false;
+        p.compraHistory = data.compraHistory || [];
+        p.est_eua = data.est_eua || false;
+        p.est_br  = data.est_br  || false;
+        p.urgente = data.urgente || false;
+        if (data.qty !== undefined) p.qty = data.qty;
         if ((data.comments||[]).length > prevLen) notificarSeNovo(id, prevLen);
         // Notificar mudança de NOK
-        if (!prevNok && PRODUTOS[id].nok) {
-          mostrarNotificacao('🚫 NOK', PRODUTOS[id].nokWho + ' marcou ' + PRODUTOS[id].n + ' como NOK', 'var(--red)');
+        if (!prevNok && p.nok) {
+          mostrarNotificacao('🚫 NOK', p.nokWho + ' marcou ' + p.n + ' como NOK', 'var(--red)');
         }
         // Notificar mudança de Em Compra
-        if (!prevCompra && PRODUTOS[id].em_compra) {
-          const quem = (PRODUTOS[id].compraHistory||[]).slice(-1)[0]?.who || '';
-          mostrarNotificacao('🛒 Em compra', (quem ? quem + ' marcou ' : '') + PRODUTOS[id].n + ' em compra', '#d97706');
+        if (!prevCompra && p.em_compra) {
+          const quem = (p.compraHistory||[]).slice(-1)[0]?.who || '';
+          mostrarNotificacao('🛒 Em compra', (quem ? quem + ' marcou ' : '') + p.n + ' em compra', '#d97706');
         }
       }
     });
