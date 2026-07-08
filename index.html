@@ -3188,12 +3188,46 @@ function renderMeta() {
     </div>`;
   }
 
+  // Bloco Categoria mais vendida + Ticket médio
+  let categoriaTicketHtml = '';
+  if (relatorio && (relatorio.categoriaTop || Object.keys(relatorio.ticketMedio||{}).length)) {
+    const catTop = relatorio.categoriaTop;
+    const catTopHtml = catTop ? `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:0.5px solid var(--border)">
+        <div>
+          <div style="font-size:9px;color:var(--text4);text-transform:uppercase;letter-spacing:0.5px;font-weight:600">🏆 Categoria mais vendida</div>
+          <div style="font-size:14px;font-weight:700;color:var(--text);margin-top:2px">${catTop.nome.charAt(0)+catTop.nome.slice(1).toLowerCase()}</div>
+        </div>
+        <div style="font-size:15px;font-weight:800;color:#0f6b52">${fmt(catTop.valor)}</div>
+      </div>` : '';
+    const ticketRows = Object.entries(relatorio.ticketMedio||{}).map(([nome, tk]) => {
+      const nomeF = nome.charAt(0)+nome.slice(1).toLowerCase();
+      const pctCor = tk.pct >= 100 ? '#0f6b52' : tk.pct >= 70 ? '#d97706' : '#7a0b1e';
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0">
+        <div style="font-size:11px;font-weight:600;color:var(--text)">${nomeF}</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:11px;color:var(--text3)">${fmt(tk.real)}</span>
+          ${tk.meta ? '<span style="font-size:9px;color:var(--text4)">meta '+fmt(tk.meta)+'</span>' : ''}
+          <span style="font-size:10px;font-weight:700;color:${pctCor}">${tk.pct.toFixed(0).replace('.', ',')}%</span>
+        </div>
+      </div>`;
+    }).join('');
+    categoriaTicketHtml = `<div style="background:var(--bg2);border:0.5px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:12px">
+      ${catTopHtml}
+      ${ticketRows ? `<div style="margin-top:${catTopHtml?'10px':'0'}">
+        <div style="font-size:9px;color:var(--text4);text-transform:uppercase;letter-spacing:0.5px;font-weight:600;margin-bottom:6px">🎟️ Ticket médio por vendedora</div>
+        ${ticketRows}
+      </div>` : ''}
+    </div>`;
+  }
+
   container.innerHTML = `
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
       <button onclick="gerarPdfMeta('todas')" style="padding:10px;border-radius:12px;background:#7a0b1e;border:none;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px">📄 PDF</button>
       <button onclick="enviarWppMeta('todas')" style="padding:10px;border-radius:12px;background:#0f6b52;border:none;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px">💬 WhatsApp</button>
     </div>
     ${budgetHtml}
+    ${categoriaTicketHtml}
     <div id="selecao-vend-pdf" style="display:none;background:var(--bg2);border:0.5px solid var(--border);border-radius:12px;padding:12px;margin-bottom:12px">
       <div style="font-size:11px;color:var(--text4);margin-bottom:8px">Escolha a vendedora:</div>
       <div id="selecao-vend-pdf-lista" style="display:flex;flex-direction:column;gap:6px"></div>
@@ -4842,7 +4876,7 @@ function processarCSVRelatorio(input) {
     const pv = s => { let v = String(s||'').replace(/R\$\s*/g,'').replace(/\./g,'').replace(',','.').trim(); const n=parseFloat(v); return isNaN(n)?0:n; };
     const pp = s => { let v = String(s||'').replace('%','').replace(',','.').trim(); const n=parseFloat(v); return isNaN(n)?0:n; };
 
-    const dados = { budget: 0, geral: {}, vendedoras: {} };
+    const dados = { budget: 0, geral: {}, vendedoras: {}, ticketMedio: {}, categorias: [], categoriaTop: null };
 
     // Parse geral
     for (const r of rows) {
@@ -4854,6 +4888,31 @@ function processarCSVRelatorio(input) {
       if (label === 'REALIZADO + A COMPRAR' && !Object.keys(dados.vendedoras).length) dados.geral.realizadoMais = pv(r[5]);
       if (label === 'PEDIDOS EM ABERTO' && !Object.keys(dados.vendedoras).length) dados.geral.emAberto = pv(r[5]);
       if (label.startsWith('FALTAM PARA') && !Object.keys(dados.vendedoras).length) dados.geral.faltam = pv(r[5]);
+      // Bloco "TICKET MÉDIO" (canto superior direito): nome em col 10, ticket real em col 11, meta em col 12, % em col 15
+      if (label.startsWith('DESEMPENHO POR VENDEDORA')) dados._pastTicket = true;
+      if (!Object.keys(dados.vendedoras).length && !dados._pastTicket) {
+        const nomeTk = (r[10]||'').trim();
+        if (nomeTk && /^R\$/.test(r[11]||'') ) {
+          const nomeTkNorm = nomeTk.toUpperCase() === 'FABI' ? 'FABIANA' : (nomeTk.toUpperCase() === 'JESSICA' ? 'JÉSSICA' : nomeTk.charAt(0)+nomeTk.slice(1).toLowerCase());
+          dados.ticketMedio[nomeTkNorm] = { real: pv(r[11]), meta: pv(r[12]||0), pct: pp(r[15]||0) };
+        }
+      }
+      // Bloco "VENDAS POR CATEGORIA <mês>" (coluna 0 = categoria, coluna 2 = valor)
+      if (label.startsWith('VENDAS POR CATEGORIA')) { dados._inCategorias = true; continue; }
+      if (dados._inCategorias) {
+        const nomeCat = (r[0]||'').trim();
+        const valorCatRaw = r[2]||'';
+        if (nomeCat && /^R\$/.test(valorCatRaw)) {
+          dados.categorias.push({ nome: nomeCat, valor: pv(valorCatRaw) });
+        } else if (!nomeCat) {
+          dados._inCategorias = false;
+        }
+      }
+    }
+    delete dados._inCategorias;
+    delete dados._pastTicket;
+    if (dados.categorias.length) {
+      dados.categoriaTop = dados.categorias.reduce((a,b) => b.valor > a.valor ? b : a, dados.categorias[0]);
     }
 
     // Parse por vendedora — detecta automaticamente qualquer nome após "DESEMPENHO POR VENDEDORA"
