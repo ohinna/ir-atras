@@ -997,18 +997,31 @@ function resolverFoto(raw) {
   if (!raw) return '';
   const s = raw.trim();
   if (!s) return '';
-  // Se for um link do Drive, converter normalmente
-  if (s.startsWith('http')) return converterLinkDrive(s);
-  // Buscar no foto_map USA e BR
-  try {
-    const semExt = s.replace(/\.[^/.]+$/, '');
-    const maps = ['foto_map','foto_map_br'].map(k => { try { return JSON.parse(localStorage.getItem(k)||'{}'); } catch(e) { return {}; } });
+  const maps = ['foto_map','foto_map_br'].map(k => { try { return JSON.parse(localStorage.getItem(k)||'{}'); } catch(e) { return {}; } });
+  const buscarNoMapa = (nome) => {
+    const semExt = nome.replace(/\.[^/.]+$/, '');
     for (const fotoMap of maps) {
-      if (fotoMap[s]) return fotoMap[s];
-      if (fotoMap[s.toLowerCase()]) return fotoMap[s.toLowerCase()];
+      if (fotoMap[nome]) return fotoMap[nome];
+      if (fotoMap[nome.toLowerCase()]) return fotoMap[nome.toLowerCase()];
       if (fotoMap[semExt]) return fotoMap[semExt];
       if (fotoMap[semExt.toLowerCase()]) return fotoMap[semExt.toLowerCase()];
     }
+    return null;
+  };
+  // Se for um link do Drive, converter normalmente — mas antes verificar se o "id" embutido
+  // na verdade é um nome de arquivo cru que ficou salvo por engano (autocorreção de fotos quebradas)
+  if (s.startsWith('http')) {
+    const mIdBruto = s.match(/(?:drive\.google\.com\/(?:file\/d\/|open\?id=|(?:uc|thumbnail)\?(?:export=view&)?id=)|lh3\.googleusercontent\.com\/d\/)([a-zA-Z0-9_-]+)/);
+    if (mIdBruto) {
+      const achado = buscarNoMapa(mIdBruto[1]);
+      if (achado) return achado;
+    }
+    return converterLinkDrive(s);
+  }
+  // Buscar no foto_map USA e BR
+  try {
+    const achado = buscarNoMapa(s);
+    if (achado) return achado;
   } catch(e) {}
   // Fallback: tentar como ID do Drive direto
   return s.length > 10 ? `https://drive.google.com/thumbnail?id=${s}&sz=w1000` : '';
@@ -3982,7 +3995,7 @@ function fbListen() {
           snap.forEach(doc => { raw.push({...doc.data(), _id: parseInt(doc.id)}); });
           raw.sort((a,b) => a._id - b._id);
           PRODUTOS = raw.map(p => {
-            const fOriginal = p.f || '';
+            const fOriginal = p._fOriginal || p.f || '';
             const fResolved = resolverFoto(fOriginal) || converterLinkDrive(fOriginal);
             return {...p, f: fResolved, _fOriginal: fOriginal, origem: p.origem||'usa', nok:false, em_compra:false, est_eua:false, est_br:false, comments:[], qty:p.q};
           });
@@ -4663,13 +4676,13 @@ function processarCSVUSA(input) {
           return _isBazaarUSA ? Math.round(v / 0.8 * 100) / 100 : v;
         })();
         const key = base.toLowerCase().trim() + '||' + (row[iMarca]?.trim()||'').toLowerCase();
-        if (!groups[key]) groups[key] = {n:base,m:row[iMarca]?.trim()||'',c:row[iCat]?.trim()||'',cor:(iCor>-1?row[iCor]?.trim():'')||'',vs:[],v:valUnit,q:0,_vals:[],f:resolverFoto(row[iFoto]?.trim()||''),tams:{},tams_por_vend:{},est_eua:false,est_br:false,origem:'usa'};
+        if (!groups[key]) groups[key] = {n:base,m:row[iMarca]?.trim()||'',c:row[iCat]?.trim()||'',cor:(iCor>-1?row[iCor]?.trim():'')||'',vs:[],v:valUnit,q:0,_vals:[],f:resolverFoto(row[iFoto]?.trim()||''),_fOriginal:row[iFoto]?.trim()||'',tams:{},tams_por_vend:{},est_eua:false,est_br:false,origem:'usa'};
         const g = groups[key];
         if (isEstEua) g.est_eua = true;
         if (isEstBr)  g.est_br  = true;
         const vend = row[iVend]?.trim()||'';
         if (vend && !g.vs.includes(vend)) g.vs.push(vend);
-        if (!g.f && row[iFoto]?.trim()) g.f = resolverFoto(row[iFoto].trim());
+        if (!g.f && row[iFoto]?.trim()) { g.f = resolverFoto(row[iFoto].trim()); g._fOriginal = row[iFoto].trim(); }
         const tamKey = tam || 'Único';
         g.tams[tamKey] = (g.tams[tamKey]||0) + multFinal;
         if (vend) {
@@ -5071,7 +5084,8 @@ function processarCSVBR(input) {
           const vendRaw = row[iVend]?.trim().toUpperCase() || '';
           return vendRaw.includes('BAZAAR') ? Math.round(v / 0.8 * 100) / 100 : v;
         })();
-        const foto = resolverFoto(row[iFoto]?.trim() || '');
+        const fotoRawItem = row[iFoto]?.trim() || '';
+        const foto = resolverFoto(fotoRawItem);
 
         // Extrair nome base e multiplicador (igual USA)
         const {base: itemBase, tam: itemTam, mult: itemMult} = extrairTamMult(item);
@@ -5079,10 +5093,10 @@ function processarCSVBR(input) {
         const mult = itemMult;
 
         const key = itemBase.toLowerCase() + '||' + marca.toLowerCase();
-        if (!groups[key]) groups[key] = {n:itemBase,m:marca,c:cat,cor:cor,vs:[],v:valUnit,q:0,_vals:[],f:foto,tams:{},tams_por_vend:{},origem:'br'};
+        if (!groups[key]) groups[key] = {n:itemBase,m:marca,c:cat,cor:cor,vs:[],v:valUnit,q:0,_vals:[],f:foto,_fOriginal:fotoRawItem,tams:{},tams_por_vend:{},origem:'br'};
         const g = groups[key];
         if (vend && !g.vs.includes(vend)) g.vs.push(vend);
-        if (!g.f && foto) g.f = foto;
+        if (!g.f && foto) { g.f = foto; g._fOriginal = fotoRawItem; }
         g.tams[tamKey] = (g.tams[tamKey]||0) + mult;
         if (vend) {
           if (!g.tams_por_vend[vend]) g.tams_por_vend[vend] = {};
