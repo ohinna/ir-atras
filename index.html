@@ -1016,6 +1016,9 @@ function resolverFoto(raw) {
       const achado = buscarNoMapa(mIdBruto[1]);
       if (achado) return achado;
     }
+    // Já está num formato exibível e nenhuma correção foi necessária — não reformatar à toa
+    // (evita trocar um link que já funciona por outro formato, ex: thumbnail -> lh3.googleusercontent)
+    if (/drive\.google\.com\/thumbnail\?/.test(s) || /lh3\.googleusercontent\.com\/d\//.test(s)) return s;
     return converterLinkDrive(s);
   }
   // Buscar no foto_map USA e BR
