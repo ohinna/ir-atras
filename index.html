@@ -2321,6 +2321,7 @@ function exportarNokPDF() {
     .sub{color:#888;font-size:12px;margin-bottom:8px}
     .footer{margin-top:24px;font-size:11px;color:#888;text-align:right;border-top:0.5px solid #eee;padding-top:8px}
     @media print{body{padding:0}}
+    *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;color-adjust:exact!important}
   </style></head><body>
   <h1>🚫 Lista NOK — Bazaar</h1>
   <div class="sub">Gerado em ${now} · ${noks.length} item(s) · ${unGeral} un · Total ${fmt(totalGeral)}</div>
