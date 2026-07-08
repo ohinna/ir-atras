@@ -2220,11 +2220,18 @@ function exportarNokPDF() {
   const COR_USA = '#7a0b1e';
   const COR_BR  = '#0f6b52';
 
+  const mesUSA = localStorage.getItem('mes_label_usa')||'USA';
+  const mesBR  = localStorage.getItem('mes_label_br')||'BR';
+
   function tamsHtml(p) {
-    const nokT = p.nokTams || {};
-    const tamsAtivos = p.tams ? Object.entries(p.tams).filter(([t]) => !nokT[t]) : [];
-    if (tamsAtivos.length > 0 && !(tamsAtivos.length===1 && tamsAtivos[0][0]==='Único')) {
-      return tamsAtivos.map(([t,q])=>`<span style="display:inline-block;background:#f5ede8;border-radius:3px;padding:1px 4px;font-size:9px;margin-right:2px">${t==='??? (a definir)'?'???':t}: ${q}</span>`).join('');
+    const tams = p.tams ? Object.entries(p.tams) : [];
+    if (tams.length > 0 && !(tams.length===1 && tams[0][0]==='Único')) {
+      const nokT = p.nokTams || {};
+      return tams.map(([t,q])=>{
+        const tamNok = !!nokT[t];
+        const label = t==='??? (a definir)'?'???':t;
+        return `<span style="display:inline-block;background:${tamNok?'#f8e2e2':'#f5ede8'};color:${tamNok?'#7a0b1e':'#1a1a1a'};border-radius:3px;padding:1px 4px;font-size:9px;margin-right:2px">${label}: ${q}</span>`;
+      }).join('');
     }
     return '';
   }
@@ -2300,8 +2307,8 @@ function exportarNokPDF() {
       </div>`;
   }
 
-  const secoes = gerarSecaoOrigemNok('🇺🇸', 'USA', noks.filter(p=>(p.origem||'usa')==='usa'), COR_USA) +
-                 gerarSecaoOrigemNok('🇧🇷', 'BR',  noks.filter(p=>p.origem==='br'), COR_BR);
+  const secoes = gerarSecaoOrigemNok('🇺🇸', mesUSA, noks.filter(p=>(p.origem||'usa')==='usa'), COR_USA) +
+                 gerarSecaoOrigemNok('🇧🇷', mesBR,  noks.filter(p=>p.origem==='br'), COR_BR);
 
   const totalGeral = noks.reduce((a,p)=>(a+parseFloat(p.vt||p.v)||0),0);
   const unGeral = noks.reduce((a,p)=>a+(p.qty||p.q||0),0);
