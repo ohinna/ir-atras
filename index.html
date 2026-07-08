@@ -86,9 +86,9 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
 .card-footer{display:flex;justify-content:space-between;align-items:center;gap:4px;flex-wrap:nowrap}
 .card-val{font-size:11px;color:var(--text2);white-space:nowrap}
 /* Modal */
-.modal-bg{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0);backdrop-filter:blur(0px);transition:background 0.25s,backdrop-filter 0.25s}
-.modal-bg.open{display:flex;align-items:flex-end;background:var(--modal-overlay);backdrop-filter:blur(4px)}
-.modal-bg.closing{background:rgba(0,0,0,0);backdrop-filter:blur(0px)}
+.modal-bg{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0);backdrop-filter:blur(0px);transition:background 0.25s,backdrop-filter 0.25s;pointer-events:none}
+.modal-bg.open{display:flex;align-items:flex-end;background:var(--modal-overlay);backdrop-filter:blur(4px);pointer-events:auto}
+.modal-bg.closing{background:rgba(0,0,0,0);backdrop-filter:blur(0px);pointer-events:none}
 .modal{background:var(--bg);border-radius:24px 24px 0 0;box-shadow:0 -8px 40px rgba(0,0,0,0.15);width:100%;max-height:85vh;overflow-y:auto;padding:20px 20px 90px;transform:translateY(100%);transition:transform 0.3s cubic-bezier(0.32,0.72,0,1)}
 .modal-bg.open .modal{transform:translateY(0)}
 .modal-bg.closing .modal{transform:translateY(100%)}
@@ -1186,8 +1186,9 @@ function renderGrid() {
     const img = p.f ? `<img src="${p.f}" style="width:100%;height:100%;object-fit:cover;cursor:pointer" onerror="${fallbackSrc ? `if(!this.dataset.fb){this.dataset.fb=1;this.src='${fallbackSrc}';}else{` : ''}this.style.display='none';this.nextElementSibling.style.display='flex';${fallbackSrc ? '}' : ''}">
       <span class="card-abbrev" style="display:none">${ab}</span>` 
       : `<span class="card-abbrev">${ab}</span>`;
-    const hasC = p.comments && p.comments.length > 0;
-    const unread = (p.comments||[]).filter((_,i)=>!SEEN.has(p._id+'_'+i)).length;
+    const cmts = Array.isArray(p.comments) ? p.comments : [];
+    const hasC = cmts.length > 0;
+    const unread = cmts.filter((_,i)=>!SEEN.has(p._id+'_'+i)).length;
     return `<div class="card ${p.nok?'is-nok':''}" id="card-${p._id}">
       <div class="card-img" onclick="openModal(${p._id})">
         ${img}
@@ -1280,9 +1281,9 @@ function enviarComentarioRapido(id) {
   if (!input) return;
   const txt = input.value.trim();
   if (!txt) return;
-  const p = PRODUTOS[id];
+  const p = PRODUTOS.find(x => x._id === id) || PRODUTOS[id];
   if (!p) return;
-  p.comments = p.comments || [];
+  p.comments = Array.isArray(p.comments) ? p.comments : [];
   p.comments.push({
     text: txt,
     who: getNomeUsuario(),
@@ -1604,6 +1605,7 @@ function openModal(id, focusComment=false) {
   }
   if (!p) return;
   modalId = p._id;
+  try {
   const ab = abbrev(p.n, p.m);
   const imgEl = document.getElementById('modal-img');
   if (p.f) {
@@ -1744,6 +1746,9 @@ function openModal(id, focusComment=false) {
   const hist = (p.compraHistory||[]).slice(-3).reverse();
   compraHistEl.innerHTML = hist.length ? hist.map(h=>`<span style="margin-right:8px">🛒 <b>${h.who}</b> ${h.action} em ${h.time}</span>`).join('<br>') : '';
   renderModalComments(p);
+  } catch(e) {
+    console.error('openModal error:', e.message, e.stack);
+  }
   const modalBg = document.getElementById('modal-bg');
   modalBg.style.display = 'flex';
   modalBg.classList.remove('closing');
@@ -2721,12 +2726,13 @@ function toggleNok() {
 
 function renderModalComments(p) {
   const el = document.getElementById('modal-comments');
-  if (!p.comments || !p.comments.length) {
+  const list = Array.isArray(p.comments) ? p.comments : (p.comments = []);
+  if (!list.length) {
     el.innerHTML = '<div style="font-size:12px;color:#c4a898;text-align:center;padding:12px 0">Nenhum comentário ainda</div>';
     return;
   }
   el.innerHTML = '';
-  p.comments.forEach((c, i) => {
+  list.forEach((c, i) => {
     const id = p._id+'_'+i;
     SEEN.add(id);
     const div = document.createElement('div');
@@ -2777,7 +2783,7 @@ function mostrarNotificacao(titulo, texto, cor) {
 
 function notificarSeNovo(prodId, prevLen) {
   const p = PRODUTOS.find(x => x._id === prodId) || PRODUTOS[prodId];
-  if (!p || !p.comments) return;
+  if (!p || !Array.isArray(p.comments)) return;
   const meuNome = getNomeUsuario();
   const novos = p.comments.slice(prevLen);
   novos.forEach(c => {
@@ -2786,8 +2792,8 @@ function notificarSeNovo(prodId, prevLen) {
 }
 
 function deletarComentario(prodId, idx) {
-  const p = PRODUTOS[prodId];
-  if (!p) return;
+  const p = PRODUTOS.find(x => x._id === prodId) || PRODUTOS[prodId];
+  if (!p || !Array.isArray(p.comments)) return;
   if (!confirm('Excluir este comentário?')) return;
   p.comments.splice(idx, 1);
   fbSave(prodId);
@@ -2803,7 +2809,7 @@ function sendComment() {
   const p = PRODUTOS.find(x => x._id === modalId) || PRODUTOS[modalId];
   const who = getNomeUsuario();
   const time = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
-  p.comments = p.comments || [];
+  p.comments = Array.isArray(p.comments) ? p.comments : [];
   p.comments.push({who, text, time});
   inp.value = '';
   fbSave(modalId);
@@ -3763,7 +3769,7 @@ function updateNokBadge() {
 
 function renderChat() {
   const list = document.getElementById('chat-list');
-  const prods = PRODUTOS.filter(p => p.comments && p.comments.length > 0);
+  const prods = PRODUTOS.filter(p => Array.isArray(p.comments) && p.comments.length > 0);
   (document.getElementById('chat-sub')||{}).textContent = prods.length + ' produto(s) com comentários';
   if (!prods.length) {
     list.innerHTML = '<div style="text-align:center;padding:60px 20px;color:#c4a898;font-size:13px">Nenhum comentário ainda</div>';
@@ -3785,7 +3791,7 @@ function renderChat() {
 
 function updateChatBadge() {
   const total = PRODUTOS.reduce((a,p)=>{
-    return a + (p.comments||[]).filter((_,i)=>!SEEN.has(p._id+'_'+i)).length;
+    return a + (Array.isArray(p.comments) ? p.comments : []).filter((_,i)=>!SEEN.has(p._id+'_'+i)).length;
   }, 0);
   const badge = document.getElementById('chat-badge');
   badge.textContent = total;
@@ -3962,7 +3968,7 @@ function _fbListenCore() {
         p.nokWho    = data.nokWho     || '';
         p.nokHistory = data.nokHistory || [];
         p.nokTams   = data.nokTams    || {};
-        p.comments = data.comments || [];
+        p.comments = Array.isArray(data.comments) ? data.comments : [];
         p.em_compra = data.em_compra || false;
         p.compraHistory = data.compraHistory || [];
         p.est_eua = data.est_eua || false;
