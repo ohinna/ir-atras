@@ -5224,11 +5224,28 @@ function handleFotos(input, origem) {
       window._db.collection('config').doc(fbDoc).set({map: JSON.stringify(map), updatedAt: new Date().toISOString()});
     }
     if (PRODUTOS.length > 0) {
+      const corrigidos = [];
       PRODUTOS.forEach(p => {
         const fOriginal = p._fOriginal || p.f;
         const resolved = resolverFoto(fOriginal);
-        if (resolved) { p._fOriginal = fOriginal; p.f = resolved; }
+        if (resolved && resolved !== p.f) {
+          p._fOriginal = fOriginal;
+          p.f = resolved;
+          if (p._id !== undefined && p._id !== null) corrigidos.push(p);
+        }
       });
+      if (corrigidos.length && window._db) {
+        // Persistir a correção no Firebase em lotes de 400 (limite do batch do Firestore é 500)
+        const chunks = [];
+        for (let i = 0; i < corrigidos.length; i += 400) chunks.push(corrigidos.slice(i, i+400));
+        chunks.forEach(chunk => {
+          const batch = window._db.batch();
+          chunk.forEach(p => {
+            batch.set(window._db.collection('catalogo').doc(String(p._id)), { f: p.f, _fOriginal: p._fOriginal }, { merge: true });
+          });
+          batch.commit().catch(err => console.error('Erro ao persistir correção de fotos:', err.message));
+        });
+      }
     }
     const fotoTs = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
     const fotoEntry = {nome: (origem==='br'?'🇧🇷':'🇺🇸') + ' Fotos ' + (origem||'usa').toUpperCase() + ' atualizadas (' + Object.keys(map).length + ')', ts: fotoTs, uid: getNomeUsuario()};
