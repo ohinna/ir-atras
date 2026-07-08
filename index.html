@@ -3911,8 +3911,7 @@ function updateChatBadge() {
     return a + (Array.isArray(p.comments) ? p.comments : []).filter((_,i)=>!SEEN.has(p._id+'_'+i)).length;
   }, 0);
   const badge = document.getElementById('chat-badge');
-  badge.textContent = total;
-  badge.style.display = total > 0 ? 'flex' : 'none';
+  if (badge) { badge.textContent = total; badge.style.display = total > 0 ? 'flex' : 'none'; }
 }
 
 // Firebase
