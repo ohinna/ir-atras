@@ -4822,7 +4822,7 @@ function salvarOrigemNoFirebase(newData, origem, onDone) {
         const batch = window._db.batch();
         chunk.forEach(p => {
           const ref = window._db.collection('catalogo').doc(String(p._id));
-          batch.set(ref, {n:p.n,m:p.m||'',c:p.c||'',cor:p.cor||'',vs:p.vs||[],v:p.v||0,q:p.q||0,vt:p.vt||0,vmin:p.vmin||0,vmax:p.vmax||0,f:p.f||'',tams:p.tams||{},tams_str:p.tams_str||'',tams_por_vend:p.tams_por_vend||{},origem:p.origem||origem});
+          batch.set(ref, {n:p.n,m:p.m||'',c:p.c||'',cor:p.cor||'',vs:p.vs||[],v:p.v||0,q:p.q||0,vt:p.vt||0,vmin:p.vmin||0,vmax:p.vmax||0,f:p.f||'',_fOriginal:p._fOriginal||'',tams:p.tams||{},tams_str:p.tams_str||'',tams_por_vend:p.tams_por_vend||{},origem:p.origem||origem});
         });
         return batch.commit();
       });
@@ -5241,12 +5241,25 @@ function handleFotos(input, origem) {
         // Persistir a correção no Firebase em lotes de 400 (limite do batch do Firestore é 500)
         const chunks = [];
         for (let i = 0; i < corrigidos.length; i += 400) chunks.push(corrigidos.slice(i, i+400));
+        const totalChunks = chunks.length;
+        let chunksFeitos = 0, chunksComErro = 0;
         chunks.forEach(chunk => {
           const batch = window._db.batch();
           chunk.forEach(p => {
             batch.set(window._db.collection('catalogo').doc(String(p._id)), { f: p.f, _fOriginal: p._fOriginal }, { merge: true });
           });
-          batch.commit().catch(err => console.error('Erro ao persistir correção de fotos:', err.message));
+          batch.commit().then(() => {
+            chunksFeitos++;
+            if (chunksFeitos + chunksComErro === totalChunks) {
+              const el = document.getElementById(statusId);
+              if (el) el.textContent += (chunksComErro ? ` ⚠️ ${corrigidos.length} foto(s) corrigida(s), mas houve erro ao salvar ${chunksComErro} lote(s) no banco — pode reverter ao atualizar a página.` : ` · ${corrigidos.length} foto(s) corrigida(s) e salvas permanentemente.`);
+            }
+          }).catch(err => {
+            chunksComErro++;
+            console.error('Erro ao persistir correção de fotos:', err.message);
+            const el = document.getElementById(statusId);
+            if (el && chunksFeitos + chunksComErro === totalChunks) el.textContent += ` ⚠️ Erro ao salvar correção de fotos no banco: ${err.message}`;
+          });
         });
       }
     }
