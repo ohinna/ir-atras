@@ -5100,6 +5100,28 @@ function salvarVersao() {
   if (vStatus) vStatus.textContent = '✅ Salvo e sincronizado!';
 }
 
+function parseCsvLineSimples(line) {
+  // Parser simples de CSV com suporte a campos entre aspas (que podem conter vírgulas)
+  const out = [];
+  let cur = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (inQuotes) {
+      if (c === '"') {
+        if (line[i+1] === '"') { cur += '"'; i++; }
+        else inQuotes = false;
+      } else cur += c;
+    } else {
+      if (c === '"') inQuotes = true;
+      else if (c === ',') { out.push(cur); cur = ''; }
+      else cur += c;
+    }
+  }
+  out.push(cur);
+  return out;
+}
+
 function handleFotos(input, origem) {
   const file = input.files[0];
   if (!file) return;
@@ -5112,7 +5134,8 @@ function handleFotos(input, origem) {
     const lines = e.target.result.split(/\r?\n/).slice(1);
     const map = {};
     lines.forEach(l => {
-      const [nome,id] = l.split(',');
+      if (!l.trim()) return;
+      const [nome,id] = parseCsvLineSimples(l);
       if (nome&&id) {
         const n = nome.trim();
         const url = 'https://drive.google.com/thumbnail?id='+id.trim()+'&sz=w400';
