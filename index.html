@@ -2216,48 +2216,108 @@ function exportarNokPDF() {
   const fmt = v => 'R$ ' + parseFloat(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
   const now = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
 
-  let rows = noks.map((p, i) => {
+  const todasVends = [...new Set(noks.flatMap(p=>p.vs||[]).filter(Boolean))].sort();
+  const COR_USA = '#7a0b1e';
+  const COR_BR  = '#0f6b52';
+
+  function tamsHtml(p) {
     const nokT = p.nokTams || {};
     const tamsAtivos = p.tams ? Object.entries(p.tams).filter(([t]) => !nokT[t]) : [];
-    let tamStr = '';
     if (tamsAtivos.length > 0 && !(tamsAtivos.length===1 && tamsAtivos[0][0]==='Único')) {
-      tamStr = tamsAtivos.map(([t,q])=>`${t==='??? (a definir)'?'???':t} (${q})`).join(', ');
-    } else {
-      const qtd = tamsAtivos.length ? tamsAtivos[0][1] : (p.qty||p.q||0);
-      tamStr = qtd + ' un';
+      return tamsAtivos.map(([t,q])=>`<span style="display:inline-block;background:#f5ede8;border-radius:3px;padding:1px 4px;font-size:9px;margin-right:2px">${t==='??? (a definir)'?'???':t}: ${q}</span>`).join('');
     }
-    const vend = (p.vs||[]).map(v=>v.charAt(0)+v.slice(1).toLowerCase()).join(', ') || '—';
-    return `<tr>
-      <td style="text-align:center;color:#888">${i+1}</td>
-      <td><strong>${p.n}</strong><br><span style="font-size:11px;color:#888">${p.m||'—'}</span></td>
-      <td>${fmt(p.vt||p.v)}</td>
-      <td>${tamStr}</td>
-      <td>${vend}</td>
-      <td>${p.nokWho||'—'}</td>
-    </tr>`;
-  }).join('');
+    return '';
+  }
+
+  function gerarSecaoOrigemNok(flag, label, prodsOrigem, cor) {
+    if (!prodsOrigem.length) return '';
+    const totalOrig = prodsOrigem.reduce((s,p)=>(s+parseFloat(p.vt||p.v)||0),0);
+    const unOrig = prodsOrigem.reduce((s,p)=>s+(p.qty||p.q||0),0);
+
+    const gruposVend = [...todasVends, null].map(vend => {
+      const vProds = vend
+        ? prodsOrigem.filter(p=>(p.vs||[]).includes(vend))
+        : prodsOrigem.filter(p=>!(p.vs||[]).length);
+      if (!vProds.length) return '';
+      const vTotal = vProds.reduce((s,p)=>(s+parseFloat(p.vt||p.v)||0),0);
+      const vendNome = vend ? (vend.charAt(0)+vend.slice(1).toLowerCase()) : 'Sem vendedora';
+
+      // Agrupar por marca
+      const byMarca = {};
+      vProds.forEach(p => {
+        const m = (p.m||'Sem marca').trim();
+        if (!byMarca[m]) byMarca[m] = [];
+        byMarca[m].push(p);
+      });
+
+      const marcasHtml = Object.entries(byMarca).map(([m, items]) => {
+        const mTotal = items.reduce((s,p)=>(s+parseFloat(p.vt||p.v)||0),0);
+        const mUn = items.reduce((s,p)=>s+(p.qty||p.q||0),0);
+        const itensHtml = items.map(p => {
+          const tams = tamsHtml(p);
+          return `<tr style="border-bottom:0.5px solid #f5ede8">
+            <td style="padding:6px 12px;font-size:11px;color:#1a1a1a">
+              <span style="font-weight:500">${p.n}</span>
+              ${tams ? ' <span>'+tams+'</span>' : ''}
+              <br><span style="font-size:9px;color:#b08070">NOK por: ${p.nokWho||'—'}</span>
+            </td>
+            <td style="padding:6px 12px;font-size:11px;font-weight:600;color:${cor};text-align:right;white-space:nowrap">
+              ${fmt(p.vt||p.v)}
+              <span style="font-size:9px;font-weight:400;color:#999;margin-left:4px">${p.qty||p.q} un</span>
+            </td>
+          </tr>`;
+        }).join('');
+
+        return `
+          <tr style="background:#f0ece8">
+            <td style="padding:5px 12px;font-size:10px;font-weight:700;color:#5a3040;text-transform:uppercase;letter-spacing:0.5px">${m}</td>
+            <td style="padding:5px 12px;font-size:10px;font-weight:600;color:#5a3040;text-align:right;white-space:nowrap">${mUn} un · ${fmt(mTotal)}</td>
+          </tr>
+          ${itensHtml}`;
+      }).join('');
+
+      return `
+        <tr style="background:${cor}18">
+          <td style="padding:10px 12px;font-size:14px;font-weight:800;color:#1a1a1a;letter-spacing:0.5px">${vendNome}</td>
+          <td style="padding:10px 12px;font-size:13px;font-weight:700;color:${cor};text-align:right;white-space:nowrap">${fmt(vTotal)}</td>
+        </tr>
+        ${marcasHtml}
+        <tr><td colspan="2" style="height:8px;background:#fff"></td></tr>`;
+    }).join('');
+
+    return `
+      <div style="margin-top:28px;page-break-inside:avoid">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px;background:${cor};border-radius:10px 10px 0 0">
+          <div style="font-size:17px;font-weight:800;color:#fff;letter-spacing:1.5px">${flag} ${label}</div>
+          <div style="text-align:right;color:#fff">
+            <div style="font-size:15px;font-weight:700">${fmt(totalOrig)}</div>
+            <div style="font-size:10px;opacity:0.75">${unOrig} unidades · ${prodsOrigem.length} item(s)</div>
+          </div>
+        </div>
+        <table style="width:100%;border-collapse:collapse;background:#fff;border-radius:0 0 10px 10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.08)">
+          <tbody>${gruposVend}</tbody>
+        </table>
+      </div>`;
+  }
+
+  const secoes = gerarSecaoOrigemNok('🇺🇸', 'USA', noks.filter(p=>(p.origem||'usa')==='usa'), COR_USA) +
+                 gerarSecaoOrigemNok('🇧🇷', 'BR',  noks.filter(p=>p.origem==='br'), COR_BR);
+
+  const totalGeral = noks.reduce((a,p)=>(a+parseFloat(p.vt||p.v)||0),0);
+  const unGeral = noks.reduce((a,p)=>a+(p.qty||p.q||0),0);
 
   const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
   <title>NOK — Bazaar</title>
   <style>
     body{font-family:Arial,sans-serif;font-size:13px;color:#1a1a1a;padding:24px}
     h1{color:#7a0b1e;font-size:18px;margin:0 0 4px}
-    .sub{color:#888;font-size:12px;margin-bottom:20px}
-    table{width:100%;border-collapse:collapse}
-    th{background:#7a0b1e;color:#fff;padding:8px 10px;text-align:left;font-size:12px}
-    td{padding:8px 10px;border-bottom:0.5px solid #eee;vertical-align:top}
-    tr:nth-child(even) td{background:#fdf8f8}
-    .footer{margin-top:16px;font-size:11px;color:#888;text-align:right}
+    .sub{color:#888;font-size:12px;margin-bottom:8px}
+    .footer{margin-top:24px;font-size:11px;color:#888;text-align:right;border-top:0.5px solid #eee;padding-top:8px}
     @media print{body{padding:0}}
   </style></head><body>
   <h1>🚫 Lista NOK — Bazaar</h1>
-  <div class="sub">Gerado em ${now} · ${noks.length} item(s)</div>
-  <table>
-    <thead><tr>
-      <th>#</th><th>Produto</th><th>Valor</th><th>Qtd / Tamanhos</th><th>Vendedora</th><th>NOK por</th>
-    </tr></thead>
-    <tbody>${rows}</tbody>
-  </table>
+  <div class="sub">Gerado em ${now} · ${noks.length} item(s) · ${unGeral} un · Total ${fmt(totalGeral)}</div>
+  ${secoes}
   <div class="footer">Bazaar Faltantes · ${now}</div>
   <script>window.onload=()=>{window.print();}<\/script>
   </body></html>`;
