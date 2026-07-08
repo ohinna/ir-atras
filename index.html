@@ -1016,9 +1016,8 @@ function resolverFoto(raw) {
       const achado = buscarNoMapa(mIdBruto[1]);
       if (achado) return achado;
     }
-    // Já está num formato exibível e nenhuma correção foi necessária — não reformatar à toa
-    // (evita trocar um link que já funciona por outro formato, ex: thumbnail -> lh3.googleusercontent)
-    if (/drive\.google\.com\/thumbnail\?/.test(s) || /lh3\.googleusercontent\.com\/d\//.test(s)) return s;
+    // Já está no formato canônico atual (lh3) e nenhuma correção foi necessária — não reformatar à toa
+    if (/lh3\.googleusercontent\.com\/d\//.test(s)) return s;
     return converterLinkDrive(s);
   }
   // Buscar no foto_map USA e BR
@@ -1027,7 +1026,7 @@ function resolverFoto(raw) {
     if (achado) return achado;
   } catch(e) {}
   // Fallback: tentar como ID do Drive direto
-  return s.length > 10 ? `https://drive.google.com/thumbnail?id=${s}&sz=w1000` : '';
+  return s.length > 10 ? `https://lh3.googleusercontent.com/d/${s}=w1000` : '';
 }
 
 function converterLinkDrive(url) {
@@ -5214,7 +5213,7 @@ function handleFotos(input, origem) {
       const [nome,id] = parseCsvLineSimples(l);
       if (nome&&id) {
         const n = nome.trim();
-        const url = 'https://drive.google.com/thumbnail?id='+id.trim()+'&sz=w400';
+        const url = 'https://lh3.googleusercontent.com/d/'+id.trim()+'=w400';
         map[n] = url;
         // Salvar também sem extensão e com extensão pra garantir match
         const semExt = n.replace(/\.[^/.]+$/, '');
