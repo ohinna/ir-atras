@@ -1025,7 +1025,11 @@ function resolverFoto(raw) {
   if (!raw) return '';
   const s = raw.trim();
   if (!s) return '';
-  const maps = ['foto_map','foto_map_br'].map(k => { try { return JSON.parse(localStorage.getItem(k)||'{}'); } catch(e) { return {}; } });
+  const getMapa = (memKey, lsKey) => {
+    if (window[memKey] && Object.keys(window[memKey]).length) return window[memKey];
+    try { return JSON.parse(localStorage.getItem(lsKey)||'{}'); } catch(e) { return {}; }
+  };
+  const maps = [getMapa('_fotoMap','foto_map'), getMapa('_fotoMapBr','foto_map_br')];
   const buscarNoMapa = (nome) => {
     const semExt = nome.replace(/\.[^/.]+$/, '');
     for (const fotoMap of maps) {
@@ -3789,7 +3793,7 @@ function resolverFotoMeta(raw) {
   if (!raw) return '';
   if (raw.startsWith('http')) return raw;
   try {
-    const fm = JSON.parse(localStorage.getItem('foto_map')||'{}');
+    const fm = (window._fotoMap && Object.keys(window._fotoMap).length) ? window._fotoMap : JSON.parse(localStorage.getItem('foto_map')||'{}');
     return fm[raw] || fm[raw.replace(/\.[^.]+$/,'')] || '';
   } catch(e) { return ''; }
 }
@@ -4059,12 +4063,21 @@ function fbListen() {
     }
   };
 
-  // Carregar foto_map USA e BR do Firebase
+  // Carregar foto_map USA e BR do Firebase — guarda em memória (imune a limite do localStorage)
+  // e tenta cachear no localStorage só como bônus (se falhar por causa do limite, não tem problema)
   const p1 = window._db.collection('config').doc('fotos').get().then(doc => {
-    if (doc.exists && doc.data().map) localStorage.setItem('foto_map', JSON.stringify(JSON.parse(doc.data().map)));
+    if (doc.exists && doc.data().map) {
+      const parsed = JSON.parse(doc.data().map);
+      window._fotoMap = parsed;
+      try { localStorage.setItem('foto_map', JSON.stringify(parsed)); } catch(e) { console.warn('foto_map não coube no localStorage (usando só memória):', e.message); }
+    }
   }).catch(()=>{});
   const p2 = window._db.collection('config').doc('fotos_br').get().then(doc => {
-    if (doc.exists && doc.data().map) localStorage.setItem('foto_map_br', JSON.stringify(JSON.parse(doc.data().map)));
+    if (doc.exists && doc.data().map) {
+      const parsed = JSON.parse(doc.data().map);
+      window._fotoMapBr = parsed;
+      try { localStorage.setItem('foto_map_br', JSON.stringify(parsed)); } catch(e) { console.warn('foto_map_br não coube no localStorage (usando só memória):', e.message); }
+    }
   }).catch(()=>{});
   const p3 = window._db.collection('config').doc('relatorio').get().then(doc => {
     if (doc.exists && doc.data().dados) localStorage.setItem('relatorio_vendas', doc.data().dados);
@@ -5259,7 +5272,9 @@ function handleFotos(input, origem) {
         else { map[n+'.jpg'] = url; map[n+'.jpeg'] = url; }
       }
     });
-    localStorage.setItem(lsKey, JSON.stringify(map));
+    const memKey = origem === 'br' ? '_fotoMapBr' : '_fotoMap';
+    window[memKey] = map;
+    try { localStorage.setItem(lsKey, JSON.stringify(map)); } catch(e) { console.warn(lsKey + ' não coube no localStorage (usando só memória):', e.message); }
     if (window._db) {
       window._db.collection('config').doc(fbDoc).set({map: JSON.stringify(map), updatedAt: new Date().toISOString()});
     }
