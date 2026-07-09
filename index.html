@@ -225,6 +225,7 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
       <div style="position:absolute;bottom:0;right:0;width:8px;height:8px;border-radius:50%;background:#28c850;border:1.5px solid #7a0b1e"></div>
     </div>
     <span id="user-name" style="font-size:11px;color:rgba(255,255,255,0.9);font-weight:600"></span>
+    <span id="version-status-badge" style="display:none;font-size:9px;font-weight:600;padding:2px 8px;border-radius:10px;cursor:pointer;white-space:nowrap"></span>
   </div>
   <div style="display:flex;align-items:center;gap:8px">
     <div id="online-users" style="display:flex;align-items:center;gap:4px"></div>
@@ -5498,19 +5499,53 @@ document.addEventListener('DOMContentLoaded', () => {
   Instalar app
 </div>
 <script>
+function setVersionBadge(status) {
+  const el = document.getElementById('version-status-badge');
+  if (!el) return;
+  if (status === 'desatualizado') {
+    el.textContent = '⚠️ Versão desatualizada — toque pra atualizar';
+    el.style.background = '#f59e0b';
+    el.style.color = '#1a1a1a';
+    el.style.display = 'inline-block';
+    el.onclick = () => {
+      if (window._swWaiting) window._swWaiting.postMessage('skipWaiting');
+      else window.location.reload();
+    };
+  } else if (status === 'atualizado') {
+    el.textContent = '✓ Versão atualizada';
+    el.style.background = 'rgba(255,255,255,0.15)';
+    el.style.color = 'rgba(255,255,255,0.85)';
+    el.style.display = 'inline-block';
+    el.onclick = null;
+  }
+}
+let _swReloadPendente = false;
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/ir-atras/sw.js').then(reg => {
     reg.update();
+    // Já existe uma nova versão esperando pra ativar (ex: aba ficou aberta enquanto atualizava)
+    if (reg.waiting && navigator.serviceWorker.controller) {
+      window._swWaiting = reg.waiting;
+      setVersionBadge('desatualizado');
+    } else {
+      setVersionBadge('atualizado');
+    }
     reg.addEventListener('updatefound', () => {
       const nw = reg.installing;
       nw.addEventListener('statechange', () => {
         if (nw.state === 'installed' && navigator.serviceWorker.controller) {
-          nw.postMessage('skipWaiting');
+          // Nova versão baixada e pronta — avisa em vez de recarregar sozinho
+          window._swWaiting = nw;
+          setVersionBadge('desatualizado');
         }
       });
     });
   }).catch(() => {});
-  navigator.serviceWorker.addEventListener('controllerchange', () => window.location.reload());
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (_swReloadPendente) return;
+    _swReloadPendente = true;
+    window.location.reload();
+  });
 }
 </script>
 </body>
