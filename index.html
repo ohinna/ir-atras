@@ -4175,6 +4175,35 @@ function _fbListenCore() {
     });
     fbRenderDebounced();
   });
+
+  // Ponte com um futuro app de estoque: ele confirma produtos escrevendo em
+  // estoque_confirmado/{nome-do-arquivo-da-foto} = {confirmado:true, local:'eua'|'br'}.
+  // Aqui a gente escuta isso e marca Est EUA / Est BR sozinho, sem precisar mexer na mão.
+  window._db.collection('estoque_confirmado').onSnapshot(snap => {
+    let mudou = false;
+    snap.docChanges().forEach(change => {
+      try {
+        const filename = change.doc.id;
+        const data = change.doc.data() || {};
+        const filenameSemExt = filename.replace(/\.[^/.]+$/, '');
+        const candidatos = PRODUTOS.filter(p => {
+          const fo = (p._fOriginal || '').trim();
+          if (!fo) return false;
+          return fo === filename || fo.replace(/\.[^/.]+$/, '') === filenameSemExt;
+        });
+        candidatos.forEach(p => {
+          const campo = (data.local || '').toLowerCase() === 'br' ? 'est_br' : 'est_eua';
+          const novoValor = !!data.confirmado;
+          if (p[campo] !== novoValor) {
+            p[campo] = novoValor;
+            fbSave(p._id);
+            mudou = true;
+          }
+        });
+      } catch (eBridge) { console.error('Erro na ponte com app de estoque:', eBridge.message); }
+    });
+    if (mudou) renderGrid();
+  }, () => {}); // segundo argumento ignora erro se a coleção ainda não existir/sem permissão
 }
 
 // CSV import
