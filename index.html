@@ -429,6 +429,10 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
       <div id="fb-usage" style="font-size:11px;color:var(--text3)">Calculando...</div>
       <a href="https://console.firebase.google.com" target="_blank" style="font-size:10px;color:var(--text4);text-decoration:none;display:block;margin-top:6px">Ver console completo ↗</a>
     </div>
+    <div style="margin-top:12px;padding:12px 16px;border-top:0.5px solid var(--border)">
+      <div style="font-size:10px;color:var(--text4);font-weight:600;letter-spacing:0.5px;margin-bottom:8px">DIAGNÓSTICO TÉCNICO</div>
+      <div id="diag-tecnico" style="font-size:10px;color:var(--text3);font-family:monospace;white-space:pre-wrap;word-break:break-all"></div>
+    </div>
   </div>
 </div>
 
@@ -685,32 +689,21 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script>
-// Banner visível de erro — mostra na própria tela qualquer erro de JS não tratado,
-// pra facilitar diagnóstico sem precisar abrir o Console do navegador.
+// Captura erros de JS silenciosamente (sem mostrar pra todo mundo) — fica guardado em memória
+// e é exibido de forma discreta no final da aba Dados, pra diagnóstico quando precisar.
+window._errosCapturados = [];
 window.addEventListener('error', function(e) {
   try {
-    let banner = document.getElementById('js-error-banner');
-    if (!banner) {
-      banner = document.createElement('div');
-      banner.id = 'js-error-banner';
-      banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#7a0b1e;color:#fff;font-size:11px;font-family:monospace;padding:8px 10px;max-height:35vh;overflow-y:auto;white-space:pre-wrap;word-break:break-all;box-shadow:0 2px 8px rgba(0,0,0,0.4)';
-      document.body.appendChild(banner);
-    }
     const linha = '⚠️ ' + (e.message||'erro') + ' — ' + (e.filename||'').split('/').pop() + ':' + e.lineno + ':' + e.colno;
-    banner.textContent = (banner.textContent ? banner.textContent + '\n' : '') + linha;
+    window._errosCapturados.push(linha);
+    if (window._errosCapturados.length > 30) window._errosCapturados.shift();
   } catch(err) {}
 });
 window.addEventListener('unhandledrejection', function(e) {
   try {
-    let banner = document.getElementById('js-error-banner');
-    if (!banner) {
-      banner = document.createElement('div');
-      banner.id = 'js-error-banner';
-      banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#7a0b1e;color:#fff;font-size:11px;font-family:monospace;padding:8px 10px;max-height:35vh;overflow-y:auto;white-space:pre-wrap;word-break:break-all;box-shadow:0 2px 8px rgba(0,0,0,0.4)';
-      document.body.appendChild(banner);
-    }
     const linha = '⚠️ (promise) ' + (e.reason && e.reason.message ? e.reason.message : e.reason);
-    banner.textContent = (banner.textContent ? banner.textContent + '\n' : '') + linha;
+    window._errosCapturados.push(linha);
+    if (window._errosCapturados.length > 30) window._errosCapturados.shift();
   } catch(err) {}
 });
 const _fbConfig = {
@@ -1452,6 +1445,7 @@ function goTab(tab) {
     const ua = localStorage.getItem('ultima_atualizacao');
     (document.getElementById('ultima-atualizacao')||{}).textContent = ua ? 'Última atualização: ' + ua : '';
     updateFbUsage();
+    renderDiagnosticoTecnico();
     // Load version history
     if (window._db) {
       window._db.collection('config').doc('versoes').get().then(doc => {
@@ -1652,17 +1646,8 @@ function openModal(id, focusComment=false) {
   }
   if (!p) return;
   modalId = p._id;
-  // DEBUG TEMPORÁRIO: mostra os dados brutos da foto na tela (remover depois de diagnosticar)
-  try {
-    let dbgEl = document.getElementById('debug-foto-info');
-    if (!dbgEl) {
-      dbgEl = document.createElement('div');
-      dbgEl.id = 'debug-foto-info';
-      dbgEl.style.cssText = 'position:fixed;bottom:70px;left:8px;right:8px;z-index:99998;background:#111;color:#0f0;font-size:9px;font-family:monospace;padding:8px;border-radius:8px;max-height:25vh;overflow-y:auto;white-space:pre-wrap;word-break:break-all;border:1px solid #0f0';
-      document.body.appendChild(dbgEl);
-    }
-    dbgEl.textContent = 'DEBUG _id=' + p._id + '\np.f=' + JSON.stringify(p.f) + '\np._fOriginal=' + JSON.stringify(p._fOriginal) + '\ntypeof p.f=' + typeof p.f;
-  } catch(eDbg) {}
+  // Guarda info técnica do último produto aberto (exibida discretamente no final da aba Dados, se precisar)
+  try { window._ultimoDebugFoto = { _id: p._id, nome: p.n, f: p.f, _fOriginal: p._fOriginal, tipo: typeof p.f }; } catch(eDbg) {}
   try {
   const ab = abbrev(p.n, p.m);
   const imgEl = document.getElementById('modal-img');
@@ -1915,6 +1900,24 @@ function baixarPdfProduto() {
 }
 
 let _histView = 'timeline';
+
+function renderDiagnosticoTecnico() {
+  const el = document.getElementById('diag-tecnico');
+  if (!el) return;
+  const qtdUsa = window._fotoMap ? Object.keys(window._fotoMap).length : 0;
+  const qtdBr = window._fotoMapBr ? Object.keys(window._fotoMapBr).length : 0;
+  let txt = `Fotos mapeadas em memória: ${qtdUsa} (USA) · ${qtdBr} (BR)\nProdutos carregados: ${PRODUTOS.length}`;
+  if (window._ultimoDebugFoto) {
+    const d = window._ultimoDebugFoto;
+    txt += `\n\nÚltimo produto aberto: ${d.nome} (id ${d._id})\nf=${d.f}\n_fOriginal=${d._fOriginal}`;
+  }
+  if (window._errosCapturados && window._errosCapturados.length) {
+    txt += `\n\nÚltimos erros capturados (${window._errosCapturados.length}):\n` + window._errosCapturados.join('\n');
+  } else {
+    txt += `\n\nNenhum erro capturado nesta sessão.`;
+  }
+  el.textContent = txt;
+}
 
 function updateFbUsage() {
   const el = document.getElementById('fb-usage');
