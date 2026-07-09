@@ -685,6 +685,34 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script>
+// Banner visível de erro — mostra na própria tela qualquer erro de JS não tratado,
+// pra facilitar diagnóstico sem precisar abrir o Console do navegador.
+window.addEventListener('error', function(e) {
+  try {
+    let banner = document.getElementById('js-error-banner');
+    if (!banner) {
+      banner = document.createElement('div');
+      banner.id = 'js-error-banner';
+      banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#7a0b1e;color:#fff;font-size:11px;font-family:monospace;padding:8px 10px;max-height:35vh;overflow-y:auto;white-space:pre-wrap;word-break:break-all;box-shadow:0 2px 8px rgba(0,0,0,0.4)';
+      document.body.appendChild(banner);
+    }
+    const linha = '⚠️ ' + (e.message||'erro') + ' — ' + (e.filename||'').split('/').pop() + ':' + e.lineno + ':' + e.colno;
+    banner.textContent = (banner.textContent ? banner.textContent + '\n' : '') + linha;
+  } catch(err) {}
+});
+window.addEventListener('unhandledrejection', function(e) {
+  try {
+    let banner = document.getElementById('js-error-banner');
+    if (!banner) {
+      banner = document.createElement('div');
+      banner.id = 'js-error-banner';
+      banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#7a0b1e;color:#fff;font-size:11px;font-family:monospace;padding:8px 10px;max-height:35vh;overflow-y:auto;white-space:pre-wrap;word-break:break-all;box-shadow:0 2px 8px rgba(0,0,0,0.4)';
+      document.body.appendChild(banner);
+    }
+    const linha = '⚠️ (promise) ' + (e.reason && e.reason.message ? e.reason.message : e.reason);
+    banner.textContent = (banner.textContent ? banner.textContent + '\n' : '') + linha;
+  } catch(err) {}
+});
 const _fbConfig = {
   apiKey: "AIzaSyCy6NWVuvC1nVsX5fV53b9DpmKqFzwI2tc",
   authDomain: "ir-atras.firebaseapp.com",
@@ -1620,6 +1648,17 @@ function openModal(id, focusComment=false) {
   }
   if (!p) return;
   modalId = p._id;
+  // DEBUG TEMPORÁRIO: mostra os dados brutos da foto na tela (remover depois de diagnosticar)
+  try {
+    let dbgEl = document.getElementById('debug-foto-info');
+    if (!dbgEl) {
+      dbgEl = document.createElement('div');
+      dbgEl.id = 'debug-foto-info';
+      dbgEl.style.cssText = 'position:fixed;bottom:70px;left:8px;right:8px;z-index:99998;background:#111;color:#0f0;font-size:9px;font-family:monospace;padding:8px;border-radius:8px;max-height:25vh;overflow-y:auto;white-space:pre-wrap;word-break:break-all;border:1px solid #0f0';
+      document.body.appendChild(dbgEl);
+    }
+    dbgEl.textContent = 'DEBUG _id=' + p._id + '\np.f=' + JSON.stringify(p.f) + '\np._fOriginal=' + JSON.stringify(p._fOriginal) + '\ntypeof p.f=' + typeof p.f;
+  } catch(eDbg) {}
   try {
   const ab = abbrev(p.n, p.m);
   const imgEl = document.getElementById('modal-img');
