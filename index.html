@@ -4065,20 +4065,34 @@ function fbListen() {
 
   // Carregar foto_map USA e BR do Firebase — guarda em memória (imune a limite do localStorage)
   // e tenta cachear no localStorage só como bônus (se falhar por causa do limite, não tem problema)
-  const p1 = window._db.collection('config').doc('fotos').get().then(doc => {
-    if (doc.exists && doc.data().map) {
-      const parsed = JSON.parse(doc.data().map);
-      window._fotoMap = parsed;
-      try { localStorage.setItem('foto_map', JSON.stringify(parsed)); } catch(e) { console.warn('foto_map não coube no localStorage (usando só memória):', e.message); }
-    }
-  }).catch(()=>{});
-  const p2 = window._db.collection('config').doc('fotos_br').get().then(doc => {
-    if (doc.exists && doc.data().map) {
-      const parsed = JSON.parse(doc.data().map);
-      window._fotoMapBr = parsed;
-      try { localStorage.setItem('foto_map_br', JSON.stringify(parsed)); } catch(e) { console.warn('foto_map_br não coube no localStorage (usando só memória):', e.message); }
-    }
-  }).catch(()=>{});
+  // O mapa pode estar dividido em várias partes (config/{doc}_chunk0, _chunk1, ...) por causa do
+  // limite de ~1MB por documento do Firestore, ou no formato antigo (um único doc com campo 'map').
+  const carregarMapaFotos = (fbDoc, memKey, lsKey) => {
+    return window._db.collection('config').doc(fbDoc).get().then(metaDoc => {
+      if (!metaDoc.exists) return;
+      const data = metaDoc.data();
+      if (data.totalChunks) {
+        // Formato novo: buscar todas as partes e juntar
+        const promessas = [];
+        for (let i = 0; i < data.totalChunks; i++) {
+          promessas.push(window._db.collection('config').doc(fbDoc + '_chunk' + i).get());
+        }
+        return Promise.all(promessas).then(docs => {
+          let mapaCompleto = {};
+          docs.forEach(d => { if (d.exists && d.data().map) Object.assign(mapaCompleto, JSON.parse(d.data().map)); });
+          window[memKey] = mapaCompleto;
+          try { localStorage.setItem(lsKey, JSON.stringify(mapaCompleto)); } catch(e) { console.warn(lsKey + ' não coube no localStorage (usando só memória):', e.message); }
+        });
+      } else if (data.map) {
+        // Formato antigo (um único documento) — ainda suportado
+        const parsed = JSON.parse(data.map);
+        window[memKey] = parsed;
+        try { localStorage.setItem(lsKey, JSON.stringify(parsed)); } catch(e) { console.warn(lsKey + ' não coube no localStorage (usando só memória):', e.message); }
+      }
+    }).catch(()=>{});
+  };
+  const p1 = carregarMapaFotos('fotos', '_fotoMap', 'foto_map');
+  const p2 = carregarMapaFotos('fotos_br', '_fotoMapBr', 'foto_map_br');
   const p3 = window._db.collection('config').doc('relatorio').get().then(doc => {
     if (doc.exists && doc.data().dados) localStorage.setItem('relatorio_vendas', doc.data().dados);
   }).catch(()=>{});
@@ -5276,7 +5290,35 @@ function handleFotos(input, origem) {
     window[memKey] = map;
     try { localStorage.setItem(lsKey, JSON.stringify(map)); } catch(e) { console.warn(lsKey + ' não coube no localStorage (usando só memória):', e.message); }
     if (window._db) {
-      window._db.collection('config').doc(fbDoc).set({map: JSON.stringify(map), updatedAt: new Date().toISOString()});
+      // O Firestore tem limite de ~1MB por documento. Mapas grandes (ex: USA com milhares de fotos)
+      // podem ultrapassar isso e a gravação falha silenciosamente. Por isso, dividimos em pedaços.
+      const entries = Object.entries(map);
+      const CHUNK_ENTRIES = 3000; // ~3000 entradas fica bem abaixo do limite de 1MB por documento
+      const mapChunks = [];
+      for (let i = 0; i < entries.length; i += CHUNK_ENTRIES) {
+        mapChunks.push(Object.fromEntries(entries.slice(i, i + CHUNK_ENTRIES)));
+      }
+      const totalChunksMapa = mapChunks.length;
+      // Salvar cada pedaço em config/{fbDoc}_chunk0, _chunk1, etc, e apagar pedaços antigos que sobrarem
+      window._db.collection('config').doc(fbDoc).get().then(metaDoc => {
+        const chunksAntigos = (metaDoc.exists && metaDoc.data().totalChunks) || 1;
+        const batch = window._db.batch();
+        mapChunks.forEach((chunk, i) => {
+          batch.set(window._db.collection('config').doc(fbDoc + '_chunk' + i), { map: JSON.stringify(chunk) });
+        });
+        for (let i = totalChunksMapa; i < chunksAntigos; i++) {
+          batch.delete(window._db.collection('config').doc(fbDoc + '_chunk' + i));
+        }
+        batch.set(window._db.collection('config').doc(fbDoc), { totalChunks: totalChunksMapa, updatedAt: new Date().toISOString() });
+        return batch.commit();
+      }).then(() => {
+        const el = document.getElementById(statusId);
+        if (el) el.textContent += ` · salvo no banco em ${totalChunksMapa} parte(s).`;
+      }).catch(err => {
+        console.error('Erro ao salvar mapa de fotos em partes:', err.message);
+        const el = document.getElementById(statusId);
+        if (el) el.textContent += ` ⚠️ Erro ao salvar no banco: ${err.message}`;
+      });
     }
     if (PRODUTOS.length > 0) {
       const corrigidos = [];
