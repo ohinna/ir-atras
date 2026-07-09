@@ -4852,11 +4852,13 @@ function salvarOrigemNoFirebase(newData, origem, onDone) {
         const d = doc.data();
         const o = doc.data().origem;
         const pertenceOrigem = origem === 'usa' ? (!o || o === 'usa') : o === 'br';
-        if (pertenceOrigem && PRODUTOS[parseInt(doc.id)]) {
-          const p = PRODUTOS[parseInt(doc.id)];
+        const docIdNum = parseInt(doc.id);
+        const p = PRODUTOS.find(x => x._id === docIdNum) || PRODUTOS[docIdNum];
+        if (pertenceOrigem && p) {
           const key = (p.n||'').toLowerCase().trim() + '||' + (p.m||'').toLowerCase().trim();
           window._statusBackup[key] = {
             em_compra: d.em_compra || false,
+            compraHistory: d.compraHistory || [],
             nok: d.nok || false,
             urgente: d.urgente || false,
             est_eua: d.est_eua || false,
@@ -4900,17 +4902,27 @@ function salvarOrigemNoFirebase(newData, origem, onDone) {
     fbListen();
     // Reaplicar status salvos nos novos produtos pelo nome+marca
     if (window._statusBackup && Object.keys(window._statusBackup).length > 0) {
-      setTimeout(() => {
+      const backupSnapshot = window._statusBackup;
+      let tentativas = 0;
+      const tentarRestaurar = () => {
+        tentativas++;
+        const prodsDaOrigem = PRODUTOS.filter(p => (p.origem||'usa') === origem);
+        // Espera até o catálogo recarregado ter a quantidade esperada de produtos dessa origem (ou desistir após várias tentativas)
+        if (prodsDaOrigem.length < newData.length && tentativas < 20) {
+          setTimeout(tentarRestaurar, 300);
+          return;
+        }
         const batch2 = window._db.batch();
         let restored = 0;
         PRODUTOS.forEach(p => {
           if ((p.origem||'usa') !== origem) return;
           const key = (p.n||'').toLowerCase().trim() + '||' + (p.m||'').toLowerCase().trim();
-          const bk = window._statusBackup[key];
+          const bk = backupSnapshot[key];
           if (!bk) return;
-          // Restaura tudo — chave nome+foto garante produto correto
+          // Restaura tudo — chave nome+marca garante produto correto
           if (bk.em_compra || bk.nok || bk.urgente || bk.est_eua || bk.est_br) {
             p.em_compra = bk.em_compra;
+            p.compraHistory = bk.compraHistory;
             p.nok = bk.nok;
             p.urgente = bk.urgente;
             p.est_eua = bk.est_eua;
@@ -4929,7 +4941,8 @@ function salvarOrigemNoFirebase(newData, origem, onDone) {
           });
         }
         window._statusBackup = {};
-      }, 1500);
+      };
+      setTimeout(tentarRestaurar, 500);
     }
     if (onDone) onDone();
   }).catch(e => {
