@@ -1338,24 +1338,50 @@ function enviarComentarioRapido(id) {
 }
 
 function confirmNok(id) {
-  const p = PRODUTOS[id];
+  const p = PRODUTOS.find(x => x._id === id);
   if (!p) return;
   p.nok = !p.nok;
-  p.nokWho = p.nok ? (getNomeUsuario()) : '';
+  const _quem = getNomeUsuario();
+  p.nokWho = p.nok ? _quem : '';
   if (p.nok) {
     p.nokHistory = p.nokHistory || [];
     p.nokHistory.push({
-      who: getNomeUsuario(),
+      who: _quem,
       time: new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})
     });
   }
-  const _quem = getNomeUsuario();
   const _t = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
   registrarAtividade(p.nok ? 'nok_on' : 'nok_off', id, _quem, _t);
   if (p.nok) mostrarNotificacao('🚫 NOK marcado', _quem + ' · ' + (p.n||'').substring(0,40), '#7a0b1e');
+  enviarNokParaPlanilha(p, '', p.nok ? 'marcou' : 'desmarcou', _quem);
   fbSave(id);
   renderGrid();
   updateNokBadge();
+}
+
+// Manda um aviso pro Google Apps Script sempre que um produto é marcado OU desmarcado como NOK,
+// pra ele gravar automaticamente uma linha na planilha do Google Sheets.
+function enviarNokParaPlanilha(p, tamanho, acao, quem) {
+  const URL_APPS_SCRIPT = 'https://script.google.com/macros/s/AKfycbyIkLGXyfhE7I_4tjb30VkbEkSVrgERMr0_HKYJtM8cfRL_tcwUvK_3z2mexXJlVtNzQA/exec';
+  if (!URL_APPS_SCRIPT || URL_APPS_SCRIPT.startsWith('COLE_AQUI')) return; // ainda não configurado
+  const vend = (p.vs||[]).map(v=>v.charAt(0)+v.slice(1).toLowerCase()).join(', ');
+  const qtd = (tamanho && p.tams && p.tams[tamanho] !== undefined) ? p.tams[tamanho] : (p.qty||p.q||0);
+  fetch(URL_APPS_SCRIPT, {
+    method: 'POST',
+    mode: 'no-cors', // Apps Script Web App não devolve CORS; não precisamos ler a resposta
+    headers: {'Content-Type': 'text/plain'},
+    body: JSON.stringify({
+      produto: p.n || '',
+      marca: p.m || '',
+      tamanho: tamanho || '',
+      quantidade: qtd,
+      vendedora: vend,
+      acao: acao || 'marcou',
+      quemMarcou: quem || getNomeUsuario(),
+      origem: (p.origem||'usa').toUpperCase(),
+      quando: new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})
+    })
+  }).catch(() => {}); // se falhar, não trava o app — é só um aviso extra
 }
 
 function resetCat() {
@@ -1912,6 +1938,15 @@ function renderDiagnosticoTecnico() {
     const d = window._ultimoDebugFoto;
     txt += `\n\nÚltimo produto aberto: ${d.nome} (id ${d._id})\nf=${d.f}\n_fOriginal=${d._fOriginal}`;
   }
+  if (window._ultimoRestoreDiag) {
+    const r = window._ultimoRestoreDiag;
+    txt += `\n\nÚltima restauração de status (${r.origem.toUpperCase()}):\n` +
+      `Catálogo carregou a tempo: ${r.catalogoCarregouATempo ? 'sim' : 'NÃO (tentativas esgotadas: ' + r.tentativas + ')'}\n` +
+      `Itens no backup com status ativo: ${r.comStatusAtivo}\n` +
+      `Restaurados com sucesso: ${r.restored}\n` +
+      `Não encontrados: ${r.totalNaoEncontradas}`;
+    if (r.naoEncontradas.length) txt += `\nExemplos não encontrados:\n- ` + r.naoEncontradas.join('\n- ');
+  }
   if (window._errosCapturados && window._errosCapturados.length) {
     txt += `\n\nÚltimos erros capturados (${window._errosCapturados.length}):\n` + window._errosCapturados.join('\n');
   } else {
@@ -2441,7 +2476,7 @@ function abrirProdutoPorHash() {
   const hash = window.location.hash;
   if (!hash.startsWith('#produto-')) return;
   const id = parseInt(hash.replace('#produto-', ''));
-  if (isNaN(id) || !PRODUTOS[id]) return;
+  if (isNaN(id) || !PRODUTOS.find(x => x._id === id)) return;
   setTimeout(() => openModal(id), 800);
   // Limpar hash sem recarregar
   history.replaceState(null, '', window.location.pathname);
@@ -2475,9 +2510,10 @@ function compartilharWhatsApp() {
 }
 
 function toggleTamNok(prodId, tam) {
-  const p = PRODUTOS[prodId];
+  const p = PRODUTOS.find(x => x._id === prodId);
   if (!p) return;
   p.nokTams = p.nokTams || {};
+  const marcandoNok = !p.nokTams[tam];
   if (p.nokTams[tam]) {
     delete p.nokTams[tam];
   } else {
@@ -2492,6 +2528,8 @@ function toggleTamNok(prodId, tam) {
     p.nok = false;
     p.nokWho = '';
   }
+  if (marcandoNok) enviarNokParaPlanilha(p, tam, 'marcou', getNomeUsuario());
+  else enviarNokParaPlanilha(p, tam, 'desmarcou', getNomeUsuario());
   fbSave(prodId);
   // Re-render tams inline
   openModal(prodId);
@@ -4007,7 +4045,7 @@ function mostrarSyncToast(ok) {
 
 function fbSave(id) {
   if (!window._db) return;
-  const p = PRODUTOS.find(x => x._id === id) || PRODUTOS[id];
+  const p = PRODUTOS.find(x => x._id === id);
   if (!p) return;
   _pendingSaves.add(id);
   // Show saving indicator on sync dot
@@ -4144,7 +4182,7 @@ function _fbListenCore() {
   fbUnsub = window._db.collection('faltantes').onSnapshot(snap => {
     snap.forEach(doc => {
       const id = parseInt(doc.id);
-      const p = !isNaN(id) ? (PRODUTOS.find(x => x._id === id) || PRODUTOS[id]) : null;
+      const p = !isNaN(id) ? PRODUTOS.find(x => x._id === id) : null;
       if (p && !_pendingSaves.has(id)) {
         const data = doc.data();
         const prevLen = (p.comments||[]).length;
@@ -4882,7 +4920,7 @@ function salvarOrigemNoFirebase(newData, origem, onDone) {
         const o = doc.data().origem;
         const pertenceOrigem = origem === 'usa' ? (!o || o === 'usa') : o === 'br';
         const docIdNum = parseInt(doc.id);
-        const p = PRODUTOS.find(x => x._id === docIdNum) || PRODUTOS[docIdNum];
+        const p = PRODUTOS.find(x => x._id === docIdNum);
         if (pertenceOrigem && p) {
           const key = (p.n||'').toLowerCase().trim() + '||' + (p.m||'').toLowerCase().trim();
           window._statusBackup[key] = {
@@ -4932,17 +4970,19 @@ function salvarOrigemNoFirebase(newData, origem, onDone) {
     // Reaplicar status salvos nos novos produtos pelo nome+marca
     if (window._statusBackup && Object.keys(window._statusBackup).length > 0) {
       const backupSnapshot = window._statusBackup;
+      const totalBackup = Object.keys(backupSnapshot).length;
       let tentativas = 0;
       const tentarRestaurar = () => {
         tentativas++;
         const prodsDaOrigem = PRODUTOS.filter(p => (p.origem||'usa') === origem);
         // Espera até o catálogo recarregado ter a quantidade esperada de produtos dessa origem (ou desistir após várias tentativas)
-        if (prodsDaOrigem.length < newData.length && tentativas < 20) {
-          setTimeout(tentarRestaurar, 300);
+        if (prodsDaOrigem.length < newData.length && tentativas < 60) {
+          setTimeout(tentarRestaurar, 500);
           return;
         }
         const batch2 = window._db.batch();
         let restored = 0;
+        const chavesNaoEncontradas = [];
         PRODUTOS.forEach(p => {
           if ((p.origem||'usa') !== origem) return;
           const key = (p.n||'').toLowerCase().trim() + '||' + (p.m||'').toLowerCase().trim();
@@ -4963,11 +5003,23 @@ function salvarOrigemNoFirebase(newData, origem, onDone) {
             restored++;
           }
         });
+        // Diagnóstico: quantas chaves do backup (que tinham algum status ativo) não encontraram produto correspondente
+        const chavesComStatus = Object.entries(backupSnapshot).filter(([,bk]) => bk.em_compra||bk.nok||bk.urgente||bk.est_eua||bk.est_br);
+        const prodKeysAtuais = new Set(PRODUTOS.filter(p=>(p.origem||'usa')===origem).map(p => (p.n||'').toLowerCase().trim() + '||' + (p.m||'').toLowerCase().trim()));
+        chavesComStatus.forEach(([k]) => { if (!prodKeysAtuais.has(k)) chavesNaoEncontradas.push(k); });
+        window._ultimoRestoreDiag = {
+          origem, totalBackup, comStatusAtivo: chavesComStatus.length, restored,
+          catalogoCarregouATempo: prodsDaOrigem.length >= newData.length, tentativas,
+          naoEncontradas: chavesNaoEncontradas.slice(0, 15),
+          totalNaoEncontradas: chavesNaoEncontradas.length,
+        };
         if (restored > 0) {
           batch2.commit().then(() => {
-            setStatus('✅ ' + newData.length + ' produtos · ' + restored + ' status restaurados');
+            setStatus('✅ ' + newData.length + ' produtos · ' + restored + ' status restaurados' + (chavesNaoEncontradas.length ? ' · ' + chavesNaoEncontradas.length + ' não encontrados (ver aba Dados)' : ''));
             renderGrid();
           });
+        } else if (chavesComStatus.length > 0) {
+          setStatus('⚠️ ' + newData.length + ' produtos salvos, mas 0 de ' + chavesComStatus.length + ' status foram restaurados (ver Diagnóstico na aba Dados)');
         }
         window._statusBackup = {};
       };
