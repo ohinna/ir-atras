@@ -1322,7 +1322,7 @@ function enviarComentarioRapido(id) {
   if (!input) return;
   const txt = input.value.trim();
   if (!txt) return;
-  const p = PRODUTOS.find(x => x._id === id) || PRODUTOS[id];
+  const p = PRODUTOS.find(x => x._id === id);
   if (!p) return;
   p.comments = Array.isArray(p.comments) ? p.comments : [];
   p.comments.push({
@@ -1665,12 +1665,7 @@ function initModalSwipe() {
 
 function openModal(id, focusComment=false) {
   initModalSwipe();
-  // Buscar por _id para suportar USA+BR sem conflito de índice
-  let p = PRODUTOS[id];
-  if (!p || p._id !== id) {
-    const found = PRODUTOS.find(x => x._id === id);
-    p = found || p;
-  }
+  const p = PRODUTOS.find(x => x._id === id);
   if (!p) return;
   modalId = p._id;
   // Guarda info técnica do último produto aberto (exibida discretamente no final da aba Dados, se precisar)
@@ -1845,7 +1840,7 @@ function closeModalBtn() {
 
 function baixarPdfProduto() {
   if (modalId === null) return;
-  const p = PRODUTOS.find(x => x._id === modalId) || PRODUTOS[modalId];
+  const p = PRODUTOS.find(x => x._id === modalId);
   if (!p) return;
   const fmt = v => 'R$ ' + parseFloat(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
   const now = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
@@ -2204,7 +2199,7 @@ function confirmarLimparNok() {
 
 function registrarAtividade(tipo, prodId, quem, time) {
   if (!window._db) return;
-  const p = prodId !== null && prodId !== undefined ? PRODUTOS[prodId] : null;
+  const p = prodId !== null && prodId !== undefined ? PRODUTOS.find(x => x._id === prodId) : null;
   // Eventos sem produto (entrou, saiu) não precisam de p
   const precisaProd = !['entrou','saiu'].includes(tipo);
   if (precisaProd && !p) return;
@@ -2461,7 +2456,7 @@ function exportarNokWhatsApp() {
 
 function compartilharLink() {
   if (modalId === null) return;
-  const p = PRODUTOS.find(x => x._id === modalId) || PRODUTOS[modalId];
+  const p = PRODUTOS.find(x => x._id === modalId);
   const url = window.location.origin + window.location.pathname + '#produto-' + modalId;
   if (navigator.share) {
     navigator.share({ title: p.n, text: (p.m ? p.m + ' — ' : '') + p.n, url });
@@ -2484,7 +2479,7 @@ function abrirProdutoPorHash() {
 
 function compartilharWhatsApp() {
   if (modalId === null) return;
-  const p = PRODUTOS.find(x => x._id === modalId) || PRODUTOS[modalId];
+  const p = PRODUTOS.find(x => x._id === modalId);
   if (!p) return;
   const fmt = v => 'R$ ' + parseFloat(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
   let lines = [];
@@ -2538,7 +2533,7 @@ function toggleTamNok(prodId, tam) {
 }
 
 function toggleEstEuaCard(id) {
-  const p = PRODUTOS[id];
+  const p = PRODUTOS.find(x => x._id === id);
   if (!p) return;
   p.est_eua = !p.est_eua;
   registrarAtividade(p.est_eua ? 'est_usa_on' : 'est_usa_off', id, getNomeUsuario(), new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}));
@@ -2549,7 +2544,7 @@ function toggleEstEuaCard(id) {
 
 function toggleEstEua() {
   if (modalId === null) return;
-  const p = PRODUTOS.find(x => x._id === modalId) || PRODUTOS[modalId];
+  const p = PRODUTOS.find(x => x._id === modalId);
   p.est_eua = !p.est_eua;
   const btn = document.getElementById('btn-est-eua');
   if (btn) { btn.style.background = p.est_eua ? '#0a6648' : '#0f6b52'; btn.textContent = p.est_eua ? '🇺🇸 Est USA ✓' : '🇺🇸 Est USA'; }
@@ -2565,7 +2560,7 @@ function updateEstEuaBadge() {
 }
 
 function toggleEstBrCard(id) {
-  const p = PRODUTOS[id];
+  const p = PRODUTOS.find(x => x._id === id);
   if (!p) return;
   p.est_br = !p.est_br;
   registrarAtividade(p.est_br ? 'br_on' : 'br_off', id, getNomeUsuario(), new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}));
@@ -2575,7 +2570,7 @@ function toggleEstBrCard(id) {
 }
 
 function toggleUrgente() {
-  const p = PRODUTOS.find(x => x._id === modalId) || PRODUTOS[modalId];
+  const p = PRODUTOS.find(x => x._id === modalId);
   if (!p) return;
   p.urgente = !p.urgente;
   const btn = document.getElementById('btn-urgente');
@@ -2596,7 +2591,7 @@ function toggleUrgente() {
 
 function toggleEstBr() {
   if (modalId === null) return;
-  const p = PRODUTOS.find(x => x._id === modalId) || PRODUTOS[modalId];
+  const p = PRODUTOS.find(x => x._id === modalId);
   p.est_br = !p.est_br;
   const btn = document.getElementById('btn-est-br');
   if (btn) { btn.style.background = p.est_br ? '#7a4615' : '#783c18'; btn.textContent = p.est_br ? '🇧🇷 Est BR ✓' : '🇧🇷 Est BR'; }
@@ -2612,7 +2607,7 @@ function updateEstBrBadge() {
 }
 
 function toggleEmCompraCard(id) {
-  const p = PRODUTOS[id];
+  const p = PRODUTOS.find(x => x._id === id);
   if (!p) return;
   p.em_compra = !p.em_compra;
   p.compraHistory = p.compraHistory || [];
@@ -2633,7 +2628,7 @@ function toggleEmCompraCard(id) {
 
 function abrirSelecaoCompra() {
   if (modalId === null) return;
-  const p = PRODUTOS.find(x => x._id === modalId) || PRODUTOS[modalId];
+  const p = PRODUTOS.find(x => x._id === modalId);
   const sel = document.getElementById('modal-compra-selecao');
   if (!sel) return;
 
@@ -2680,7 +2675,7 @@ function ajustarCompraBtn(btn) {
 }
 
 function ajustarCompra(tam, delta, maxTotal) {
-  const p = PRODUTOS.find(x => x._id === modalId) || PRODUTOS[modalId];
+  const p = PRODUTOS.find(x => x._id === modalId);
   const ecAtual = (typeof p.em_compra === 'object' && p.em_compra) ? p.em_compra : {};
   const emCompraQty = ecAtual[tam] || 0;
   const faltantes = Math.max(0, (p.tams?.[tam] || p.qty || 1) - emCompraQty);
@@ -2694,7 +2689,7 @@ function ajustarCompra(tam, delta, maxTotal) {
 
 function confirmarSelecaoCompra() {
   if (modalId === null) return;
-  const p = PRODUTOS.find(x => x._id === modalId) || PRODUTOS[modalId];
+  const p = PRODUTOS.find(x => x._id === modalId);
   const sel = window._selecaoCompra || {};
   // Somar com o que já está em compra
   const ecAtual = (typeof p.em_compra === 'object' && p.em_compra) ? {...p.em_compra} : {};
@@ -2744,7 +2739,7 @@ const STATUS_CONFIG = {
 };
 
 function abrirStatusSelecao(tipo) {
-  const p = PRODUTOS.find(x => x._id === modalId) || PRODUTOS[modalId];
+  const p = PRODUTOS.find(x => x._id === modalId);
   if (!p) return;
   const cfg = STATUS_CONFIG[tipo];
   const sel = document.getElementById('modal-status-selecao');
@@ -2805,7 +2800,7 @@ function ajustarStatusQtyBtn(btn) {
 
 function toggleStatusTam(tam) {
   if (!_statusAtivo) return;
-  const p = PRODUTOS.find(x => x._id === modalId) || PRODUTOS[modalId];
+  const p = PRODUTOS.find(x => x._id === modalId);
   if (!p) return;
   const cfg = STATUS_CONFIG[_statusAtivo];
   if (!p[cfg.campo]) p[cfg.campo] = {};
@@ -2825,7 +2820,7 @@ function toggleStatusTam(tam) {
 
 function confirmarStatusSelecao() {
   if (!_statusAtivo) return;
-  const p = PRODUTOS.find(x => x._id === modalId) || PRODUTOS[modalId];
+  const p = PRODUTOS.find(x => x._id === modalId);
   if (!p) return;
   const cfg = STATUS_CONFIG[_statusAtivo];
   const tams = p.tams && Object.keys(p.tams).length > 0 ? p.tams : {'Único': p.qty||1};
@@ -2878,7 +2873,7 @@ function atualizarBotoesModal(p) {
 }
 
 function toggleNok() {
-  const p = PRODUTOS.find(x => x._id === modalId) || PRODUTOS[modalId];
+  const p = PRODUTOS.find(x => x._id === modalId);
   p.nok = !p.nok;
   p.nokWho = p.nok ? (getNomeUsuario()) : '';
   if (p.nok) {
@@ -2950,7 +2945,7 @@ function mostrarNotificacao(titulo, texto, cor) {
 }
 
 function notificarSeNovo(prodId, prevLen) {
-  const p = PRODUTOS.find(x => x._id === prodId) || PRODUTOS[prodId];
+  const p = PRODUTOS.find(x => x._id === prodId);
   if (!p || !Array.isArray(p.comments)) return;
   const meuNome = getNomeUsuario();
   const novos = p.comments.slice(prevLen);
@@ -2960,7 +2955,7 @@ function notificarSeNovo(prodId, prevLen) {
 }
 
 function deletarComentario(prodId, idx) {
-  const p = PRODUTOS.find(x => x._id === prodId) || PRODUTOS[prodId];
+  const p = PRODUTOS.find(x => x._id === prodId);
   if (!p || !Array.isArray(p.comments)) return;
   if (!confirm('Excluir este comentário?')) return;
   p.comments.splice(idx, 1);
@@ -2974,7 +2969,7 @@ function sendComment() {
   const inp = document.getElementById('comment-input');
   const text = inp.value.trim();
   if (!text) return;
-  const p = PRODUTOS.find(x => x._id === modalId) || PRODUTOS[modalId];
+  const p = PRODUTOS.find(x => x._id === modalId);
   const who = getNomeUsuario();
   const time = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
   p.comments = Array.isArray(p.comments) ? p.comments : [];
@@ -3036,8 +3031,8 @@ function renderEua() {
     });
   }
 
-  renderList(euaProds, 'eua-list', '#0f6b52', '🇺🇸', id => { PRODUTOS[id].est_eua=false; fbSave(id); renderEua(); updateEstEuaBadge(); renderGrid(); });
-  renderList(brProds,  'br-list',  '#783c18', '🇧🇷', id => { PRODUTOS[id].est_br=false;  fbSave(id); renderEua(); updateEstBrBadge();  renderGrid(); });
+  renderList(euaProds, 'eua-list', '#0f6b52', '🇺🇸', id => { const p = PRODUTOS.find(x => x._id === id); if (p) p.est_eua=false; fbSave(id); renderEua(); updateEstEuaBadge(); renderGrid(); });
+  renderList(brProds,  'br-list',  '#783c18', '🇧🇷', id => { const p = PRODUTOS.find(x => x._id === id); if (p) p.est_br=false;  fbSave(id); renderEua(); updateEstBrBadge();  renderGrid(); });
 }
 
 function exportarEstoquesPDF() {
@@ -3137,7 +3132,7 @@ function renderCompra() {
       btn.textContent = 'Remover';
       btn.addEventListener('click', e => {
         e.stopPropagation();
-        PRODUTOS[p._id].em_compra = false;
+        p.em_compra = false;
         fbSave(p._id);
         renderCompra();
         updateEmCompraBadge();
@@ -3941,7 +3936,7 @@ function renderNok() {
       btn.textContent = p.nok ? 'Desfazer' : 'Limpar';
       btn.addEventListener('click', e => {
         e.stopPropagation();
-        PRODUTOS[p._id].nok = false; PRODUTOS[p._id].nokWho = ''; PRODUTOS[p._id].nokTams = {};
+        p.nok = false; p.nokWho = ''; p.nokTams = {};
         fbSave(p._id); renderNok(); updateNokBadge(); renderGrid();
       });
       actions.appendChild(btn);
@@ -3952,7 +3947,7 @@ function renderNok() {
           const tamBtn = document.createElement('button');
           tamBtn.style.cssText = 'background:transparent;border:0.5px solid rgba(192,57,43,0.2);border-radius:6px;color:#c0392b;font-size:9px;padding:2px 7px;cursor:pointer;text-decoration:line-through';
           tamBtn.textContent = t === '??? (a definir)' ? '???' : t;
-          tamBtn.addEventListener('click', e => { e.stopPropagation(); delete PRODUTOS[p._id].nokTams[t]; fbSave(p._id); renderNok(); updateNokBadge(); renderGrid(); });
+          tamBtn.addEventListener('click', e => { e.stopPropagation(); delete p.nokTams[t]; fbSave(p._id); renderNok(); updateNokBadge(); renderGrid(); });
           actions.appendChild(tamBtn);
         });
       }
