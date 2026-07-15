@@ -1362,7 +1362,7 @@ function confirmNok(id) {
 // Manda um aviso pro Google Apps Script sempre que um produto é marcado OU desmarcado como NOK,
 // pra ele gravar automaticamente uma linha na planilha do Google Sheets.
 function enviarNokParaPlanilha(p, tamanho, acao, quem) {
-  const URL_APPS_SCRIPT = 'https://script.google.com/macros/s/AKfycbyIkLGXyfhE7I_4tjb30VkbEkSVrgERMr0_HKYJtM8cfRL_tcwUvK_3z2mexXJlVtNzQA/exec';
+  const URL_APPS_SCRIPT = 'https://script.google.com/macros/s/AKfycbzmRH8E69BgJE3kEtZThlmsCmeSJuUi7AetMgsNEVzXkJvA01Or84R2aYZTsmu-QU-nig/exec';
   if (!URL_APPS_SCRIPT || URL_APPS_SCRIPT.startsWith('COLE_AQUI')) return; // ainda não configurado
   const vend = (p.vs||[]).map(v=>v.charAt(0)+v.slice(1).toLowerCase()).join(', ');
   const qtd = (tamanho && p.tams && p.tams[tamanho] !== undefined) ? p.tams[tamanho] : (p.qty||p.q||0);
