@@ -2874,15 +2874,18 @@ function atualizarBotoesModal(p) {
 
 function toggleNok() {
   const p = PRODUTOS.find(x => x._id === modalId);
+  if (!p) return;
   p.nok = !p.nok;
-  p.nokWho = p.nok ? (getNomeUsuario()) : '';
+  const _quem = getNomeUsuario();
+  p.nokWho = p.nok ? _quem : '';
   if (p.nok) {
     p.nokHistory = p.nokHistory || [];
     p.nokHistory.push({
-      who: getNomeUsuario(),
+      who: _quem,
       time: new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})
     });
   }
+  enviarNokParaPlanilha(p, '', p.nok ? 'marcou' : 'desmarcou', _quem);
   fbSave(modalId);
   closeModalBtn();
 }
