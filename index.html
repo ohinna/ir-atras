@@ -3955,6 +3955,7 @@ function renderNok() {
       btn.addEventListener('click', e => {
         e.stopPropagation();
         p.nok = false; p.nokWho = ''; p.nokTams = {};
+        enviarNokParaPlanilha(p, '', 'desmarcou', getNomeUsuario());
         fbSave(p._id); renderNok(); updateNokBadge(); renderGrid();
       });
       actions.appendChild(btn);
@@ -3965,7 +3966,7 @@ function renderNok() {
           const tamBtn = document.createElement('button');
           tamBtn.style.cssText = 'background:transparent;border:0.5px solid rgba(192,57,43,0.2);border-radius:6px;color:#c0392b;font-size:9px;padding:2px 7px;cursor:pointer;text-decoration:line-through';
           tamBtn.textContent = t === '??? (a definir)' ? '???' : t;
-          tamBtn.addEventListener('click', e => { e.stopPropagation(); delete p.nokTams[t]; fbSave(p._id); renderNok(); updateNokBadge(); renderGrid(); });
+          tamBtn.addEventListener('click', e => { e.stopPropagation(); delete p.nokTams[t]; enviarNokParaPlanilha(p, t, 'desmarcou', getNomeUsuario()); fbSave(p._id); renderNok(); updateNokBadge(); renderGrid(); });
           actions.appendChild(tamBtn);
         });
       }
