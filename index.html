@@ -2847,6 +2847,9 @@ function confirmarStatusSelecao() {
     p.nok = todosAtivos;
     p.nokTams = novoQty;
     p.nokWho = getNomeUsuario();
+    Object.entries(qty).forEach(([t, q]) => {
+      if (q > 0) enviarNokParaPlanilha(p, t, 'marcou', getNomeUsuario());
+    });
   } else if (_statusAtivo === 'est_eua') {
     p.est_eua = todosAtivos;
     p.estEuaTams = novoQty;
