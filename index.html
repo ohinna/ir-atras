@@ -405,6 +405,51 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
     <div id="ultima-atualizacao" style="font-size:11px;color:#c4a898;text-align:center;margin-top:8px"></div>
 
     <div class="upload-card" style="margin-top:12px">
+      <div class="upload-title">🔄 Sincronização automática</div>
+      <div class="upload-sub">Configure uma vez. Todo mês, quando a planilha nova nascer, só precisa trocar o "ID da planilha do mês" — o resto fica igual.</div>
+
+      <div style="margin-bottom:8px">
+        <div style="font-size:11px;color:var(--text4);margin-bottom:4px">Link do Apps Script (configura uma vez só)</div>
+        <input id="sync-url-base" type="text" placeholder="https://script.google.com/macros/s/.../exec" style="width:100%;padding:8px 12px;border-radius:10px;border:0.5px solid var(--border);background:var(--bg);color:var(--text);font-size:12px;font-family:inherit;box-sizing:border-box">
+      </div>
+      <div style="margin-bottom:12px">
+        <div style="font-size:11px;color:var(--text4);margin-bottom:4px">ID da planilha do mês (muda todo mês)</div>
+        <input id="sync-planilha-id" type="text" placeholder="cole aqui o ID (fica no meio do link da planilha)" style="width:100%;padding:8px 12px;border-radius:10px;border:0.5px solid var(--border);background:var(--bg);color:var(--text);font-size:12px;font-family:inherit;box-sizing:border-box">
+        <div style="font-size:10px;color:var(--text4);margin-top:4px">Ex: no link .../d/<b>1AbCdEfGhIjKlMnOp</b>/edit — o ID é essa parte do meio.</div>
+      </div>
+
+      <div style="font-size:10px;color:var(--text4);margin:10px 0 6px;text-transform:uppercase;letter-spacing:0.5px">Nomes das abas (raramente mudam)</div>
+      <div style="margin-bottom:8px">
+        <div style="font-size:11px;color:var(--text4);margin-bottom:4px">Aba — Produtos USA</div>
+        <input id="sync-aba-usa" type="text" placeholder="ex: EUA - AGOSTO" style="width:100%;padding:8px 12px;border-radius:10px;border:0.5px solid var(--border);background:var(--bg);color:var(--text);font-size:12px;font-family:inherit;box-sizing:border-box">
+      </div>
+      <div style="margin-bottom:8px">
+        <div style="font-size:11px;color:var(--text4);margin-bottom:4px">Aba — Fotos USA</div>
+        <input id="sync-aba-fotos-usa" type="text" placeholder="ex: FotoIDs" style="width:100%;padding:8px 12px;border-radius:10px;border:0.5px solid var(--border);background:var(--bg);color:var(--text);font-size:12px;font-family:inherit;box-sizing:border-box">
+      </div>
+      <div style="margin-bottom:8px">
+        <div style="font-size:11px;color:var(--text4);margin-bottom:4px">Aba — Fotos BR</div>
+        <input id="sync-aba-fotos-br" type="text" placeholder="ex: FotoIDs BR" style="width:100%;padding:8px 12px;border-radius:10px;border:0.5px solid var(--border);background:var(--bg);color:var(--text);font-size:12px;font-family:inherit;box-sizing:border-box">
+      </div>
+      <div style="margin-bottom:12px">
+        <div style="font-size:11px;color:var(--text4);margin-bottom:4px">Aba — Relatório de Vendas</div>
+        <input id="sync-aba-relatorio" type="text" placeholder="ex: RELATORIOS_VENDAS" style="width:100%;padding:8px 12px;border-radius:10px;border:0.5px solid var(--border);background:var(--bg);color:var(--text);font-size:12px;font-family:inherit;box-sizing:border-box">
+      </div>
+
+      <div style="font-size:10px;color:var(--text4);background:var(--bg);border-radius:8px;padding:8px 10px;margin-bottom:12px">⚠️ Produtos BR não está na lista de propósito — continua manual, pelo cuidado com dado de cliente que já conversamos.</div>
+
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <button onclick="salvarLinksSync()" style="flex:1;padding:10px;border-radius:10px;background:var(--red);border:none;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Salvar</button>
+        <button onclick="sincronizarAutomaticamente(true)" style="flex:1;padding:10px;border-radius:10px;background:#0f6b52;border:none;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Sincronizar agora</button>
+      </div>
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text3);cursor:pointer">
+        <input type="checkbox" id="sync-auto-ativo" onchange="salvarLinksSync()">
+        Ativar verificação automática a cada 30 minutos
+      </label>
+      <div id="sync-status" style="font-size:11px;color:#b08070;margin-top:8px"></div>
+    </div>
+
+    <div class="upload-card" style="margin-top:12px">
       <div class="upload-title">📋 Histórico de importações</div>
       <div id="version-list" style="margin-top:8px"></div>
     </div>
@@ -1480,6 +1525,9 @@ function goTab(tab) {
     (document.getElementById('ultima-atualizacao')||{}).textContent = ua ? 'Última atualização: ' + ua : '';
     updateFbUsage();
     renderDiagnosticoTecnico();
+    carregarLinksSyncNaTela();
+    const ultimaSync = localStorage.getItem('syncUltimaVez');
+    if (ultimaSync) { const el = document.getElementById('sync-status'); if (el) el.textContent = 'Última sincronização automática: ' + ultimaSync; }
     // Load version history
     if (window._db) {
       window._db.collection('config').doc('versoes').get().then(doc => {
@@ -4577,6 +4625,112 @@ function gerarPDF() {
   window.open(URL.createObjectURL(blob), '_blank');
 }
 
+// ============================================
+// Sincronização automática — busca dados de abas específicas via
+// um único Apps Script protegido por senha, e alimenta as mesmas
+// funções de importação manual que já existem, simulando um arquivo
+// (sem precisar reescrever a lógica de parsing).
+//
+// Produtos BR fica de fora de propósito — continua manual, pelo
+// cuidado com dado de cliente (nome + telefone) na planilha.
+// ============================================
+
+const SYNC_SENHA = 'j4ly7K3LWxlzLSWcMVqXZYV7apBr7zQo';
+
+const SYNC_CONFIG_KEYS = {
+  url: 'sync-url-base',
+  planilhaId: 'sync-planilha-id',
+  abaUsa: 'sync-aba-usa',
+  abaFotosUsa: 'sync-aba-fotos-usa',
+  abaFotosBr: 'sync-aba-fotos-br',
+  abaRelatorio: 'sync-aba-relatorio',
+};
+
+function salvarLinksSync() {
+  Object.entries(SYNC_CONFIG_KEYS).forEach(([k, elId]) => {
+    const el = document.getElementById(elId);
+    if (el) localStorage.setItem('sync_' + k, el.value.trim());
+  });
+  const ativo = (document.getElementById('sync-auto-ativo')||{}).checked;
+  localStorage.setItem('syncAutoAtivo', ativo ? '1' : '0');
+  const el = document.getElementById('sync-status');
+  if (el) el.textContent = '✅ Configuração salva.' + (ativo ? ' Sincronização automática ativada.' : '');
+  reiniciarTimerSync();
+}
+
+function carregarLinksSyncNaTela() {
+  Object.entries(SYNC_CONFIG_KEYS).forEach(([k, elId]) => {
+    const el = document.getElementById(elId);
+    const salvo = localStorage.getItem('sync_' + k);
+    if (el && salvo) el.value = salvo;
+  });
+  const chk = document.getElementById('sync-auto-ativo');
+  if (chk) chk.checked = localStorage.getItem('syncAutoAtivo') === '1';
+}
+
+// Cria um <input> "fake" contendo o texto baixado, pra reaproveitar as funções
+// de importação já existentes (elas só usam input.files[0], nada mais).
+function _inputFalsoComTexto(texto, nomeArquivo) {
+  const arquivo = new File([texto], nomeArquivo, {type: 'text/csv'});
+  return { files: [arquivo] };
+}
+
+async function sincronizarAutomaticamente(manual) {
+  const statusEl = document.getElementById('sync-status');
+  const baseUrl = localStorage.getItem('sync_url') || '';
+  const planilhaId = localStorage.getItem('sync_planilhaId') || '';
+  const abas = {
+    usa: localStorage.getItem('sync_abaUsa') || '',
+    fotosUsa: localStorage.getItem('sync_abaFotosUsa') || '',
+    fotosBr: localStorage.getItem('sync_abaFotosBr') || '',
+    relatorio: localStorage.getItem('sync_abaRelatorio') || '',
+  };
+  if (!baseUrl) {
+    if (manual && statusEl) statusEl.textContent = '⚠️ Link do Apps Script ainda não configurado.';
+    return;
+  }
+  if (!planilhaId) {
+    if (manual && statusEl) statusEl.textContent = '⚠️ ID da planilha do mês ainda não configurado.';
+    return;
+  }
+  if (statusEl) statusEl.textContent = '🔄 Sincronizando...';
+  let algumErro = false;
+
+  async function baixarAba(nomeAba, nomeArquivo, callback) {
+    if (!nomeAba) return;
+    try {
+      const url = baseUrl + '?senha=' + encodeURIComponent(SYNC_SENHA) + '&planilhaId=' + encodeURIComponent(planilhaId) + '&aba=' + encodeURIComponent(nomeAba);
+      const resp = await fetch(url, { cache: 'no-store' });
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      const texto = await resp.text();
+      if (texto.startsWith('Erro:') || texto === 'Acesso negado' || texto.startsWith('Aba não encontrada') || texto.startsWith('Parâmetro')) throw new Error(texto);
+      const inputFalso = _inputFalsoComTexto(texto, nomeArquivo);
+      callback(inputFalso);
+    } catch (err) {
+      algumErro = true;
+      console.error('Erro sincronizando ' + nomeArquivo + ':', err.message);
+    }
+  }
+
+  await baixarAba(abas.usa, 'usa.csv', processarCSVUSA);
+  await baixarAba(abas.fotosUsa, 'fotos-usa.csv', (inp) => handleFotos(inp, 'usa'));
+  await baixarAba(abas.fotosBr, 'fotos-br.csv', (inp) => handleFotos(inp, 'br'));
+  await baixarAba(abas.relatorio, 'relatorio.csv', processarCSVRelatorio);
+
+  const agora = new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+  localStorage.setItem('syncUltimaVez', agora);
+  if (statusEl) statusEl.textContent = (algumErro ? '⚠️ Sincronizado com algum erro (confira o Diagnóstico Técnico)' : '✅ Sincronizado') + ' às ' + agora + '.';
+}
+
+let _syncTimerId = null;
+function reiniciarTimerSync() {
+  if (_syncTimerId) clearInterval(_syncTimerId);
+  const ativo = localStorage.getItem('syncAutoAtivo') === '1';
+  if (ativo) {
+    _syncTimerId = setInterval(() => sincronizarAutomaticamente(false), 30 * 60 * 1000);
+  }
+}
+
 function handleCSV(input) {
   processarCSVUSA(input);
 }
@@ -5630,6 +5784,7 @@ function setVersionBadge(status) {
   }
 }
 let _swReloadPendente = false;
+reiniciarTimerSync();
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/ir-atras/sw.js').then(reg => {
     reg.update();
