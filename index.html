@@ -5075,13 +5075,13 @@ function processarCSVRelatorio(input) {
     // Parse geral
     for (const r of rows) {
       const label = (r[0]||'').trim().toUpperCase();
-      if (label === '% BUDGET' && !Object.keys(dados.vendedoras).length) {
+      if (label === '% BUDGET' && !dados._pastTicket) {
         dados.budget = pp(r[5]);
       }
-      if (label === 'VENDAS REALIZADAS' && !Object.keys(dados.vendedoras).length) dados.geral.realizadas = pv(r[5]);
-      if (label === 'REALIZADO + A COMPRAR' && !Object.keys(dados.vendedoras).length) dados.geral.realizadoMais = pv(r[5]);
-      if (label === 'PEDIDOS EM ABERTO' && !Object.keys(dados.vendedoras).length) dados.geral.emAberto = pv(r[5]);
-      if (label.startsWith('FALTAM PARA') && !Object.keys(dados.vendedoras).length) dados.geral.faltam = pv(r[5]);
+      if (label === 'VENDAS REALIZADAS' && !dados._pastTicket) dados.geral.realizadas = pv(r[5]);
+      if (label === 'REALIZADO + A COMPRAR' && !dados._pastTicket) dados.geral.realizadoMais = pv(r[5]);
+      if (label === 'PEDIDOS EM ABERTO' && !dados._pastTicket) dados.geral.emAberto = pv(r[5]);
+      if (label.startsWith('FALTAM PARA') && !dados._pastTicket) dados.geral.faltam = pv(r[5]);
       // Bloco "TICKET MÉDIO" (canto superior direito): nome em col 10, ticket real em col 11, meta em col 12, % em col 15
       if (label.startsWith('DESEMPENHO POR VENDEDORA')) dados._pastTicket = true;
       if (!Object.keys(dados.vendedoras).length && !dados._pastTicket) {
