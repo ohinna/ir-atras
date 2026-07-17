@@ -243,6 +243,7 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
       <div id="versao-header" style="font-size:9px;color:#b08070;opacity:0.7;margin-top:2px;line-height:1.3;max-width:200px"></div>
     </div>
     <div style="display:flex;align-items:center;gap:8px">
+      <button id="btn-refresh-dados" onclick="forcarAtualizacaoDados()" title="Atualizar dados agora" style="background:transparent;border:none;color:var(--text3);font-size:16px;cursor:pointer;padding:4px;display:flex;align-items:center">↻</button>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:1px">
         <span class="header-meta" id="header-meta" style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block">231 itens · R$ 48.959,50</span>
         <span id="header-total" style="font-size:9px;color:var(--text4)"></span>
@@ -1224,7 +1225,7 @@ function renderGrid() {
       // Total por vendedora = faltantes da planilha
       let _mvVend = [];
       try { _mvVend = JSON.parse(localStorage.getItem('meta_vendedoras')||'[]'); } catch(e) {}
-      const mvEntry = _mvVend.find(v => v.nome.toUpperCase() === vend);
+      const mvEntry = _mvVend.find(v => normalizarVendedora(v.nome) === vend);
       const totalVend = mvEntry
         ? (mvEntry.faltantes !== undefined ? mvEntry.faltantes : Math.max(0,(mvEntry.total||0)-(mvEntry.oks||0)))
         : prodsDaVend.filter(p => !p.nok).reduce((a,p) => {
@@ -1404,7 +1405,9 @@ function confirmNok(id) {
   const _t = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
   registrarAtividade(p.nok ? 'nok_on' : 'nok_off', id, _quem, _t);
   if (p.nok) mostrarNotificacao('🚫 NOK marcado', _quem + ' · ' + (p.n||'').substring(0,40), '#7a0b1e');
-  enviarNokParaPlanilha(p, '', p.nok ? 'marcou' : 'desmarcou', _quem);
+  const _tamsProduto = Object.keys(p.tams||{});
+  const _tamanhoTxt = _tamsProduto.length === 1 ? _tamsProduto[0] : _tamsProduto.join(', ');
+  enviarNokParaPlanilha(p, _tamanhoTxt, p.nok ? 'marcou' : 'desmarcou', _quem);
   fbSave(id);
   renderGrid();
   updateNokBadge();
@@ -1983,6 +1986,19 @@ function baixarPdfProduto() {
 }
 
 let _histView = 'timeline';
+
+// Força buscar os produtos de novo direto do servidor (ignora qualquer cache
+// do navegador/WebView), sem precisar dar F5 na página inteira.
+function forcarAtualizacaoDados() {
+  const btn = document.getElementById('btn-refresh-dados');
+  if (btn) { btn.style.transition = 'transform 0.6s'; btn.style.transform = 'rotate(360deg)'; setTimeout(() => { btn.style.transform = 'rotate(0deg)'; }, 600); }
+  if (!window._db) return;
+  window._db.collection('catalogo').get({source: 'server'}).then(snap => {
+    PRODUTOS = snap.docs.map(doc => ({...doc.data(), _id: parseInt(doc.id)}));
+    renderGrid();
+    mostrarSyncToast(true);
+  }).catch(() => mostrarSyncToast(false));
+}
 
 function renderDiagnosticoTecnico() {
   const el = document.getElementById('diag-tecnico');
@@ -2954,7 +2970,9 @@ function toggleNok() {
       time: new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})
     });
   }
-  enviarNokParaPlanilha(p, '', p.nok ? 'marcou' : 'desmarcou', _quem);
+  const _tamsProduto = Object.keys(p.tams||{});
+  const _tamanhoTxt = _tamsProduto.length === 1 ? _tamsProduto[0] : _tamsProduto.join(', ');
+  enviarNokParaPlanilha(p, _tamanhoTxt, p.nok ? 'marcou' : 'desmarcou', _quem);
   fbSave(modalId);
   closeModalBtn();
 }
@@ -3290,7 +3308,7 @@ function renderMeta() {
   try { _metaFalt = JSON.parse(localStorage.getItem('meta_vendedoras')||'[]'); } catch(e) {}
   const faltantesApp = {};
   _metaFalt.forEach(v => {
-    faltantesApp[v.nome.toUpperCase()] = v.faltantes !== undefined ? v.faltantes : Math.max(0,(v.total||0)-(v.oks||0));
+    faltantesApp[normalizarVendedora(v.nome)] = v.faltantes !== undefined ? v.faltantes : Math.max(0,(v.total||0)-(v.oks||0));
   });
 
 
@@ -3299,7 +3317,7 @@ function renderMeta() {
     <tr>
       <td style="padding:4px 6px;font-weight:600;color:var(--text);font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${v.nome.charAt(0)+v.nome.slice(1).toLowerCase()}</td>
       <td style="padding:4px 6px;text-align:right;color:#0f6b52;font-weight:600;font-size:10px">${fmt(v.oks)}</td>
-      <td style="padding:4px 6px;text-align:right;color:var(--red);font-weight:600;font-size:10px">${fmt(faltantesApp[v.nome.toUpperCase()]||0)}</td>
+      <td style="padding:4px 6px;text-align:right;color:var(--red);font-weight:600;font-size:10px">${fmt(faltantesApp[normalizarVendedora(v.nome)]||0)}</td>
       <td style="padding:4px 6px;text-align:right;color:var(--text4);font-size:10px">${fmt(v.meta)}</td>
       <td style="padding:4px 6px;text-align:right">
         <span style="background:${v.pct>=100?'#e8f5f1':v.pct>=70?'#fff8e8':'#fdf2f3'};color:${v.pct>=100?'#0f6b52':v.pct>=70?'#d97706':'#7a0b1e'};border-radius:8px;padding:2px 6px;font-size:10px;font-weight:700">${v.pct}%</span>
@@ -3448,9 +3466,9 @@ function renderMeta() {
     const pctOk = v.pct >= 100;
     const pctBg = pctOk ? '#e8f5f1' : '#fdf2f3';
     const pctCor = pctOk ? '#085041' : '#7a0b1e';
-    const falt = faltantesApp[v.nome.toUpperCase()]||0;
-    const vr = vendasResumo[v.nome.toUpperCase()] || null;
-    const vendKey = v.nome.toUpperCase().replace(/[^A-Z]/g,'');
+    const falt = faltantesApp[normalizarVendedora(v.nome)]||0;
+    const vr = vendasResumo[normalizarVendedora(v.nome)] || null;
+    const vendKey = normalizarVendedora(v.nome).replace(/[^A-Z]/g,'');
 
     const vrJson = vr ? JSON.stringify({top3marcas: vr.top3marcas||[], marcasPorTurno: vr.marcasPorTurno||{}}).replace(/"/g,'&quot;') : '';
     const vendNomeCard = v.nome.charAt(0)+v.nome.slice(1).toLowerCase();
@@ -3528,7 +3546,7 @@ function renderMeta() {
   // Inicializar blocos de marcas via renderMarcasBloco
   setTimeout(() => {
     vendedoras.forEach(v => {
-      const vKey = v.nome.toUpperCase().replace(/[^A-Z]/g,'');
+      const vKey = normalizarVendedora(v.nome).replace(/[^A-Z]/g,'');
       const bloco = document.getElementById('marcas-bloco-' + vKey);
       const titulo = document.getElementById('marcas-titulo-' + vKey);
       if (!bloco) return;
@@ -3577,10 +3595,10 @@ function gerarPdfMeta(filtroVend) {
   try { _metaFalt2 = JSON.parse(localStorage.getItem('meta_vendedoras')||'[]'); } catch(e) {}
   const faltantesApp = {};
   _metaFalt2.forEach(v => {
-    faltantesApp[v.nome.toUpperCase()] = v.faltantes !== undefined ? v.faltantes : Math.max(0,(v.total||0)-(v.oks||0));
+    faltantesApp[normalizarVendedora(v.nome)] = v.faltantes !== undefined ? v.faltantes : Math.max(0,(v.total||0)-(v.oks||0));
   });
 
-  const lista = filtroVend === 'todas' ? metaData : metaData.filter(v => v.nome.toUpperCase() === filtroVend.toUpperCase());
+  const lista = filtroVend === 'todas' ? metaData : metaData.filter(v => normalizarVendedora(v.nome) === normalizarVendedora(filtroVend));
   const barCores = [{fill:'#b8860b',text:'#7a5c00',medal:'🥇'},{fill:'#c45b1a',text:'#7a3310',medal:'🥈'},{fill:'#7a0b1e',text:'#4a0812',medal:'🥉'}];
   const turnoLabel = {MANHA:'Manhã',TARDE:'Tarde',NOITE:'Noite'};
   const turnoIcons = {MANHA:'🌅',TARDE:'☀️',NOITE:'🌙'};
@@ -3627,8 +3645,8 @@ function gerarPdfMeta(filtroVend) {
 
   const cardsHtml = lista.map(v => {
     const pct = v.meta > 0 ? Math.round(v.oks/v.meta*100) : 0;
-    const falt = faltantesApp[v.nome.toUpperCase()]||0;
-    const vr = vendasResumo[v.nome.toUpperCase()]||null;
+    const falt = faltantesApp[normalizarVendedora(v.nome)]||0;
+    const vr = vendasResumo[normalizarVendedora(v.nome)]||null;
     const pctCor = pct >= 100 ? '#0f6b52' : '#7a0b1e';
     const pctBg = pct >= 100 ? '#e8f5f1' : '#fdf2f3';
 
@@ -3689,7 +3707,7 @@ function gerarPdfMeta(filtroVend) {
   }).join('');
 
   const totalOks = lista.reduce((s,v)=>s+v.oks,0);
-  const totalFalt = lista.reduce((s,v)=>s+(faltantesApp[v.nome.toUpperCase()]||0),0);
+  const totalFalt = lista.reduce((s,v)=>s+(faltantesApp[normalizarVendedora(v.nome)]||0),0);
   const totalMeta = lista.reduce((s,v)=>s+v.meta,0);
   const totalPct = totalMeta > 0 ? Math.round(totalOks/totalMeta*100) : 0;
 
@@ -3743,10 +3761,10 @@ function enviarWppMeta(filtroVend) {
   try { _metaFalt2 = JSON.parse(localStorage.getItem('meta_vendedoras')||'[]'); } catch(e) {}
   const faltantesApp = {};
   _metaFalt2.forEach(v => {
-    faltantesApp[v.nome.toUpperCase()] = v.faltantes !== undefined ? v.faltantes : Math.max(0,(v.total||0)-(v.oks||0));
+    faltantesApp[normalizarVendedora(v.nome)] = v.faltantes !== undefined ? v.faltantes : Math.max(0,(v.total||0)-(v.oks||0));
   });
 
-  const lista = filtroVend === 'todas' ? metaData : metaData.filter(v => v.nome.toUpperCase() === filtroVend.toUpperCase());
+  const lista = filtroVend === 'todas' ? metaData : metaData.filter(v => normalizarVendedora(v.nome) === normalizarVendedora(filtroVend));
   let vendasResumo = {};
   try { vendasResumo = JSON.parse(localStorage.getItem('vendas_resumo')||'{}'); } catch(e) {}
 
@@ -3765,8 +3783,8 @@ function enviarWppMeta(filtroVend) {
 
   lista.forEach(v => {
     const pct = v.meta > 0 ? Math.round(v.oks/v.meta*100) : 0;
-    const falt = faltantesApp[v.nome.toUpperCase()]||0;
-    const vr = vendasResumo[v.nome.toUpperCase()]||null;
+    const falt = faltantesApp[normalizarVendedora(v.nome)]||0;
+    const vr = vendasResumo[normalizarVendedora(v.nome)]||null;
     const emoji = pct >= 100 ? '✅' : pct >= 70 ? '⚠️' : '❌';
     texto += `${emoji} *${v.nome.charAt(0)+v.nome.slice(1).toLowerCase()}* — ${pct}% da meta
 `;
@@ -3779,7 +3797,7 @@ function enviarWppMeta(filtroVend) {
     if (vr && vr.diaMais) texto += '• Melhor dia: ' + vr.diaMais + '\n';
     // Budget individual
     if (relatorioWpp && relatorioWpp.vendedoras) {
-      const nomeUp = v.nome.toUpperCase();
+      const nomeUp = normalizarVendedora(v.nome);
       const vdRel = Object.entries(relatorioWpp.vendedoras).find(([k]) => k.toUpperCase() === nomeUp || k.toUpperCase().startsWith(nomeUp.slice(0,4)));
       if (vdRel) {
         const vBud = vdRel[1].budget || 0;
@@ -3793,7 +3811,7 @@ function enviarWppMeta(filtroVend) {
   });
 
   const totalOks = lista.reduce((s,v)=>s+v.oks,0);
-  const totalFalt = lista.reduce((s,v)=>s+(faltantesApp[v.nome.toUpperCase()]||0),0);
+  const totalFalt = lista.reduce((s,v)=>s+(faltantesApp[normalizarVendedora(v.nome)]||0),0);
   const totalMeta = lista.reduce((s,v)=>s+v.meta,0);
   const totalPct = totalMeta > 0 ? Math.round(totalOks/totalMeta*100) : 0;
 
@@ -4010,8 +4028,10 @@ function renderNok() {
       btn.textContent = p.nok ? 'Desfazer' : 'Limpar';
       btn.addEventListener('click', e => {
         e.stopPropagation();
+        const _tamsProduto = Object.keys(p.tams||{});
+        const _tamanhoTxt = _tamsProduto.length === 1 ? _tamsProduto[0] : _tamsProduto.join(', ');
         p.nok = false; p.nokWho = ''; p.nokTams = {};
-        enviarNokParaPlanilha(p, '', 'desmarcou', getNomeUsuario());
+        enviarNokParaPlanilha(p, _tamanhoTxt, 'desmarcou', getNomeUsuario());
         fbSave(p._id); renderNok(); updateNokBadge(); renderGrid();
       });
       actions.appendChild(btn);
@@ -4142,7 +4162,7 @@ function fbListen() {
   const carregarCatalogo = () => {
     // Sempre recarregar do Firebase para garantir BR e USA atualizados
     {
-      window._db.collection('catalogo').get().then(snap => {
+      window._db.collection('catalogo').get({source: 'server'}).then(snap => {
         // Esconder loading screen agora que os dados chegaram
         const ls = document.getElementById('loading-screen');
         if (ls) ls.style.display = 'none';
@@ -4685,6 +4705,19 @@ function _inputFalsoComTexto(texto, nomeArquivo) {
 
 async function sincronizarAutomaticamente(manual) {
   const statusEl = document.getElementById('sync-status');
+  // Proteção: não reimportar produtos enquanto alguém está com um produto aberto
+  // ou digitando nesse navegador — evita perder um comentário/ação no meio do caminho.
+  const active = document.activeElement;
+  const digitandoAgora = active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA');
+  const modalAbertoAgora = typeof modalId !== 'undefined' && modalId !== null;
+  if (digitandoAgora || modalAbertoAgora) {
+    if (manual && statusEl) statusEl.textContent = '⏸️ Adiado — feche o produto aberto (ou termine de digitar) e tente de novo.';
+    else {
+      console.log('Sincronização automática adiada: usuário está com um produto aberto ou digitando. Tentando de novo em 5 min.');
+      setTimeout(() => sincronizarAutomaticamente(false), 5 * 60 * 1000);
+    }
+    return;
+  }
   const baseUrl = localStorage.getItem('sync_url') || '';
   const planilhaId = localStorage.getItem('sync_planilhaId') || '';
   const planilhaIdBr = localStorage.getItem('sync_planilhaIdBr') || '';
@@ -4759,6 +4792,12 @@ function extrairTamMult(nomeRaw) {
   var m4 = nome.match(/\s+cor\s+([\w.]+)\s*$/i);
   if (m4) return {base: nome.slice(0,m4.index).trim(), tam: 'Cor ' + m4[1].toUpperCase(), mult: 1};
   return {base: nome, tam: null, mult: 1};
+}
+
+// Padroniza nome de vendedora (remove acento e deixa maiúsculo) — evita que
+// "Thais" e "Thaís" (grafias diferentes na planilha) virem duas pessoas diferentes no filtro.
+function normalizarVendedora(s) {
+  return (s||'').trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
 }
 
 function processarCSVUSA(input) {
@@ -4882,7 +4921,7 @@ function processarCSVUSA(input) {
         if (!row[iItem]?.trim()) return;
         const conf = (row[iConf]||'').trim().toUpperCase();
         if (conf === 'NOK') return; // só exclui NOK, SOS e tudo mais conta
-        const vend = (row[iVend]||'').trim().toUpperCase();
+        const vend = normalizarVendedora(row[iVend]);
         if (!vend) return;
         const itemRaw = row[iItem].trim();
         // Extrair multiplicador do nome (ex: "Produto 2x" = 2 unidades)
@@ -4999,7 +5038,7 @@ function processarCSVUSA(input) {
         const g = groups[key];
         if (isEstEua) g.est_eua = true;
         if (isEstBr)  g.est_br  = true;
-        const vend = row[iVend]?.trim()||'';
+        const vend = normalizarVendedora(row[iVend]);
         if (vend && !g.vs.includes(vend)) g.vs.push(vend);
         if (!g.f && row[iFoto]?.trim()) { g.f = resolverFoto(row[iFoto].trim()); g._fOriginal = row[iFoto].trim(); }
         const tamKey = tam || 'Único';
@@ -5081,7 +5120,7 @@ function salvarOrigemNoFirebase(newData, origem, onDone) {
   }
   if (fbUnsub) { fbUnsub(); fbUnsub = null; }
   setStatus('🧹 Limpando produtos antigos (' + origem.toUpperCase() + ')...');
-  window._db.collection('catalogo').get().then(snap => {
+  window._db.collection('catalogo').get({source: 'server'}).then(snap => {
     // Cada origem só apaga os seus próprios produtos
     const docsToDelete = snap.docs.filter(doc => {
       const o = doc.data().origem || 'usa';
@@ -5128,7 +5167,7 @@ function salvarOrigemNoFirebase(newData, origem, onDone) {
     });
   }).then(() => {
     // Gerar novos IDs únicos não conflitantes com a outra origem
-    return window._db.collection('catalogo').get();
+    return window._db.collection('catalogo').get({source: 'server'});
   }).then(snap => {
     let maxId = -1;
     snap.forEach(doc => { const n = parseInt(doc.id); if (!isNaN(n) && n > maxId) maxId = n; });
@@ -5424,7 +5463,7 @@ function processarCSVBR(input) {
         const cat = row[iCat]?.trim() || '';
         const tamCol = row[iTam]?.trim() || '';
         const cor = row[iCor]?.trim() || '';
-        const vend = row[iVend]?.trim() || '';
+        const vend = normalizarVendedora(row[iVend]);
         const valUnit = (() => {
           const v = pvBR(row);
           const vendRaw = row[iVend]?.trim().toUpperCase() || '';
