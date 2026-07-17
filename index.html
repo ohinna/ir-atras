@@ -256,6 +256,9 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
     <span class="search-icon">🔍</span>
     <input class="search-input" id="search-input" type="text" placeholder="Buscar produto, marca, vendedora..." oninput="renderGrid()" autocomplete="off">
   </div>
+  <div style="padding:2px 12px 0;text-align:right">
+    <button onclick="limparTodosFiltros()" style="background:none;border:none;color:var(--text4);font-size:10px;text-decoration:underline;cursor:pointer;padding:2px 0">🔄 Limpar todos os filtros</button>
+  </div>
   <div style="display:flex;gap:8px;padding:8px 12px 4px">
     <button class="chip active" id="chip-origem-todos" onclick="setOrigem('',this)" style="flex:1;justify-content:center">Todos</button>
     <button class="chip" id="chip-origem-br" onclick="setOrigem('br',this)" style="flex:1;justify-content:center">🇧🇷 <span id="label-mes-br">Mês BR</span></button>
@@ -774,6 +777,32 @@ const RAW_DATA = [];
 
 let PRODUTOS = RAW_DATA.map((p,i) => ({...p, _id:i, nok:false, em_compra:false, urgente:false, comments:[], qty: p.q}));
 // Restaurar filtros salvos
+function limparTodosFiltros() {
+  fVends = new Set(['TODAS']);
+  fMarcas = new Set();
+  fCat = '';
+  fStatus = '';
+  fOrigem = '';
+  _sortMode = 'marca';
+  _sortDir = 'asc';
+  const searchInput = document.getElementById('search-input');
+  if (searchInput) searchInput.value = '';
+  // Resetar visual dos chips
+  document.querySelectorAll('#vend-row .chip').forEach(c => c.classList.remove('active'));
+  document.getElementById('chip-todas')?.classList.add('active');
+  document.querySelectorAll('.chip[onclick*="setMarca"]').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('.chip[onclick*="setCat"]').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('.chip[onclick*="setStatus"]').forEach(c => c.classList.remove('active'));
+  document.getElementById('chip-all-marca')?.classList.add('active');
+  document.getElementById('chip-all-cat')?.classList.add('active');
+  document.getElementById('status-todos')?.classList.add('active');
+  document.getElementById('chip-origem-todos')?.classList.add('active');
+  document.getElementById('chip-origem-br')?.classList.remove('active');
+  document.getElementById('chip-origem-usa')?.classList.remove('active');
+  salvarFiltros();
+  renderGrid();
+}
+
 function salvarFiltros() {
   localStorage.setItem('filtros', JSON.stringify({
     vends: [...fVends], marcas: [...fMarcas], cat: fCat, sortMode: _sortMode, sortDir: _sortDir, status: fStatus, origem: fOrigem
@@ -1346,7 +1375,7 @@ function renderGrid() {
   const vendChips = document.querySelectorAll('#vend-row .chip:not(#chip-todas)');
   vendChips.forEach(btn => {
     const vName = btn.textContent.replace(/\s*\(\d+\)/, '').trim().toUpperCase();
-    const count = PRODUTOS.filter(p => !p.nok && (p.vs||[]).some(v => v.toUpperCase() === vName)).length;
+    const count = PRODUTOS.filter(p => !p.nok && (!fOrigem || p.origem === fOrigem) && (p.vs||[]).some(v => v.toUpperCase() === vName)).length;
     btn.textContent = btn.textContent.replace(/\s*\(\d+\)/, '') + ' (' + count + ')';
   });
   } catch(e) {
