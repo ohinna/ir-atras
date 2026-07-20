@@ -5086,15 +5086,18 @@ async function gerarESalvarPDFAutomatico(manual) {
     const html = construirHtmlFaltantes('');
     const blob = await gerarPDFBlobReal(html);
     const agora = new Date();
+    const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+    const mesStr = meses[agora.getMonth()];
     const dataStr = agora.toLocaleDateString('pt-BR').slice(0,5).replace(/\//g,'-'); // ex: 20-07
     const horaStr = agora.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}).replace(':','h');
-    const pastaDia = await handle.getDirectoryHandle(dataStr, { create: true });
+    const pastaMes = await handle.getDirectoryHandle(mesStr, { create: true });
+    const pastaDia = await pastaMes.getDirectoryHandle(dataStr, { create: true });
     const nomeArquivo = `Faltantes ${horaStr}.pdf`;
     const fileHandle = await pastaDia.getFileHandle(nomeArquivo, { create: true });
     const writable = await fileHandle.createWritable();
     await writable.write(blob);
     await writable.close();
-    if (statusEl) statusEl.textContent = '✅ Salvo: ' + dataStr + '/' + nomeArquivo;
+    if (statusEl) statusEl.textContent = '✅ Salvo: ' + mesStr + '/' + dataStr + '/' + nomeArquivo;
     return true;
   } catch(e) {
     console.error('Erro ao gerar/salvar PDF automático:', e.message);
