@@ -1195,7 +1195,14 @@ function getOrdensOnlineFiltradas() {
       o.itens.some(it => (it.item||'').toLowerCase().includes(q) || (it.marca||'').toLowerCase().includes(q))
     );
   }
+  // Ordem some da lista quando TODOS os itens dela já estiverem "ENTREGUE" — só continua aparecendo
+  // enquanto tiver pelo menos um item pendente.
+  ordens = ordens.filter(o => o.itens.some(it => (it.status||'').trim().toUpperCase() !== 'ENTREGUE'));
   return ordens;
+}
+
+function pendentesDaOrdem(o) {
+  return o.itens.filter(it => (it.status||'').trim().toUpperCase() !== 'ENTREGUE').length;
 }
 
 function renderOrdensOnline() {
@@ -1344,11 +1351,12 @@ function renderOrdensDaVendedora(ordensTodas, grid, empty) {
     const totalVal = o.itens.reduce((a,it) => a + (it.valor||0), 0);
     const origemBadge = o.origem === 'usa' ? '🇺🇸' : '🇧🇷';
     const ordemAtrasada = o.itens.some(it => isAtrasadoOuSemData(it.dataChegada));
+    const pendentes = pendentesDaOrdem(o);
     return `<div style="background:var(--bg2);border:0.5px solid ${ordemAtrasada?'#dc2626':'var(--border)'};border-radius:14px;margin-bottom:10px;overflow:hidden">
       <div onclick="toggleOrdemOnline(${i})" style="padding:12px 14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer">
         <div>
           <div style="font-size:13px;font-weight:700;color:var(--text)">${origemBadge} Ordem ${o.ordem}${ordemAtrasada?' 🔴':''}</div>
-          <div style="font-size:10.5px;color:var(--text3);margin-top:2px">${o.itens.length} item(ns) · R$ ${totalVal.toFixed(2).replace('.',',')}</div>
+          <div style="font-size:10.5px;color:var(--text3);margin-top:2px">${o.itens.length}/${pendentes} incompleta · R$ ${totalVal.toFixed(2).replace('.',',')}</div>
         </div>
         <span id="seta-ordem-${i}" style="font-size:12px;color:var(--text4)">▾</span>
       </div>
