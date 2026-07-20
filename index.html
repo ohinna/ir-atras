@@ -1067,6 +1067,7 @@ let _sortMode = 'marca';
 let _sortDir = 'asc';
 
 function setStatus(s, btn) {
+  if (s !== 'online') _onlineVendSelecionada = null;
   fStatus = s;
   document.querySelectorAll('#status-row .chip').forEach(c => c.classList.remove('active'));
   btn.classList.add('active');
@@ -1157,24 +1158,35 @@ function fmtVal(v) {
   return 'R$ ' + parseFloat(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
 }
 
-function renderOrdensOnline() {
-  const grid = document.getElementById('grid');
-  const empty = document.getElementById('empty');
-  if (!grid || !empty) return;
-  const q = (fSearch||'').toLowerCase();
+let _onlineVendSelecionada = null; // null = mostra lista de vendedoras; senão mostra as ordens dessa vendedora
+
+function parseDataBR(str) {
+  if (!str) return null;
+  const s = str.trim().toLowerCase();
+  if (!s || s.includes('sem data')) return null;
+  const m = s.match(/^(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?/);
+  if (!m) return null;
+  const dia = parseInt(m[1]), mes = parseInt(m[2])-1;
+  const anoAtual = new Date().getFullYear();
+  const ano = m[3] ? (m[3].length===2 ? 2000+parseInt(m[3]) : parseInt(m[3])) : anoAtual;
+  const d = new Date(ano, mes, dia);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+function isAtrasadoOuSemData(dataChegadaStr) {
+  const d = parseDataBR(dataChegadaStr);
+  if (!d) return true; // sem data também entra em evidência
+  const hoje = new Date();
+  hoje.setHours(0,0,0,0);
+  d.setHours(0,0,0,0);
+  return d < hoje;
+}
+
+function getOrdensOnlineFiltradas() {
   let ordens = [];
   if (!fOrigem || fOrigem === 'usa') ordens = ordens.concat((window._ordensOnlineUSA||[]).map(o => ({...o, origem:'usa'})));
   if (!fOrigem || fOrigem === 'br') ordens = ordens.concat((window._ordensOnlineBR||[]).map(o => ({...o, origem:'br'})));
-
-  // Filtro de vendedora (mesmo padrão do catálogo normal, mas só dentro das ordens online)
-  if (!fVends.has('TODAS')) {
-    ordens = ordens.filter(o => fVends.has(semAcento(o.vendedora)));
-  }
-  // Filtro de marca — mantém a ordem, mas só se tiver algum item com aquela marca
-  if (fMarcas.size > 0) {
-    ordens = ordens.filter(o => o.itens.some(it => fMarcas.has((it.marca||'').trim())));
-  }
-  // Busca por texto — nome do item, marca ou vendedora
+  const q = (fSearch||'').toLowerCase();
   if (q) {
     ordens = ordens.filter(o =>
       o.ordem.toLowerCase().includes(q) ||
@@ -1182,16 +1194,82 @@ function renderOrdensOnline() {
       o.itens.some(it => (it.item||'').toLowerCase().includes(q) || (it.marca||'').toLowerCase().includes(q))
     );
   }
+  return ordens;
+}
+
+function renderOrdensOnline() {
+  const grid = document.getElementById('grid');
+  const empty = document.getElementById('empty');
+  if (!grid || !empty) return;
+  grid.style.gridTemplateColumns = '1fr';
+  const ordens = getOrdensOnlineFiltradas();
+  if (_onlineVendSelecionada === null) renderListaVendedorasOnline(ordens, grid, empty);
+  else renderOrdensDaVendedora(ordens, grid, empty);
+}
+
+function renderListaVendedorasOnline(ordens, grid, empty) {
+  const porVend = {};
+  ordens.forEach(o => {
+    const v = o.vendedora || '—';
+    if (!porVend[v]) porVend[v] = { vendedora: v, ordens: [], totalVal: 0 };
+    const totalOrdem = o.itens.reduce((a,it) => a + (it.valor||0), 0);
+    porVend[v].ordens.push(o);
+    porVend[v].totalVal += totalOrdem;
+  });
+  const lista = Object.values(porVend).sort((a,b) => b.ordens.length - a.ordens.length);
+
+  const countNum = document.getElementById('count-num');
+  if (countNum) countNum.textContent = lista.length;
+  const headerMeta = document.getElementById('header-meta');
+  if (headerMeta) headerMeta.textContent = lista.length + ' vendedora' + (lista.length===1?'':'s') + ' com online';
+
+  if (lista.length === 0) {
+    grid.innerHTML = '';
+    empty.style.display = 'block';
+    empty.textContent = 'Nenhuma ordem online encontrada.';
+    return;
+  }
+  empty.style.display = 'none';
+
+  grid.innerHTML = lista.map(v => {
+    const media = v.ordens.length ? v.totalVal / v.ordens.length : 0;
+    const nomeFmt = v.vendedora.charAt(0)+v.vendedora.slice(1).toLowerCase();
+    const temAlerta = v.ordens.some(o => o.itens.some(it => isAtrasadoOuSemData(it.dataChegada)));
+    return `<div onclick="abrirVendedoraOnline('${v.vendedora.replace(/'/g,"\\'")}')" style="background:var(--bg2);border:0.5px solid ${temAlerta?'#dc2626':'var(--border)'};border-radius:14px;padding:14px;margin-bottom:10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-size:14px;font-weight:700;color:var(--text)">${nomeFmt}${temAlerta?' 🔴':''}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:3px">${v.ordens.length} ordem${v.ordens.length===1?'':'s'} · média R$ ${media.toFixed(2).replace('.',',')}</div>
+      </div>
+      <span style="font-size:16px;color:var(--text4)">›</span>
+    </div>`;
+  }).join('');
+}
+
+function abrirVendedoraOnline(vend) {
+  _onlineVendSelecionada = vend;
+  renderGrid();
+}
+
+function voltarListaVendedorasOnline() {
+  _onlineVendSelecionada = null;
+  renderGrid();
+}
+
+function renderOrdensDaVendedora(ordensTodas, grid, empty) {
+  const ordens = ordensTodas.filter(o => o.vendedora === _onlineVendSelecionada);
+  const nomeFmt = (_onlineVendSelecionada||'').charAt(0)+(_onlineVendSelecionada||'').slice(1).toLowerCase();
 
   const countNum = document.getElementById('count-num');
   if (countNum) countNum.textContent = ordens.length;
   const headerMeta = document.getElementById('header-meta');
-  if (headerMeta) headerMeta.textContent = ordens.length + ' ordem' + (ordens.length===1?'':'s') + ' online';
+  if (headerMeta) headerMeta.textContent = ordens.length + ' ordem' + (ordens.length===1?'':'s') + ' de ' + nomeFmt;
+
+  const voltarBtn = `<div onclick="voltarListaVendedorasOnline()" style="display:flex;align-items:center;gap:6px;padding:8px 4px;margin-bottom:8px;cursor:pointer;color:var(--text3);font-size:12px;font-weight:600">‹ Voltar pras vendedoras</div>`;
 
   if (ordens.length === 0) {
-    grid.innerHTML = '';
+    grid.innerHTML = voltarBtn;
     empty.style.display = 'block';
-    empty.textContent = 'Nenhuma ordem online encontrada.';
+    empty.textContent = 'Nenhuma ordem encontrada.';
     return;
   }
   empty.style.display = 'none';
@@ -1206,20 +1284,22 @@ function renderOrdensOnline() {
     return 'var(--text4)';
   };
 
-  grid.style.gridTemplateColumns = '1fr';
-  grid.innerHTML = ordens.map((o, i) => {
+  grid.innerHTML = voltarBtn + ordens.map((o, i) => {
     const totalVal = o.itens.reduce((a,it) => a + (it.valor||0), 0);
     const origemBadge = o.origem === 'usa' ? '🇺🇸' : '🇧🇷';
-    return `<div style="background:var(--bg2);border:0.5px solid var(--border);border-radius:14px;margin-bottom:10px;overflow:hidden">
+    const ordemAtrasada = o.itens.some(it => isAtrasadoOuSemData(it.dataChegada));
+    return `<div style="background:var(--bg2);border:0.5px solid ${ordemAtrasada?'#dc2626':'var(--border)'};border-radius:14px;margin-bottom:10px;overflow:hidden">
       <div onclick="toggleOrdemOnline(${i})" style="padding:12px 14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer">
         <div>
-          <div style="font-size:13px;font-weight:700;color:var(--text)">${origemBadge} Ordem ${o.ordem}</div>
-          <div style="font-size:10.5px;color:var(--text3);margin-top:2px">${o.vendedora?.charAt(0)+o.vendedora?.slice(1).toLowerCase()||'—'} · ${o.itens.length} item(ns) · R$ ${totalVal.toFixed(2).replace('.',',')}</div>
+          <div style="font-size:13px;font-weight:700;color:var(--text)">${origemBadge} Ordem ${o.ordem}${ordemAtrasada?' 🔴':''}</div>
+          <div style="font-size:10.5px;color:var(--text3);margin-top:2px">${o.itens.length} item(ns) · R$ ${totalVal.toFixed(2).replace('.',',')}</div>
         </div>
         <span id="seta-ordem-${i}" style="font-size:12px;color:var(--text4)">▾</span>
       </div>
       <div id="itens-ordem-${i}" style="display:none;border-top:0.5px solid var(--border)">
-        ${o.itens.map(it => `<div style="padding:10px 14px;display:flex;gap:10px;align-items:center;border-bottom:0.5px solid var(--border)">
+        ${o.itens.map(it => {
+          const alerta = isAtrasadoOuSemData(it.dataChegada);
+          return `<div style="padding:10px 14px;display:flex;gap:10px;align-items:center;border-bottom:0.5px solid var(--border);${alerta?'background:rgba(220,38,38,0.08)':''}">
           ${it.foto ? `<img src="${it.foto}" style="width:40px;height:40px;border-radius:8px;object-fit:cover;flex-shrink:0" onerror="this.style.display='none'">` : ''}
           <div style="flex:1;min-width:0">
             <div style="font-size:11.5px;color:var(--text);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${it.item}</div>
@@ -1227,9 +1307,10 @@ function renderOrdensOnline() {
           </div>
           <div style="text-align:right;flex-shrink:0">
             <div style="font-size:9px;font-weight:700;color:${corStatus(it.status)};text-transform:uppercase">${it.status||'—'}</div>
-            <div style="font-size:9px;color:var(--text4);margin-top:2px">${it.dataCompra?'Compra: '+it.dataCompra:''}${it.dataChegada?' · Chegada: '+it.dataChegada:''}</div>
+            <div style="font-size:9px;font-weight:${alerta?'700':'400'};color:${alerta?'#dc2626':'var(--text4)'};margin-top:2px">${it.dataCompra?'Compra: '+it.dataCompra:''} · Chegada: ${it.dataChegada||'sem data'}</div>
           </div>
-        </div>`).join('')}
+        </div>`;
+        }).join('')}
       </div>
     </div>`;
   }).join('');
