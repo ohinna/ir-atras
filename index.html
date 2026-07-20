@@ -1356,7 +1356,11 @@ function renderOrdensDaVendedora(ordensTodas, grid, empty) {
           <div style="font-size:13px;font-weight:700;color:var(--text)">${origemBadge} Ordem ${o.ordem}${ordemAtrasada?' 🔴':''}</div>
           <div style="font-size:10.5px;color:var(--text3);margin-top:2px">${o.itens.length}/${pendentes} incompleta · R$ ${totalVal.toFixed(2).replace('.',',')}</div>
         </div>
-        <span id="seta-ordem-${i}" style="font-size:12px;color:var(--text4)">▾</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <button onclick="event.stopPropagation();exportarOrdemOnlinePDF('${o.ordem.replace(/'/g,"\\'")}')" title="Exportar PDF" style="background:#6366f1;border:none;border-radius:8px;padding:5px 8px;cursor:pointer;font-size:13px;line-height:1">📄</button>
+          <button onclick="event.stopPropagation();compartilharOrdemOnline('${o.ordem.replace(/'/g,"\\'")}')" title="Compartilhar essa ordem" style="background:#25d366;border:none;border-radius:8px;padding:5px 8px;cursor:pointer;font-size:13px;line-height:1">📲</button>
+          <span id="seta-ordem-${i}" style="font-size:12px;color:var(--text4)">▾</span>
+        </div>
       </div>
       <div id="itens-ordem-${i}" style="display:none;border-top:0.5px solid var(--border)">
         ${o.itens.map(it => {
@@ -2609,6 +2613,68 @@ function exportarCompraPDF() {
   <script>window.onload=()=>{window.print();}<\/script></body></html>`;
   const blob = new Blob([html], {type:'text/html'});
   window.open(URL.createObjectURL(blob), '_blank');
+}
+
+function exportarOrdemOnlinePDF(ordemNum) {
+  const todas = getOrdensOnlineFiltradas();
+  const o = todas.find(x => x.ordem === ordemNum);
+  if (!o) return;
+  const loja = (o.itens[0]?.loja || 'SEM LOJA').trim() || 'SEM LOJA';
+  const nomeFmt = (o.vendedora||'').charAt(0)+(o.vendedora||'').slice(1).toLowerCase();
+  const now = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  const origemBadge = o.origem === 'usa' ? '🇺🇸 USA' : '🇧🇷 BR';
+  const pendentes = pendentesDaOrdem(o);
+
+  const rows = o.itens.map((it, i) => {
+    const entregue = it.conf === 'ok';
+    const statusTxt = entregue ? 'Entregue' : (it.status || 'Aguardando entrega');
+    const statusCor = entregue ? '#0f6b52' : '#d97706';
+    const fotoImg = it.foto ? `<img src="${it.foto}" style="width:50px;height:50px;object-fit:cover;border-radius:6px">` : '';
+    return `<tr>
+      <td style="text-align:center;color:#888">${i+1}</td>
+      <td>${fotoImg}</td>
+      <td><strong>${it.item}</strong><br><span style="font-size:11px;color:#888">${it.marca||''}${it.cor?' · '+it.cor:''}${it.tam?' · '+it.tam:''}</span></td>
+      <td>R$ ${(it.valor||0).toFixed(2).replace('.',',')}</td>
+      <td style="color:${statusCor};font-weight:600">${statusTxt}</td>
+      <td style="font-size:11px">${it.dataCompra?'Compra: '+it.dataCompra+'<br>':''}Chegada: ${it.dataChegada||'sem data'}</td>
+    </tr>`;
+  }).join('');
+
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Ordem ${o.ordem} — Bazaar</title>
+  <style>body{font-family:Arial,sans-serif;font-size:13px;color:#1a1a1a;padding:24px}h1{color:#6366f1;font-size:18px;margin:0 0 4px}.sub{color:#888;font-size:12px;margin-bottom:20px}table{width:100%;border-collapse:collapse}th{background:#6366f1;color:#fff;padding:8px 10px;text-align:left;font-size:12px}td{padding:8px 10px;border-bottom:0.5px solid #eee;vertical-align:middle}tr:nth-child(even) td{background:#f5f5ff}.footer{margin-top:16px;font-size:11px;color:#888;text-align:right}@media print{body{padding:0}}</style></head><body>
+  <h1>📦 Ordem ${o.ordem} — ${loja}</h1>
+  <div class="sub">${origemBadge} · Vendedora: ${nomeFmt} · ${o.itens.length} item(ns), ${pendentes} pendente(s) · Gerado em ${now}</div>
+  <table><thead><tr><th>#</th><th>Foto</th><th>Item</th><th>Valor</th><th>Status</th><th>Datas</th></tr></thead><tbody>${rows}</tbody></table>
+  <div class="footer">Bazaar Faltantes · ${now}</div>
+  <script>window.onload=()=>{window.print();}<\/script></body></html>`;
+  const blob = new Blob([html], {type:'text/html'});
+  window.open(URL.createObjectURL(blob), '_blank');
+}
+
+function compartilharOrdemOnline(ordemNum) {
+  const todas = getOrdensOnlineFiltradas();
+  const o = todas.find(x => x.ordem === ordemNum);
+  if (!o) return;
+  const loja = (o.itens[0]?.loja || 'SEM LOJA').trim() || 'SEM LOJA';
+  const nomeFmt = (o.vendedora||'').charAt(0)+(o.vendedora||'').slice(1).toLowerCase();
+  const nl = String.fromCharCode(10);
+  let lines = [`📦 *Ordem ${o.ordem}* — ${loja}`, `Vendedora: ${nomeFmt}`, ''];
+  o.itens.forEach((it, i) => {
+    const entregue = it.conf === 'ok';
+    lines.push(`*${i+1}. ${it.item}*`);
+    if (it.marca) lines.push(`Marca: ${it.marca}`);
+    if (it.tam) lines.push(`Tam: ${it.tam}`);
+    if (it.cor) lines.push(`Cor: ${it.cor}`);
+    lines.push(`Valor: R$ ${(it.valor||0).toFixed(2).replace('.',',')}`);
+    lines.push(`Status: ${entregue ? 'Entregue ✅' : (it.status || 'Aguardando entrega')}`);
+    if (it.dataCompra) lines.push(`Compra: ${it.dataCompra}`);
+    lines.push(`Chegada: ${it.dataChegada || 'sem data'}`);
+    if (it.foto) lines.push(`Foto: ${it.foto}`);
+    lines.push('');
+  });
+  const pendentes = pendentesDaOrdem(o);
+  lines.push(`Total: ${o.itens.length} item(s) · ${pendentes} pendente(s)`);
+  window.open('https://wa.me/?text=' + encodeURIComponent(lines.join(nl)), '_blank');
 }
 
 function exportarCompraWhatsApp() {
