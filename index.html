@@ -1195,16 +1195,11 @@ function getOrdensOnlineFiltradas() {
       o.itens.some(it => (it.item||'').toLowerCase().includes(q) || (it.marca||'').toLowerCase().includes(q))
     );
   }
-  // Ordem some da lista quando TODOS os itens dela já estiverem "ENTREGUE" — só continua aparecendo
-  // enquanto tiver pelo menos um item pendente.
-  ordens = ordens.filter(o => o.itens.some(it => (it.status||'').trim().toUpperCase() !== 'ENTREGUE'));
-  // Só mostra ordens que realmente têm um número de ordem — sem ordem, não aparece.
-  ordens = ordens.filter(o => o.ordem && o.ordem !== 'sem-ordem');
   return ordens;
 }
 
 function pendentesDaOrdem(o) {
-  return o.itens.filter(it => (it.status||'').trim().toUpperCase() !== 'ENTREGUE').length;
+  return o.itens.filter(it => it.conf === 'online').length;
 }
 
 function renderOrdensOnline() {
@@ -1341,6 +1336,7 @@ function renderOrdensDaVendedora(ordensTodas, grid, empty) {
 
   const corStatus = (s) => {
     const su = (s||'').toUpperCase();
+    if (su === 'ENTREGUE') return '#0f6b52';
     if (su.includes('ATRASO')) return '#dc2626';
     if (su.includes('INCOMPLETA')) return '#dc2626';
     if (su.includes('PICK UP')) return '#0f6b52';
@@ -1372,7 +1368,7 @@ function renderOrdensDaVendedora(ordensTodas, grid, empty) {
             <div style="font-size:10px;color:var(--text3)">${it.marca||''}${it.cor?' · '+it.cor:''}${it.tam?' · '+it.tam:''} · R$ ${(it.valor||0).toFixed(2).replace('.',',')}</div>
           </div>
           <div style="text-align:right;flex-shrink:0">
-            <div style="font-size:9px;font-weight:700;color:${corStatus(it.status)};text-transform:uppercase">${it.status||'—'}</div>
+            <div style="font-size:9px;font-weight:700;color:${corStatus(it.conf==='ok'?'ENTREGUE':it.status)};text-transform:uppercase">${it.conf==='ok' ? 'Entregue' : (it.status||'—')}</div>
             <div style="font-size:9px;font-weight:${alerta?'700':'400'};color:${alerta?'#dc2626':'var(--text4)'};margin-top:2px">${it.dataCompra?'Compra: '+it.dataCompra:''} · Chegada: ${it.dataChegada||'sem data'}</div>
           </div>
         </div>`;
@@ -5237,8 +5233,9 @@ function processarCSVUSA(input) {
       rows.slice(headerIdx+1).forEach(row => {
         if (!row[iItem]?.trim()) return;
         const confRaw = (row[iConf]||'').trim().toLowerCase();
-        if (confRaw !== 'online') return;
-        const ordemNum = (iOrdem>-1 ? row[iOrdem]?.trim() : '') || 'sem-ordem';
+        if (confRaw !== 'online' && confRaw !== 'ok') return;
+        const ordemNum = (iOrdem>-1 ? row[iOrdem]?.trim() : '') || '';
+        if (!ordemNum) return; // sem número de ordem, não entra
         if (!ordensOnline[ordemNum]) ordensOnline[ordemNum] = { ordem: ordemNum, vendedora: normalizarVendedora(row[iVend]), itens: [] };
         ordensOnline[ordemNum].itens.push({
           item: (row[iItem]||'').trim(),
@@ -5252,9 +5249,11 @@ function processarCSVUSA(input) {
           dataChegada: iDataChegada>-1 ? (row[iDataChegada]||'').trim() : '',
           status: iStatusOrdem>-1 ? (row[iStatusOrdem]||'').trim() : '',
           loja: iLoja>-1 ? (row[iLoja]||'').trim() : '',
+          conf: confRaw, // 'online' = aguardando entrega, 'ok' = entregue
         });
       });
-      const listaOrdensOnline = Object.values(ordensOnline);
+      // Só mantém ordens que ainda têm pelo menos 1 item "online" pendente
+      const listaOrdensOnline = Object.values(ordensOnline).filter(o => o.itens.some(it => it.conf === 'online'));
       window._ordensOnlineUSA = listaOrdensOnline;
       if (window._db) window._db.collection('config').doc('ordens_online_usa').set({dados: JSON.stringify(listaOrdensOnline), updatedAt: new Date().toISOString()});
 
@@ -5713,8 +5712,9 @@ function processarCSVBR(input) {
       rows.slice(headerIdx+1).forEach(row => {
         if (!row[iItem]?.trim()) return;
         const confRawBR = (row[iConf]||'').trim().toLowerCase();
-        if (confRawBR !== 'online') return;
-        const ordemNumBR = (iOrdem>-1 ? row[iOrdem]?.trim() : '') || 'sem-ordem';
+        if (confRawBR !== 'online' && confRawBR !== 'ok') return;
+        const ordemNumBR = (iOrdem>-1 ? row[iOrdem]?.trim() : '') || '';
+        if (!ordemNumBR) return; // sem número de ordem, não entra
         if (!ordensOnlineBR[ordemNumBR]) ordensOnlineBR[ordemNumBR] = { ordem: ordemNumBR, vendedora: normalizarVendedora(row[iVend]), itens: [] };
         ordensOnlineBR[ordemNumBR].itens.push({
           item: (row[iItem]||'').trim(),
@@ -5728,9 +5728,10 @@ function processarCSVBR(input) {
           dataChegada: iDataChegada>-1 ? (row[iDataChegada]||'').trim() : '',
           status: iStatusOrdem>-1 ? (row[iStatusOrdem]||'').trim() : '',
           loja: iLoja>-1 ? (row[iLoja]||'').trim() : '',
+          conf: confRawBR,
         });
       });
-      const listaOrdensOnlineBR = Object.values(ordensOnlineBR);
+      const listaOrdensOnlineBR = Object.values(ordensOnlineBR).filter(o => o.itens.some(it => it.conf === 'online'));
       window._ordensOnlineBR = listaOrdensOnlineBR;
       if (window._db) window._db.collection('config').doc('ordens_online_br').set({dados: JSON.stringify(listaOrdensOnlineBR), updatedAt: new Date().toISOString()});
 
