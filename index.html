@@ -1067,7 +1067,7 @@ let _sortMode = 'marca';
 let _sortDir = 'asc';
 
 function setStatus(s, btn) {
-  if (s !== 'online') _onlineVendSelecionada = null;
+  if (s !== 'online') { _onlineVendSelecionada = null; _onlineLojaSelecionada = null; }
   fStatus = s;
   document.querySelectorAll('#status-row .chip').forEach(c => c.classList.remove('active'));
   btn.classList.add('active');
@@ -1158,7 +1158,8 @@ function fmtVal(v) {
   return 'R$ ' + parseFloat(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
 }
 
-let _onlineVendSelecionada = null; // null = mostra lista de vendedoras; senão mostra as ordens dessa vendedora
+let _onlineVendSelecionada = null; // null = mostra lista de vendedoras; senão mostra as lojas dessa vendedora
+let _onlineLojaSelecionada = null; // null = mostra lista de lojas; senão mostra as ordens dessa loja
 
 function parseDataBR(str) {
   if (!str) return null;
@@ -1204,6 +1205,7 @@ function renderOrdensOnline() {
   grid.style.gridTemplateColumns = '1fr';
   const ordens = getOrdensOnlineFiltradas();
   if (_onlineVendSelecionada === null) renderListaVendedorasOnline(ordens, grid, empty);
+  else if (_onlineLojaSelecionada === null) renderListaLojasOnline(ordens, grid, empty);
   else renderOrdensDaVendedora(ordens, grid, empty);
 }
 
@@ -1247,24 +1249,78 @@ function renderListaVendedorasOnline(ordens, grid, empty) {
 
 function abrirVendedoraOnline(vend) {
   _onlineVendSelecionada = vend;
+  _onlineLojaSelecionada = null;
   renderGrid();
 }
 
 function voltarListaVendedorasOnline() {
   _onlineVendSelecionada = null;
+  _onlineLojaSelecionada = null;
+  renderGrid();
+}
+
+function renderListaLojasOnline(ordensTodas, grid, empty) {
+  const ordens = ordensTodas.filter(o => o.vendedora === _onlineVendSelecionada);
+  const nomeFmt = (_onlineVendSelecionada||'').charAt(0)+(_onlineVendSelecionada||'').slice(1).toLowerCase();
+
+  const porLoja = {};
+  ordens.forEach(o => {
+    const loja = (o.itens[0]?.loja || 'SEM LOJA').trim() || 'SEM LOJA';
+    if (!porLoja[loja]) porLoja[loja] = { loja, ordens: [], totalVal: 0 };
+    const totalOrdem = o.itens.reduce((a,it) => a + (it.valor||0), 0);
+    porLoja[loja].ordens.push(o);
+    porLoja[loja].totalVal += totalOrdem;
+  });
+  const lista = Object.values(porLoja).sort((a,b) => b.ordens.length - a.ordens.length);
+
+  const countNum = document.getElementById('count-num');
+  if (countNum) countNum.textContent = lista.length;
+  const headerMeta = document.getElementById('header-meta');
+  if (headerMeta) headerMeta.textContent = lista.length + ' loja' + (lista.length===1?'':'s') + ' de ' + nomeFmt;
+
+  const voltarBtn = `<div onclick="voltarListaVendedorasOnline()" style="display:flex;align-items:center;gap:6px;padding:8px 4px;margin-bottom:8px;cursor:pointer;color:var(--text3);font-size:12px;font-weight:600">‹ Voltar pras vendedoras</div>`;
+
+  if (lista.length === 0) {
+    grid.innerHTML = voltarBtn;
+    empty.style.display = 'block';
+    empty.textContent = 'Nenhuma loja encontrada.';
+    return;
+  }
+  empty.style.display = 'none';
+
+  grid.innerHTML = voltarBtn + lista.map(l => {
+    const media = l.ordens.length ? l.totalVal / l.ordens.length : 0;
+    const temAlerta = l.ordens.some(o => o.itens.some(it => isAtrasadoOuSemData(it.dataChegada)));
+    return `<div onclick="abrirLojaOnline('${l.loja.replace(/'/g,"\\'")}')" style="background:var(--bg2);border:0.5px solid ${temAlerta?'#dc2626':'var(--border)'};border-radius:14px;padding:14px;margin-bottom:10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-size:14px;font-weight:700;color:var(--text)">${l.loja}${temAlerta?' 🔴':''}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:3px">${l.ordens.length} ${l.ordens.length===1?'ordem':'ordens'} · média R$ ${media.toFixed(2).replace('.',',')}</div>
+      </div>
+      <span style="font-size:16px;color:var(--text4)">›</span>
+    </div>`;
+  }).join('');
+}
+
+function abrirLojaOnline(loja) {
+  _onlineLojaSelecionada = loja;
+  renderGrid();
+}
+
+function voltarListaLojasOnline() {
+  _onlineLojaSelecionada = null;
   renderGrid();
 }
 
 function renderOrdensDaVendedora(ordensTodas, grid, empty) {
-  const ordens = ordensTodas.filter(o => o.vendedora === _onlineVendSelecionada);
+  const ordens = ordensTodas.filter(o => o.vendedora === _onlineVendSelecionada && ((o.itens[0]?.loja || 'SEM LOJA').trim() || 'SEM LOJA') === _onlineLojaSelecionada);
   const nomeFmt = (_onlineVendSelecionada||'').charAt(0)+(_onlineVendSelecionada||'').slice(1).toLowerCase();
 
   const countNum = document.getElementById('count-num');
   if (countNum) countNum.textContent = ordens.length;
   const headerMeta = document.getElementById('header-meta');
-  if (headerMeta) headerMeta.textContent = ordens.length + ' ' + (ordens.length===1?'ordem':'ordens') + ' de ' + nomeFmt;
+  if (headerMeta) headerMeta.textContent = ordens.length + ' ' + (ordens.length===1?'ordem':'ordens') + ' · ' + nomeFmt + ' · ' + _onlineLojaSelecionada;
 
-  const voltarBtn = `<div onclick="voltarListaVendedorasOnline()" style="display:flex;align-items:center;gap:6px;padding:8px 4px;margin-bottom:8px;cursor:pointer;color:var(--text3);font-size:12px;font-weight:600">‹ Voltar pras vendedoras</div>`;
+  const voltarBtn = `<div onclick="voltarListaLojasOnline()" style="display:flex;align-items:center;gap:6px;padding:8px 4px;margin-bottom:8px;cursor:pointer;color:var(--text3);font-size:12px;font-weight:600">‹ Voltar pras lojas de ${nomeFmt}</div>`;
 
   if (ordens.length === 0) {
     grid.innerHTML = voltarBtn;
@@ -5082,7 +5138,7 @@ function processarCSVUSA(input) {
       const iItem=h.indexOf('ITEM'), iVal=h.indexOf('VALOR'), iConf=h.indexOf('CONF');
       const iMarca=h.indexOf('MARCA'), iCat=h.indexOf('CATEGORIA'), iVend=h.indexOf('VENDEDORA'), iFoto=h.indexOf('FOTO'), iCor=h.indexOf('COR'), iTam=h.indexOf('TAM');
       const iData=h.indexOf('DATA'), iPer=h.indexOf('PERÍODO');
-      const iOrdem=h.indexOf('ORDEM'), iDataCompra=h.indexOf('DATA COMPRA'), iDataChegada=h.indexOf('DATA CHEGADA'), iStatusOrdem=h.indexOf('STATUS');
+      const iOrdem=h.indexOf('ORDEM'), iDataCompra=h.indexOf('DATA COMPRA'), iDataChegada=h.indexOf('DATA CHEGADA'), iStatusOrdem=h.indexOf('STATUS'), iLoja=h.indexOf('LOJA');
 
       // Calcular resumo de vendas por vendedora (todos os itens exceto NOK)
       const vendasResumo = {};
@@ -5185,6 +5241,7 @@ function processarCSVUSA(input) {
           dataCompra: iDataCompra>-1 ? (row[iDataCompra]||'').trim() : '',
           dataChegada: iDataChegada>-1 ? (row[iDataChegada]||'').trim() : '',
           status: iStatusOrdem>-1 ? (row[iStatusOrdem]||'').trim() : '',
+          loja: iLoja>-1 ? (row[iLoja]||'').trim() : '',
         });
       });
       const listaOrdensOnline = Object.values(ordensOnline);
@@ -5626,7 +5683,7 @@ function processarCSVBR(input) {
       const iTam=h.indexOf('TAM'), iCor=h.indexOf('COR');
       // Segunda coluna COD (lastIndexOf) tem o valor real do item IA
       const iCodVal = h.lastIndexOf('COD');
-      const iOrdem=h.indexOf('ORDEM'), iDataCompra=h.indexOf('DATA COMPRA'), iDataChegada=h.indexOf('DATA CHEGADA'), iStatusOrdem=h.indexOf('STATUS');
+      const iOrdem=h.indexOf('ORDEM'), iDataCompra=h.indexOf('DATA COMPRA'), iDataChegada=h.indexOf('DATA CHEGADA'), iStatusOrdem=h.indexOf('STATUS'), iLoja=h.indexOf('LOJA');
 
       const pv = (v) => {
         let s = String(v||'').replace(/R\$\s*/g,'').trim();
@@ -5660,6 +5717,7 @@ function processarCSVBR(input) {
           dataCompra: iDataCompra>-1 ? (row[iDataCompra]||'').trim() : '',
           dataChegada: iDataChegada>-1 ? (row[iDataChegada]||'').trim() : '',
           status: iStatusOrdem>-1 ? (row[iStatusOrdem]||'').trim() : '',
+          loja: iLoja>-1 ? (row[iLoja]||'').trim() : '',
         });
       });
       const listaOrdensOnlineBR = Object.values(ordensOnlineBR);
