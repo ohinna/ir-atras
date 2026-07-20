@@ -808,7 +808,7 @@ function restaurarFiltros() {
   try {
     const saved = JSON.parse(localStorage.getItem('filtros'));
     if (!saved) return;
-    if (saved.vends) fVends = new Set(saved.vends);
+    if (saved.vends) fVends = new Set(saved.vends.map(v => v === 'TODAS' ? v : semAcento(v)));
     if (saved.marcas) fMarcas = new Set(saved.marcas);
     if (saved.cat) fCat = saved.cat;
     if (saved.sortMode) _sortMode = saved.sortMode;
@@ -1162,7 +1162,7 @@ function getFiltered() {
   const q = fSearch.toLowerCase();
   const minQty = parseInt(document.getElementById('filter-qty')?.value) || 0;
   return PRODUTOS.filter(p => {
-    if (!fVends.has('TODAS') && !(p.vs||[]).some(v => fVends.has(v.toUpperCase()))) return false;
+    if (!fVends.has('TODAS') && !(p.vs||[]).some(v => fVends.has(semAcento(v)))) return false;
     if (fMarcas.size > 0 && !fMarcas.has((p.m||'').trim())) return false;
     if (fCat && (p.c||'').trim() !== fCat) return false;
     if (fStatus === 'nok'    && !p.nok) return false;
@@ -1369,8 +1369,8 @@ function renderGrid() {
   // Atualizar contadores nos chips de vendedora
   const vendChips = document.querySelectorAll('#vend-row .chip:not(#chip-todas)');
   vendChips.forEach(btn => {
-    const vName = btn.textContent.replace(/\s*\(\d+\)/, '').trim().toUpperCase();
-    const count = PRODUTOS.filter(p => !p.nok && (!fOrigem || p.origem === fOrigem) && (p.vs||[]).some(v => v.toUpperCase() === vName)).length;
+    const vName = semAcento(btn.textContent.replace(/\s*\(\d+\)/, ''));
+    const count = PRODUTOS.filter(p => !p.nok && (!fOrigem || p.origem === fOrigem) && (p.vs||[]).some(v => semAcento(v) === vName)).length;
     btn.textContent = btn.textContent.replace(/\s*\(\d+\)/, '') + ' (' + count + ')';
   });
   } catch(e) {
@@ -1477,6 +1477,7 @@ function resetCat() {
 }
 
 function setVend(v, btn) {
+  v = semAcento(v);
   if (v === 'TODAS') {
     const allChips = [...document.querySelectorAll('#vend-row .chip:not(#chip-todas)')];
     const allActive = allChips.every(c => c.classList.contains('active'));
@@ -1484,7 +1485,7 @@ function setVend(v, btn) {
       fVends = new Set(['TODAS']);
       allChips.forEach(c => c.classList.remove('active'));
     } else {
-      allChips.forEach(c => { fVends.add(c.textContent.trim().toUpperCase()); c.classList.add('active'); });
+      allChips.forEach(c => { fVends.add(semAcento(c.textContent)); c.classList.add('active'); });
     }
     document.getElementById('chip-todas').classList.add('active');
     resetCat();
@@ -4823,6 +4824,7 @@ function extrairTamMult(nomeRaw) {
 function normalizarVendedora(s) {
   return (s||'').trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
 }
+const semAcento = normalizarVendedora; // alias — mesma lógica, usada nos filtros pra bater com o dado já normalizado
 
 function processarCSVUSA(input) {
   const file = input.files[0];
