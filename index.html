@@ -2658,22 +2658,32 @@ function compartilharOrdemOnline(ordemNum) {
   const loja = (o.itens[0]?.loja || 'SEM LOJA').trim() || 'SEM LOJA';
   const nomeFmt = (o.vendedora||'').charAt(0)+(o.vendedora||'').slice(1).toLowerCase();
   const nl = String.fromCharCode(10);
-  let lines = [`📦 *Ordem ${o.ordem}* — ${loja}`, `Vendedora: ${nomeFmt}`, ''];
-  o.itens.forEach((it, i) => {
-    const entregue = it.conf === 'ok';
-    lines.push(`*${i+1}. ${it.item}*`);
-    if (it.marca) lines.push(`Marca: ${it.marca}`);
-    if (it.tam) lines.push(`Tam: ${it.tam}`);
-    if (it.cor) lines.push(`Cor: ${it.cor}`);
-    lines.push(`Valor: R$ ${(it.valor||0).toFixed(2).replace('.',',')}`);
-    lines.push(`Status: ${entregue ? 'Entregue ✅' : (it.status || 'Aguardando entrega')}`);
-    if (it.dataCompra) lines.push(`Compra: ${it.dataCompra}`);
-    lines.push(`Chegada: ${it.dataChegada || 'sem data'}`);
-    if (it.foto) lines.push(`Foto: ${it.foto}`);
+  const pendentesItens = o.itens.filter(it => it.conf === 'online');
+  const entreguesItens = o.itens.filter(it => it.conf === 'ok');
+
+  let lines = [`📦 *ORDEM ${o.ordem}* — ${loja}`, `Vendedora: ${nomeFmt}`, ''];
+
+  if (pendentesItens.length) {
+    lines.push(`⏳ *PENDENTES (${pendentesItens.length})*`);
+    pendentesItens.forEach(it => {
+      const atrasado = isAtrasadoOuSemData(it.dataChegada);
+      const statusTxt = (it.status || 'aguardando entrega').toLowerCase();
+      const chegadaTxt = it.dataChegada ? ` — chegada ${it.dataChegada}` : ' — sem data de chegada';
+      lines.push(`• ${it.item} — R$ ${(it.valor||0).toFixed(2).replace('.',',')} (${statusTxt}${atrasado ? chegadaTxt : ''})`);
+    });
     lines.push('');
-  });
-  const pendentes = pendentesDaOrdem(o);
-  lines.push(`Total: ${o.itens.length} item(s) · ${pendentes} pendente(s)`);
+  }
+
+  if (entreguesItens.length) {
+    lines.push(`✅ *ENTREGUES (${entreguesItens.length})*`);
+    entreguesItens.forEach(it => {
+      lines.push(`• ${it.item} — R$ ${(it.valor||0).toFixed(2).replace('.',',')}`);
+    });
+    lines.push('');
+  }
+
+  const totalVal = o.itens.reduce((a,it) => a + (it.valor||0), 0);
+  lines.push(`Total: R$ ${totalVal.toFixed(2).replace('.',',')}`);
   window.open('https://wa.me/?text=' + encodeURIComponent(lines.join(nl)), '_blank');
 }
 
