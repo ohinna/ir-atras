@@ -1198,6 +1198,8 @@ function getOrdensOnlineFiltradas() {
   // Ordem some da lista quando TODOS os itens dela já estiverem "ENTREGUE" — só continua aparecendo
   // enquanto tiver pelo menos um item pendente.
   ordens = ordens.filter(o => o.itens.some(it => (it.status||'').trim().toUpperCase() !== 'ENTREGUE'));
+  // Só mostra ordens que realmente têm um número de ordem — sem ordem, não aparece.
+  ordens = ordens.filter(o => o.ordem && o.ordem !== 'sem-ordem');
   return ordens;
 }
 
