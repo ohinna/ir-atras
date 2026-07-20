@@ -41,7 +41,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .search-icon{position:absolute;left:22px;top:50%;transform:translateY(-50%);color:var(--text4);font-size:14px;pointer-events:none}
 .filter-row{padding:0 12px 10px;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
 .filter-row::-webkit-scrollbar{display:none}
-.chip{background:var(--bg2);border:0.5px solid var(--border);border-radius:16px;padding:4px 12px;font-size:11px;color:var(--red);white-space:nowrap;cursor:pointer;transition:all 0.18s ease;font-family:inherit;font-weight:500}
+.chip{background:var(--bg2);border:0.5px solid var(--border);border-radius:14px;padding:3px 10px;font-size:10px;color:var(--red);white-space:nowrap;cursor:pointer;transition:all 0.18s ease;font-family:inherit;font-weight:500}
 .chip.active{background:var(--red) !important;border-color:var(--red) !important;color:#fff !important;transform:scale(1.04)}
 @keyframes loadbar{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}
 /* Dark mode overrides */
@@ -292,7 +292,7 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
 </div>
 
 <!-- CONTADOR -->
-<div class="count-bar main-content" id="count-bar" style="padding-top:162px">
+<div class="count-bar main-content" id="count-bar">
   <span>Mostrando <strong id="count-num">231</strong> faltantes</span>
   <span id="count-val"></span>
 </div>
