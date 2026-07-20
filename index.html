@@ -1987,7 +1987,6 @@ function initModalSwipe() {
     if (_isSwiping === 'horiz') {
       _swipeDeltaX = dx;
       modal.style.transform = `translateX(${dx * 0.3}px)`;
-      modal.style.opacity = String(1 - Math.abs(dx) / 500);
     }
   }, { passive: true });
   modal.addEventListener('touchend', () => {
