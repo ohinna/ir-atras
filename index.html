@@ -32,11 +32,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 /* Header */
 .header{position:fixed;top:0;left:0;right:0;z-index:100;background:var(--bg);border-bottom:0.5px solid var(--border);transition:transform 0.25s ease}
 .header.hidden{transform:translateY(-100%)}
-.header-top{padding:14px 16px 12px;display:flex;align-items:flex-start;justify-content:space-between}
-.logo{font-size:17px;font-weight:600;color:var(--red);letter-spacing:2px}
+.header-top{padding:8px 10px 10px;display:flex;align-items:flex-start;justify-content:space-between}
+.logo{font-size:15px;font-weight:600;color:var(--red);letter-spacing:2px}
 .header-meta{font-size:11px;color:var(--text3);background:var(--bg2);border:0.5px solid var(--border);border-radius:14px;padding:3px 10px}
 .search-wrap{padding:0 12px 8px;position:relative}
-.search-input{width:100%;background:var(--bg2);border:0.5px solid var(--border);border-radius:20px;padding:8px 14px 8px 36px;font-size:13px;color:var(--text);outline:none;font-family:inherit}
+.search-input{width:100%;background:var(--bg2);border:0.5px solid var(--border);border-radius:18px;padding:6px 14px 6px 34px;font-size:12.5px;color:var(--text);outline:none;font-family:inherit}
 .search-input::placeholder{color:var(--text4)}
 .search-icon{position:absolute;left:22px;top:50%;transform:translateY(-50%);color:var(--text4);font-size:14px;pointer-events:none}
 .filter-row{padding:0 12px 10px;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
@@ -124,9 +124,9 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
 .page.active{display:block}
 .chat-header{position:fixed;top:0;left:0;right:0;z-index:100;background:var(--bg);border-bottom:0.5px solid var(--border);padding:14px 16px;transition:top 0.2s}
 .user-bar-visible .chat-header{top:30px}
-.user-bar-visible .page{padding-top:101px}
-.user-bar-visible .main-content{padding-top:196px}
-.user-bar-visible #count-bar{padding-top:196px}
+.user-bar-visible .page{padding-top:86px}
+.user-bar-visible .main-content{padding-top:181px}
+.user-bar-visible #count-bar{padding-top:181px}
 .chat-title{font-size:16px;font-weight:600;color:var(--text)}
 .chat-sub{font-size:11px;color:var(--text3);margin-top:2px}
 .chat-item{background:var(--bg2);border-left:3px solid var(--border);border-radius:0 12px 12px 0;margin:0 12px 8px;padding:10px 12px;cursor:pointer}
@@ -173,7 +173,7 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
 /* Firebase sync */
 .sync-dot{width:6px;height:6px;border-radius:50%;background:#7a0b1e;display:inline-block;margin-right:4px}
 /* Main content offset */
-.main-content{padding-top:175px;padding-bottom:120px}
+.main-content{padding-top:160px;padding-bottom:120px}
 /* Empty */
 .empty{text-align:center;padding:60px 20px;color:#c4a898;font-size:14px}
 /* Reaction bar */
