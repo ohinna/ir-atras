@@ -5711,7 +5711,7 @@ function processarCSVBR(input) {
           marca: (row[iMarca]||'').trim(),
           cor: iCor>-1 ? (row[iCor]||'').trim() : '',
           tam: iTam>-1 ? (row[iTam]||'').trim() : '',
-          valor: pvBR(row),
+          valor: pv(row[iVal]),
           foto: resolverFoto(row[iFoto]?.trim()||''),
           _fOriginal: row[iFoto]?.trim()||'',
           dataCompra: iDataCompra>-1 ? (row[iDataCompra]||'').trim() : '',
