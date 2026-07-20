@@ -283,7 +283,7 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
     <button class="chip" id="status-compra" onclick="setStatus('compra',this)">🛒 Compra</button>
     <button class="chip" id="status-eua" onclick="setStatus('eua',this)">🇺🇸 USA</button>
     <button class="chip" id="status-br" onclick="setStatus('br',this)">🇧🇷 BR</button>
-    <button class="chip" id="status-urgente" onclick="setStatus('urgente',this)">🔴 Urgente</button>
+    <button class="chip" id="status-online" onclick="setStatus('online',this)">🌐 Online</button>
   </div>
   <div class="filter-row" id="marca-row">
     <button class="chip active" id="chip-all-marca" onclick="setMarca('',this)">Todas marcas</button>
@@ -711,7 +711,7 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
           <div id="modal-compra-tams" style="display:flex;flex-direction:column;gap:6px"></div>
           <button onclick="confirmarSelecaoCompra()" style="width:100%;margin-top:12px;padding:10px;border-radius:10px;background:#f59e0b;border:none;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">🛒 Confirmar em compra</button>
         </div>
-        <!-- Seleção de tamanhos genérica (NOK, Est USA, Est BR, Urgente) -->
+        <!-- Seleção de tamanhos genérica (NOK, Est USA, Est BR) -->
         <div id="modal-status-selecao" style="display:none;position:absolute;bottom:70px;left:0;right:0;background:var(--bg);border:2px solid #888;border-radius:14px;padding:14px;z-index:10;margin:0 8px;box-shadow:0 4px 20px rgba(0,0,0,0.3)">
           <div id="modal-status-titulo" style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">Selecionar tamanhos</div>
           <div id="modal-status-tams" style="display:flex;flex-direction:column;gap:6px"></div>
@@ -724,7 +724,6 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
       <div style="display:flex;gap:8px">
         <button id="btn-est-eua" onclick="abrirStatusSelecao('est_eua')" style="flex:1;padding:12px;border-radius:12px;background:#0f6b52;border:none;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🇺🇸 Est USA</button>
         <button id="btn-est-br" onclick="abrirStatusSelecao('est_br')" style="flex:1;padding:12px;border-radius:12px;background:#783c18;border:none;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🇧🇷 Est BR</button>
-        <button id="btn-urgente" onclick="abrirStatusSelecao('urgente')" style="flex:1;padding:12px;border-radius:12px;background:#dc2626;border:none;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🔴 Urgente</button>
       </div>
       <div style="display:flex;gap:8px">
         <button onclick="compartilharWhatsApp()" style="flex:1;padding:12px;border-radius:12px;background:#25d366;border:none;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">📲 WhatsApp</button>
@@ -770,7 +769,7 @@ window._db = typeof firebase !== 'undefined' ? firebase.firestore() : null;
 
 const RAW_DATA = [];
 
-let PRODUTOS = RAW_DATA.map((p,i) => ({...p, _id:i, nok:false, em_compra:false, urgente:false, comments:[], qty: p.q}));
+let PRODUTOS = RAW_DATA.map((p,i) => ({...p, _id:i, nok:false, em_compra:false, online:false, comments:[], qty: p.q}));
 // Restaurar filtros salvos
 function limparTodosFiltros() {
   fVends = new Set(['TODAS']);
@@ -1158,6 +1157,93 @@ function fmtVal(v) {
   return 'R$ ' + parseFloat(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
 }
 
+function renderOrdensOnline() {
+  const grid = document.getElementById('grid');
+  const empty = document.getElementById('empty');
+  if (!grid || !empty) return;
+  const q = (fSearch||'').toLowerCase();
+  let ordens = [];
+  if (!fOrigem || fOrigem === 'usa') ordens = ordens.concat((window._ordensOnlineUSA||[]).map(o => ({...o, origem:'usa'})));
+  if (!fOrigem || fOrigem === 'br') ordens = ordens.concat((window._ordensOnlineBR||[]).map(o => ({...o, origem:'br'})));
+
+  // Filtro de vendedora (mesmo padrão do catálogo normal, mas só dentro das ordens online)
+  if (!fVends.has('TODAS')) {
+    ordens = ordens.filter(o => fVends.has(semAcento(o.vendedora)));
+  }
+  // Filtro de marca — mantém a ordem, mas só se tiver algum item com aquela marca
+  if (fMarcas.size > 0) {
+    ordens = ordens.filter(o => o.itens.some(it => fMarcas.has((it.marca||'').trim())));
+  }
+  // Busca por texto — nome do item, marca ou vendedora
+  if (q) {
+    ordens = ordens.filter(o =>
+      o.ordem.toLowerCase().includes(q) ||
+      (o.vendedora||'').toLowerCase().includes(q) ||
+      o.itens.some(it => (it.item||'').toLowerCase().includes(q) || (it.marca||'').toLowerCase().includes(q))
+    );
+  }
+
+  const countNum = document.getElementById('count-num');
+  if (countNum) countNum.textContent = ordens.length;
+  const headerMeta = document.getElementById('header-meta');
+  if (headerMeta) headerMeta.textContent = ordens.length + ' ordem' + (ordens.length===1?'':'s') + ' online';
+
+  if (ordens.length === 0) {
+    grid.innerHTML = '';
+    empty.style.display = 'block';
+    empty.textContent = 'Nenhuma ordem online encontrada.';
+    return;
+  }
+  empty.style.display = 'none';
+
+  const corStatus = (s) => {
+    const su = (s||'').toUpperCase();
+    if (su.includes('ATRASO')) return '#dc2626';
+    if (su.includes('INCOMPLETA')) return '#dc2626';
+    if (su.includes('PICK UP')) return '#0f6b52';
+    if (su.includes('AGUARDANDO')) return '#d97706';
+    if (su.includes('OLHO')) return '#6366f1';
+    return 'var(--text4)';
+  };
+
+  grid.style.gridTemplateColumns = '1fr';
+  grid.innerHTML = ordens.map((o, i) => {
+    const totalVal = o.itens.reduce((a,it) => a + (it.valor||0), 0);
+    const origemBadge = o.origem === 'usa' ? '🇺🇸' : '🇧🇷';
+    return `<div style="background:var(--bg2);border:0.5px solid var(--border);border-radius:14px;margin-bottom:10px;overflow:hidden">
+      <div onclick="toggleOrdemOnline(${i})" style="padding:12px 14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer">
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--text)">${origemBadge} Ordem ${o.ordem}</div>
+          <div style="font-size:10.5px;color:var(--text3);margin-top:2px">${o.vendedora?.charAt(0)+o.vendedora?.slice(1).toLowerCase()||'—'} · ${o.itens.length} item(ns) · R$ ${totalVal.toFixed(2).replace('.',',')}</div>
+        </div>
+        <span id="seta-ordem-${i}" style="font-size:12px;color:var(--text4)">▾</span>
+      </div>
+      <div id="itens-ordem-${i}" style="display:none;border-top:0.5px solid var(--border)">
+        ${o.itens.map(it => `<div style="padding:10px 14px;display:flex;gap:10px;align-items:center;border-bottom:0.5px solid var(--border)">
+          ${it.foto ? `<img src="${it.foto}" style="width:40px;height:40px;border-radius:8px;object-fit:cover;flex-shrink:0" onerror="this.style.display='none'">` : ''}
+          <div style="flex:1;min-width:0">
+            <div style="font-size:11.5px;color:var(--text);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${it.item}</div>
+            <div style="font-size:10px;color:var(--text3)">${it.marca||''}${it.cor?' · '+it.cor:''}${it.tam?' · '+it.tam:''} · R$ ${(it.valor||0).toFixed(2).replace('.',',')}</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0">
+            <div style="font-size:9px;font-weight:700;color:${corStatus(it.status)};text-transform:uppercase">${it.status||'—'}</div>
+            <div style="font-size:9px;color:var(--text4);margin-top:2px">${it.dataCompra?'Compra: '+it.dataCompra:''}${it.dataChegada?' · Chegada: '+it.dataChegada:''}</div>
+          </div>
+        </div>`).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleOrdemOnline(i) {
+  const el = document.getElementById('itens-ordem-'+i);
+  const seta = document.getElementById('seta-ordem-'+i);
+  if (!el) return;
+  const aberto = el.style.display !== 'none';
+  el.style.display = aberto ? 'none' : 'block';
+  if (seta) seta.textContent = aberto ? '▾' : '▴';
+}
+
 function getFiltered() {
   const q = fSearch.toLowerCase();
   const minQty = parseInt(document.getElementById('filter-qty')?.value) || 0;
@@ -1169,7 +1255,7 @@ function getFiltered() {
     if (fStatus === 'compra') { const ec = p.em_compra; const temCompra = ec && (typeof ec === 'object' ? Object.values(ec).some(v=>v>0) : true); if (!temCompra) return false; }
     if (fStatus === 'eua'    && !p.est_eua) return false;
     if (fStatus === 'br'     && !p.est_br) return false;
-    if (fStatus === 'urgente' && !p.urgente) return false;
+    if (fStatus === 'online' && !p.online) return false;
     if (fOrigem && p.origem !== fOrigem) return false;
     if (q && !p.n.toLowerCase().includes(q) && !(p.m||'').toLowerCase().includes(q) && !(p.vs||[]).some(v=>v.toLowerCase().includes(q))) return false;
     if (minQty > 0 && (p.qty||p.q||0) < minQty) return false;
@@ -1180,7 +1266,7 @@ function getFiltered() {
 
 function getFiltradosOrdenados() {
   let prods = getFiltered();
-  prods.sort((a,b) => { if (a.urgente && !b.urgente) return -1; if (!a.urgente && b.urgente) return 1;
+  prods.sort((a,b) => {
     const dir = _sortDir === 'asc' ? 1 : -1;
     if (_sortMode === 'valor') return ((parseFloat(a.vt||a.v)||0) - (parseFloat(b.vt||b.v)||0)) * dir;
     if (_sortMode === 'qty')   return ((a.qty||a.q||0) - (b.qty||b.q||0)) * dir;
@@ -1204,6 +1290,9 @@ function getFiltradosOrdenados() {
 
 function renderGrid() {
   try {
+  if (fStatus === 'online') { renderOrdensOnline(); return; }
+  const grid0 = document.getElementById('grid');
+  if (grid0 && grid0.style.gridTemplateColumns === '1fr') grid0.style.gridTemplateColumns = '';
   const searchEl = document.getElementById('search-input');
   const grid = document.getElementById('grid');
   const empty = document.getElementById('empty');
@@ -1320,7 +1409,6 @@ function renderGrid() {
         ${p.est_eua ? '<div class="eua-overlay show"><div class="eua-bg"></div><div class="eua-content"><div class="eua-label">🇺🇸 Est USA</div></div></div>' : ''}
         ${p.est_br ? '<div class="br-overlay show"><div class="br-bg"></div><div class="br-content"><div class="br-label">🇧🇷 Est BR</div></div></div>' : ''}
         <button class="btn-nok" onclick="event.stopPropagation();confirmNok(${p._id})">✕</button>
-        ${p.urgente ? '<div style="position:absolute;top:6px;left:6px;background:#dc2626;border-radius:6px;padding:1px 6px;font-size:9px;font-weight:700;color:#fff;z-index:2">🔴 URGENTE</div>' : ''}
         ${unread>0 ? '' : ''}
       </div>
       <div class="card-body" onclick="openModal(${p._id})">
@@ -1883,12 +1971,6 @@ function openModal(id, focusComment=false) {
     btnBr.style.background = p.est_br ? '#7a4615' : '#783c18';
     btnBr.textContent = p.est_br ? '🇧🇷 Est BR ✓' : '🇧🇷 Est BR';
   }
-  const btnUrg = document.getElementById('btn-urgente');
-  if (btnUrg) {
-    btnUrg.style.background = p.urgente ? '#991b1b' : '#dc2626';
-    btnUrg.textContent = p.urgente ? '🔴 Urgente ✓' : '🔴 Urgente';
-    btnUrg.style.boxShadow = p.urgente ? '0 0 0 2px #fca5a5' : '';
-  }
   // Show compra history
   let compraHistEl = document.getElementById('compra-hist-modal');
   if (!compraHistEl) {
@@ -2150,9 +2232,9 @@ function renderTimeline() {
   el.innerHTML = '<div style="text-align:center;padding:40px;color:#c4a898;font-size:13px">Carregando...</div>';
   window._db.collection('atividade').orderBy('ts','desc').limit(100).get().then(snap => {
     if (snap.empty) { el.innerHTML = '<div style="text-align:center;padding:40px;color:#c4a898;font-size:13px">Nenhuma atividade registrada ainda</div>'; return; }
-    const icons = { nok_on:'🚫', nok_off:'✅', compra_on:'🛒', compra_off:'↩️', comentario:'💬', nok_clear:'🗑', est_usa_on:'🇺🇸', est_usa_off:'🇺🇸', eua_on:'🇺🇸', eua_off:'🇺🇸', est_br_on:'🇧🇷', est_br_off:'🇧🇷', urgente_on:'🔴', urgente_off:'⚪', entrou:'🟢', saiu:'🔴' };
-    const labels = { nok_on:'marcou NOK', nok_off:'removeu NOK', compra_on:'colocou em compra', compra_off:'removeu de compra', comentario:'comentou em', nok_clear:'limpou NOK em', est_usa_on:'marcou Est USA em', est_usa_off:'removeu Est USA de', eua_on:'marcou Est USA em', eua_off:'removeu Est USA de', est_br_on:'marcou Est BR em', est_br_off:'removeu Est BR de', urgente_on:'marcou como urgente', urgente_off:'removeu urgente de', entrou:'entrou no app', saiu:'saiu do app' };
-    const colors = { nok_on:'#7a0b1e', nok_off:'#1D9E75', compra_on:'#d97706', compra_off:'#888', comentario:'#6366f1', nok_clear:'#888', est_usa_on:'#0f6b52', est_usa_off:'#888', eua_on:'#0f6b52', eua_off:'#888', est_br_on:'#783c18', est_br_off:'#888', urgente_on:'#dc2626', urgente_off:'#888', entrou:'#1D9E75', saiu:'#888' };
+    const icons = { nok_on:'🚫', nok_off:'✅', compra_on:'🛒', compra_off:'↩️', comentario:'💬', nok_clear:'🗑', est_usa_on:'🇺🇸', est_usa_off:'🇺🇸', eua_on:'🇺🇸', eua_off:'🇺🇸', est_br_on:'🇧🇷', est_br_off:'🇧🇷', entrou:'🟢', saiu:'🔴' };
+    const labels = { nok_on:'marcou NOK', nok_off:'removeu NOK', compra_on:'colocou em compra', compra_off:'removeu de compra', comentario:'comentou em', nok_clear:'limpou NOK em', est_usa_on:'marcou Est USA em', est_usa_off:'removeu Est USA de', eua_on:'marcou Est USA em', eua_off:'removeu Est USA de', est_br_on:'marcou Est BR em', est_br_off:'removeu Est BR de', entrou:'entrou no app', saiu:'saiu do app' };
+    const colors = { nok_on:'#7a0b1e', nok_off:'#1D9E75', compra_on:'#d97706', compra_off:'#888', comentario:'#6366f1', nok_clear:'#888', est_usa_on:'#0f6b52', est_usa_off:'#888', eua_on:'#0f6b52', eua_off:'#888', est_br_on:'#783c18', est_br_off:'#888', entrou:'#1D9E75', saiu:'#888' };
     (document.getElementById('hist-sub')||{}).textContent = snap.size + ' evento(s)';
     el.innerHTML = snap.docs.map(doc => {
       const d = doc.data();
@@ -2676,26 +2758,6 @@ function toggleEstBrCard(id) {
   updateEstBrBadge();
 }
 
-function toggleUrgente() {
-  const p = PRODUTOS.find(x => x._id === modalId);
-  if (!p) return;
-  p.urgente = !p.urgente;
-  const btn = document.getElementById('btn-urgente');
-  if (btn) {
-    btn.style.background = p.urgente ? '#991b1b' : '#dc2626';
-    btn.textContent = p.urgente ? '🔴 Urgente ✓' : '🔴 Urgente';
-    btn.style.boxShadow = p.urgente ? '0 0 0 2px #fca5a5' : '';
-  }
-  const quem = getNomeUsuario();
-  const t = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
-  registrarAtividade(p.urgente ? 'urgente_on' : 'urgente_off', modalId, quem, t);
-  if (p.urgente) mostrarNotificacao('🔴 Urgente!', quem + ' · ' + (p.n||'').substring(0,40), '#dc2626');
-  if (window._db) {
-    window._db.collection('faltantes').doc(String(p._id)).set({urgente: p.urgente}, {merge:true});
-  }
-  renderGrid();
-}
-
 function toggleEstBr() {
   if (modalId === null) return;
   const p = PRODUTOS.find(x => x._id === modalId);
@@ -2842,7 +2904,6 @@ const STATUS_CONFIG = {
   nok:      {cor:'#7a0b1e', emoji:'✕', label:'Marcar NOK',    campo:'nokTams'},
   est_eua:  {cor:'#0f6b52', emoji:'🇺🇸', label:'Est USA',     campo:'estEuaTams'},
   est_br:   {cor:'#783c18', emoji:'🇧🇷', label:'Est BR',      campo:'estBrTams'},
-  urgente:  {cor:'#dc2626', emoji:'🔴', label:'Urgente',      campo:'urgenteTams'},
 };
 
 function abrirStatusSelecao(tipo) {
@@ -2951,9 +3012,6 @@ function confirmarStatusSelecao() {
   } else if (_statusAtivo === 'est_br') {
     p.est_br = todosAtivos;
     p.estBrTams = novoQty;
-  } else if (_statusAtivo === 'urgente') {
-    p.urgente = temAlgo;
-    p.urgenteTams = novoQty;
   }
   fecharStatusSelecao();
   fbSave(modalId);
@@ -2978,8 +3036,6 @@ function atualizarBotoesModal(p) {
   if (btnEua) { btnEua.style.background = p.est_eua ? '#0a6648' : '#0f6b52'; btnEua.textContent = p.est_eua ? '🇺🇸 Est USA ✓' : '🇺🇸 Est USA'; }
   const btnBr = document.getElementById('btn-est-br');
   if (btnBr) { btnBr.style.background = p.est_br ? '#7a4615' : '#783c18'; btnBr.textContent = p.est_br ? '🇧🇷 Est BR ✓' : '🇧🇷 Est BR'; }
-  const btnUrg = document.getElementById('btn-urgente');
-  if (btnUrg) { btnUrg.style.background = p.urgente ? '#991b1b' : '#dc2626'; btnUrg.textContent = p.urgente ? '🔴 Urgente ✓' : '🔴 Urgente'; }
 }
 
 function toggleNok() {
@@ -4259,7 +4315,13 @@ function fbListen() {
       if (doc.data().br)  localStorage.setItem('import_ts_br',  doc.data().br);
     }
   }).catch(()=>{});
-  Promise.all([p1,p2,p3,p4]).finally(() => { carregarCatalogo(); setTimeout(atualizarVersaoHeader, 500); });
+  const p5 = window._db.collection('config').doc('ordens_online_usa').get().then(doc => {
+    window._ordensOnlineUSA = (doc.exists && doc.data().dados) ? JSON.parse(doc.data().dados) : [];
+  }).catch(()=>{ window._ordensOnlineUSA = []; });
+  const p6 = window._db.collection('config').doc('ordens_online_br').get().then(doc => {
+    window._ordensOnlineBR = (doc.exists && doc.data().dados) ? JSON.parse(doc.data().dados) : [];
+  }).catch(()=>{ window._ordensOnlineBR = []; });
+  Promise.all([p1,p2,p3,p4,p5,p6]).finally(() => { carregarCatalogo(); setTimeout(atualizarVersaoHeader, 500); });
 }
 
 function _fbListenCore() {
@@ -4312,7 +4374,6 @@ function _fbListenCore() {
         p.compraHistory = data.compraHistory || [];
         p.est_eua = data.est_eua || false;
         p.est_br  = data.est_br  || false;
-        p.urgente = data.urgente || false;
         if (data.qty !== undefined) p.qty = data.qty;
         if ((data.comments||[]).length > prevLen) notificarSeNovo(id, prevLen);
         // Notificar mudança de NOK
@@ -4940,6 +5001,7 @@ function processarCSVUSA(input) {
       const iItem=h.indexOf('ITEM'), iVal=h.indexOf('VALOR'), iConf=h.indexOf('CONF');
       const iMarca=h.indexOf('MARCA'), iCat=h.indexOf('CATEGORIA'), iVend=h.indexOf('VENDEDORA'), iFoto=h.indexOf('FOTO'), iCor=h.indexOf('COR'), iTam=h.indexOf('TAM');
       const iData=h.indexOf('DATA'), iPer=h.indexOf('PERÍODO');
+      const iOrdem=h.indexOf('ORDEM'), iDataCompra=h.indexOf('DATA COMPRA'), iDataChegada=h.indexOf('DATA CHEGADA'), iStatusOrdem=h.indexOf('STATUS');
 
       // Calcular resumo de vendas por vendedora (todos os itens exceto NOK)
       const vendasResumo = {};
@@ -5023,6 +5085,30 @@ function processarCSVUSA(input) {
       if (window._db) window._db.collection('config').doc('versoes').set({list: JSON.stringify(versoes)});
 
 
+
+      const ordensOnline = {};
+      rows.slice(headerIdx+1).forEach(row => {
+        if (!row[iItem]?.trim()) return;
+        const confRaw = (row[iConf]||'').trim().toLowerCase();
+        if (confRaw !== 'online') return;
+        const ordemNum = (iOrdem>-1 ? row[iOrdem]?.trim() : '') || 'sem-ordem';
+        if (!ordensOnline[ordemNum]) ordensOnline[ordemNum] = { ordem: ordemNum, vendedora: normalizarVendedora(row[iVend]), itens: [] };
+        ordensOnline[ordemNum].itens.push({
+          item: (row[iItem]||'').trim(),
+          marca: (row[iMarca]||'').trim(),
+          cor: iCor>-1 ? (row[iCor]||'').trim() : '',
+          tam: iTam>-1 ? (row[iTam]||'').trim() : '',
+          valor: pv(row[iVal]||''),
+          foto: resolverFoto(row[iFoto]?.trim()||''),
+          _fOriginal: row[iFoto]?.trim()||'',
+          dataCompra: iDataCompra>-1 ? (row[iDataCompra]||'').trim() : '',
+          dataChegada: iDataChegada>-1 ? (row[iDataChegada]||'').trim() : '',
+          status: iStatusOrdem>-1 ? (row[iStatusOrdem]||'').trim() : '',
+        });
+      });
+      const listaOrdensOnline = Object.values(ordensOnline);
+      window._ordensOnlineUSA = listaOrdensOnline;
+      if (window._db) window._db.collection('config').doc('ordens_online_usa').set({dados: JSON.stringify(listaOrdensOnline), updatedAt: new Date().toISOString()});
 
       const groups = {};
       const itemsNaoValidos = /^(CORREIO|CORREIOS|ENTREGA PARCIAL|FABI LEVOU|OPEN|SACOLA|FRETE|CRÉDITO|DESC PG|DESCONTO|PARCIAL|DEVOLUÇÃO|TROCA|TAXA)/i;
@@ -5159,7 +5245,7 @@ function salvarOrigemNoFirebase(newData, origem, onDone) {
   }).then(() => {
     // Salvar status antes de limpar faltantes para reaplicar depois
     return window._db.collection('faltantes').get().then(snap => {
-      // Guardar status ativos (em_compra, nok, urgente, est_eua, est_br) por nome de produto
+      // Guardar status ativos (em_compra, nok, est_eua, est_br) por nome de produto
       window._statusBackup = {};
       snap.docs.forEach(doc => {
         const d = doc.data();
@@ -5173,7 +5259,6 @@ function salvarOrigemNoFirebase(newData, origem, onDone) {
             em_compra: d.em_compra || false,
             compraHistory: d.compraHistory || [],
             nok: d.nok || false,
-            urgente: d.urgente || false,
             est_eua: d.est_eua || false,
             est_br: d.est_br || false,
             nokTams: d.nokTams || {},
@@ -5235,11 +5320,10 @@ function salvarOrigemNoFirebase(newData, origem, onDone) {
           const bk = backupSnapshot[key];
           if (!bk) return;
           // Restaura tudo — chave nome+marca garante produto correto
-          if (bk.em_compra || bk.nok || bk.urgente || bk.est_eua || bk.est_br) {
+          if (bk.em_compra || bk.nok || bk.est_eua || bk.est_br) {
             p.em_compra = bk.em_compra;
             p.compraHistory = bk.compraHistory;
             p.nok = bk.nok;
-            p.urgente = bk.urgente;
             p.est_eua = bk.est_eua;
             p.est_br = bk.est_br;
             p.nokTams = bk.nokTams;
@@ -5250,7 +5334,7 @@ function salvarOrigemNoFirebase(newData, origem, onDone) {
           }
         });
         // Diagnóstico: quantas chaves do backup (que tinham algum status ativo) não encontraram produto correspondente
-        const chavesComStatus = Object.entries(backupSnapshot).filter(([,bk]) => bk.em_compra||bk.nok||bk.urgente||bk.est_eua||bk.est_br);
+        const chavesComStatus = Object.entries(backupSnapshot).filter(([,bk]) => bk.em_compra||bk.nok||bk.est_eua||bk.est_br);
         const prodKeysAtuais = new Set(PRODUTOS.filter(p=>(p.origem||'usa')===origem).map(p => (p.n||'').toLowerCase().trim() + '||' + (p.m||'').toLowerCase().trim()));
         chavesComStatus.forEach(([k]) => { if (!prodKeysAtuais.has(k)) chavesNaoEncontradas.push(k); });
         window._ultimoRestoreDiag = {
@@ -5461,6 +5545,7 @@ function processarCSVBR(input) {
       const iTam=h.indexOf('TAM'), iCor=h.indexOf('COR');
       // Segunda coluna COD (lastIndexOf) tem o valor real do item IA
       const iCodVal = h.lastIndexOf('COD');
+      const iOrdem=h.indexOf('ORDEM'), iDataCompra=h.indexOf('DATA COMPRA'), iDataChegada=h.indexOf('DATA CHEGADA'), iStatusOrdem=h.indexOf('STATUS');
 
       const pv = (v) => {
         let s = String(v||'').replace(/R\$\s*/g,'').trim();
@@ -5475,6 +5560,30 @@ function processarCSVBR(input) {
         if (vCod > 0) return vCod;
         return pv(row[iVal]);
       };
+
+      const ordensOnlineBR = {};
+      rows.slice(headerIdx+1).forEach(row => {
+        if (!row[iItem]?.trim()) return;
+        const confRawBR = (row[iConf]||'').trim().toLowerCase();
+        if (confRawBR !== 'online') return;
+        const ordemNumBR = (iOrdem>-1 ? row[iOrdem]?.trim() : '') || 'sem-ordem';
+        if (!ordensOnlineBR[ordemNumBR]) ordensOnlineBR[ordemNumBR] = { ordem: ordemNumBR, vendedora: normalizarVendedora(row[iVend]), itens: [] };
+        ordensOnlineBR[ordemNumBR].itens.push({
+          item: (row[iItem]||'').trim(),
+          marca: (row[iMarca]||'').trim(),
+          cor: iCor>-1 ? (row[iCor]||'').trim() : '',
+          tam: iTam>-1 ? (row[iTam]||'').trim() : '',
+          valor: pvBR(row),
+          foto: resolverFoto(row[iFoto]?.trim()||''),
+          _fOriginal: row[iFoto]?.trim()||'',
+          dataCompra: iDataCompra>-1 ? (row[iDataCompra]||'').trim() : '',
+          dataChegada: iDataChegada>-1 ? (row[iDataChegada]||'').trim() : '',
+          status: iStatusOrdem>-1 ? (row[iStatusOrdem]||'').trim() : '',
+        });
+      });
+      const listaOrdensOnlineBR = Object.values(ordensOnlineBR);
+      window._ordensOnlineBR = listaOrdensOnlineBR;
+      if (window._db) window._db.collection('config').doc('ordens_online_br').set({dados: JSON.stringify(listaOrdensOnlineBR), updatedAt: new Date().toISOString()});
 
       const groups = {};
       rows.slice(headerIdx+1).forEach(row => {
