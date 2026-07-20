@@ -1,5 +1,5 @@
-// Bazaar — Service Worker v596b5f19
-const CACHE_NAME = 'bazaar-596b5f19';
+// Bazaar — Service Worker v87659306
+const CACHE_NAME = 'bazaar-87659306';
 const FILES = ['/ir-atras/', '/ir-atras/index.html'];
 
 self.addEventListener('install', e => {
