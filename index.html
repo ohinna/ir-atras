@@ -1238,7 +1238,7 @@ function renderListaVendedorasOnline(ordens, grid, empty) {
     return `<div onclick="abrirVendedoraOnline('${v.vendedora.replace(/'/g,"\\'")}')" style="background:var(--bg2);border:0.5px solid ${temAlerta?'#dc2626':'var(--border)'};border-radius:14px;padding:14px;margin-bottom:10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">
       <div>
         <div style="font-size:14px;font-weight:700;color:var(--text)">${nomeFmt}${temAlerta?' 🔴':''}</div>
-        <div style="font-size:11px;color:var(--text3);margin-top:3px">${v.ordens.length} ordem${v.ordens.length===1?'':'s'} · média R$ ${media.toFixed(2).replace('.',',')}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:3px">${v.ordens.length} ${v.ordens.length===1?'ordem':'ordens'} · média R$ ${media.toFixed(2).replace('.',',')}</div>
       </div>
       <span style="font-size:16px;color:var(--text4)">›</span>
     </div>`;
@@ -1262,7 +1262,7 @@ function renderOrdensDaVendedora(ordensTodas, grid, empty) {
   const countNum = document.getElementById('count-num');
   if (countNum) countNum.textContent = ordens.length;
   const headerMeta = document.getElementById('header-meta');
-  if (headerMeta) headerMeta.textContent = ordens.length + ' ordem' + (ordens.length===1?'':'s') + ' de ' + nomeFmt;
+  if (headerMeta) headerMeta.textContent = ordens.length + ' ' + (ordens.length===1?'ordem':'ordens') + ' de ' + nomeFmt;
 
   const voltarBtn = `<div onclick="voltarListaVendedorasOnline()" style="display:flex;align-items:center;gap:6px;padding:8px 4px;margin-bottom:8px;cursor:pointer;color:var(--text3);font-size:12px;font-weight:600">‹ Voltar pras vendedoras</div>`;
 
