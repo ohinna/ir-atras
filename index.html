@@ -2713,12 +2713,12 @@ function exportarVendedoraOnlinePDF(vend) {
           <td>${fotoImg}</td>
           <td><strong>${it.item}</strong><br><span style="font-size:11px;color:#888">${it.marca||''}${it.cor?' · '+it.cor:''}${it.tam?' · '+it.tam:''}</span></td>
           <td>R$ ${(it.valor||0).toFixed(2).replace('.',',')}</td>
-          <td style="font-size:11px;${atrasado?'color:#dc2626;font-weight:700':''}">${it.dataChegada ? 'Chegada: '+it.dataChegada : 'Sem data de chegada'}</td>
+          <td style="font-size:11px;${atrasado?'color:#dc2626;font-weight:700':''}">${it.dataCompra ? 'Compra: '+it.dataCompra+'<br>' : ''}${it.dataChegada ? 'Chegada: '+it.dataChegada : 'Sem data de chegada'}</td>
         </tr>`;
       }).join('');
       return `<div style="margin-bottom:14px">
         <div style="font-size:12px;font-weight:700;color:#444;margin-bottom:4px">📦 Ordem ${o.ordem} · ${origemBadge}</div>
-        <table><thead><tr><th>#</th><th>Foto</th><th>Item</th><th>Valor</th><th>Chegada</th></tr></thead><tbody>${rows}</tbody></table>
+        <table><thead><tr><th>#</th><th>Foto</th><th>Item</th><th>Valor</th><th>Compra / Chegada</th></tr></thead><tbody>${rows}</tbody></table>
       </div>`;
     }).join('');
     return `<div style="margin-bottom:20px">
