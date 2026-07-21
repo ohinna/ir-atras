@@ -457,6 +457,16 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
         <input id="sync-aba-relatorio" type="text" placeholder="ex: RELATORIOS_VENDAS" style="width:100%;padding:8px 12px;border-radius:10px;border:0.5px solid var(--border);background:var(--bg);color:var(--text);font-size:12px;font-family:inherit;box-sizing:border-box">
       </div>
 
+      <div style="font-size:10px;color:var(--text4);margin:10px 0 6px;text-transform:uppercase;letter-spacing:0.5px">Sobras (planilha PRAZOS)</div>
+      <div style="margin-bottom:8px">
+        <div style="font-size:11px;color:var(--text4);margin-bottom:4px">ID da planilha PRAZOS</div>
+        <input id="sync-planilha-id-prazos" type="text" placeholder="cole aqui o ID da planilha PRAZOS" style="width:100%;padding:8px 12px;border-radius:10px;border:0.5px solid var(--border);background:var(--bg);color:var(--text);font-size:12px;font-family:inherit;box-sizing:border-box">
+      </div>
+      <div style="margin-bottom:12px">
+        <div style="font-size:11px;color:var(--text4);margin-bottom:4px">Aba — mês atual (muda todo mês)</div>
+        <input id="sync-aba-prazos" type="text" placeholder="ex: AGOSTO" style="width:100%;padding:8px 12px;border-radius:10px;border:0.5px solid var(--border);background:var(--bg);color:var(--text);font-size:12px;font-family:inherit;box-sizing:border-box">
+      </div>
+
       <div style="display:flex;gap:8px;margin-bottom:8px">
         <button onclick="salvarLinksSync()" style="flex:1;padding:10px;border-radius:10px;background:var(--red);border:none;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Salvar</button>
         <button onclick="sincronizarAutomaticamente(true)" style="flex:1;padding:10px;border-radius:10px;background:#0f6b52;border:none;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Sincronizar agora</button>
@@ -1199,8 +1209,22 @@ function isAtrasadoOuSemData(dataChegadaStr) {
 
 function getOrdensOnlineFiltradas() {
   let ordens = [];
-  if (!fOrigem || fOrigem === 'usa') ordens = ordens.concat((window._ordensOnlineUSA||[]).map(o => ({...o, origem:'usa'})));
-  if (!fOrigem || fOrigem === 'br') ordens = ordens.concat((window._ordensOnlineBR||[]).map(o => ({...o, origem:'br'})));
+  if (!fOrigem || fOrigem === 'usa') ordens = ordens.concat((window._ordensOnlineUSA||[]).map(o => ({...o, origem:'usa', itens: [...o.itens]})));
+  if (!fOrigem || fOrigem === 'br') ordens = ordens.concat((window._ordensOnlineBR||[]).map(o => ({...o, origem:'br', itens: [...o.itens]})));
+
+  // Junta as sobras (planilha PRAZOS) na ordem de origem por número de ORDEM.
+  // Se a ordem de origem não existir mais no app, cria uma ordem solta só com a(s) sobra(s).
+  if (!fOrigem || fOrigem === 'usa') {
+    (window._sobrasOnlineUSA||[]).forEach(sobra => {
+      const destino = ordens.find(o => o.origem === 'usa' && o.ordem === sobra.ordem);
+      if (destino) {
+        destino.itens.push(...sobra.itens);
+      } else {
+        ordens.push({ ordem: sobra.ordem, vendedora: sobra.vendedora, origem: 'usa', itens: [...sobra.itens] });
+      }
+    });
+  }
+
   const q = (fSearch||'').toLowerCase();
   if (q) {
     ordens = ordens.filter(o =>
@@ -1386,7 +1410,7 @@ function renderOrdensDaVendedora(ordensTodas, grid, empty) {
           return `<div style="padding:10px 14px;display:flex;gap:10px;align-items:center;border-bottom:0.5px solid var(--border);${alerta?'background:rgba(220,38,38,0.08)':''}${entregue?'opacity:0.45':''}">
           ${it.foto ? `<img src="${it.foto}" style="width:40px;height:40px;border-radius:8px;object-fit:cover;flex-shrink:0${entregue?';filter:grayscale(1)':''}" onerror="this.style.display='none'">` : ''}
           <div style="flex:1;min-width:0">
-            <div style="font-size:11.5px;color:${entregue?'var(--text3)':'var(--text)'};font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${it.item}</div>
+            <div style="font-size:11.5px;color:${entregue?'var(--text3)':'var(--text)'};font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${it.item}${it.sobra?' <span style="background:#9333ea;color:#fff;font-size:8px;font-weight:700;padding:1px 5px;border-radius:5px;vertical-align:middle">SOBRA</span>':''}</div>
             <div style="font-size:10px;color:var(--text4)">${it.marca||''}${it.cor?' · '+it.cor:''}${it.tam?' · '+it.tam:''} · R$ ${(it.valor||0).toFixed(2).replace('.',',')}</div>
           </div>
           <div style="text-align:right;flex-shrink:0">
@@ -4636,7 +4660,10 @@ function fbListen() {
   const p6 = window._db.collection('config').doc('ordens_online_br').get().then(doc => {
     window._ordensOnlineBR = (doc.exists && doc.data().dados) ? JSON.parse(doc.data().dados) : [];
   }).catch(()=>{ window._ordensOnlineBR = []; });
-  Promise.all([p1,p2,p3,p4,p5,p6]).finally(() => { carregarCatalogo(); setTimeout(atualizarVersaoHeader, 500); });
+  const p7 = window._db.collection('config').doc('sobras_online_usa').get().then(doc => {
+    window._sobrasOnlineUSA = (doc.exists && doc.data().dados) ? JSON.parse(doc.data().dados) : [];
+  }).catch(()=>{ window._sobrasOnlineUSA = []; });
+  Promise.all([p1,p2,p3,p4,p5,p6,p7]).finally(() => { carregarCatalogo(); setTimeout(atualizarVersaoHeader, 500); });
 }
 
 function _fbListenCore() {
@@ -5226,6 +5253,8 @@ const SYNC_CONFIG_KEYS = {
   abaFotosUsa: 'sync-aba-fotos-usa',
   abaFotosBr: 'sync-aba-fotos-br',
   abaRelatorio: 'sync-aba-relatorio',
+  planilhaIdPrazos: 'sync-planilha-id-prazos',
+  abaPrazos: 'sync-aba-prazos',
 };
 
 function salvarLinksSync() {
@@ -5257,6 +5286,61 @@ function _inputFalsoComTexto(texto, nomeArquivo) {
   return { files: [arquivo] };
 }
 
+// Lê a planilha PRAZOS e guarda só as linhas com STATUS = SOBRAS, agrupadas por ORDEM.
+// Cada "sobra" é depois encaixada dentro da ordem de origem (mesmo número de ordem) no getOrdensOnlineFiltradas().
+function processarCSVPrazos(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const rows = e.target.result.replace(/\r/g,'').split('\n').map(l => {
+      const cells = []; let cur = '', inQ = false;
+      for (const ch of l) {
+        if (ch === '"') inQ = !inQ;
+        else if (ch === ',' && !inQ) { cells.push(cur.trim()); cur = ''; }
+        else cur += ch;
+      }
+      cells.push(cur.trim());
+      return cells;
+    });
+    if (!rows.length) return;
+    const h = rows[0].map(c => (c||'').trim().toUpperCase());
+    const iLoja = h.indexOf('LOJA'), iOrdem = h.indexOf('ORDEM'), iDataCompra = h.indexOf('DATA COMPRA'),
+          iDataEntrega = h.indexOf('DATA ENTREGA'), iItem = h.indexOf('ITEM'), iFoto = h.indexOf('FOTO'),
+          iVend = h.indexOf('VENDEDORA'), iEntregue = h.indexOf('ENTREGUE'), iStatus = h.indexOf('STATUS');
+
+    const sobrasPorOrdem = {};
+    rows.slice(1).forEach(row => {
+      if (!row[iItem]?.trim()) return;
+      const status = (iStatus>-1 ? row[iStatus] : '').trim().toUpperCase();
+      if (status !== 'SOBRAS') return;
+      const ordemNum = (iOrdem>-1 ? row[iOrdem]?.trim() : '') || '';
+      if (!ordemNum) return;
+      const entregueTxt = (iEntregue>-1 ? row[iEntregue] : '').trim().toUpperCase();
+      const conf = entregueTxt === 'ENTREGUE' ? 'ok' : 'online';
+      if (!sobrasPorOrdem[ordemNum]) sobrasPorOrdem[ordemNum] = { ordem: ordemNum, vendedora: normalizarVendedora(row[iVend]), itens: [] };
+      sobrasPorOrdem[ordemNum].itens.push({
+        item: (row[iItem]||'').trim(),
+        marca: '',
+        cor: '',
+        tam: '',
+        valor: 0,
+        foto: resolverFoto(row[iFoto]?.trim()||''),
+        dataCompra: iDataCompra>-1 ? (row[iDataCompra]||'').trim() : '',
+        dataChegada: iDataEntrega>-1 ? (row[iDataEntrega]||'').trim() : '',
+        status: 'SOBRA',
+        loja: iLoja>-1 ? (row[iLoja]||'').trim() : '',
+        conf,
+        sobra: true,
+      });
+    });
+    const listaSobras = Object.values(sobrasPorOrdem);
+    window._sobrasOnlineUSA = listaSobras;
+    if (window._db) window._db.collection('config').doc('sobras_online_usa').set({dados: JSON.stringify(listaSobras), updatedAt: new Date().toISOString()});
+  };
+  reader.readAsText(file, 'UTF-8');
+}
+
 async function sincronizarAutomaticamente(manual) {
   const statusEl = document.getElementById('sync-status');
   // Proteção: não reimportar produtos enquanto alguém está com um produto aberto
@@ -5275,12 +5359,14 @@ async function sincronizarAutomaticamente(manual) {
   const baseUrl = localStorage.getItem('sync_url') || '';
   const planilhaId = localStorage.getItem('sync_planilhaId') || '';
   const planilhaIdBr = localStorage.getItem('sync_planilhaIdBr') || '';
+  const planilhaIdPrazos = localStorage.getItem('sync_planilhaIdPrazos') || '';
   const abas = {
     usa: localStorage.getItem('sync_abaUsa') || '',
     br: localStorage.getItem('sync_abaBr') || '',
     fotosUsa: localStorage.getItem('sync_abaFotosUsa') || '',
     fotosBr: localStorage.getItem('sync_abaFotosBr') || '',
     relatorio: localStorage.getItem('sync_abaRelatorio') || '',
+    prazos: localStorage.getItem('sync_abaPrazos') || '',
   };
   if (!baseUrl) {
     if (manual && statusEl) statusEl.textContent = '⚠️ Link do Apps Script ainda não configurado.';
@@ -5314,6 +5400,7 @@ async function sincronizarAutomaticamente(manual) {
   await baixarAba(planilhaId, abas.fotosUsa, 'fotos-usa.csv', (inp) => handleFotos(inp, 'usa'));
   await baixarAba(planilhaIdBr || planilhaId, abas.fotosBr, 'fotos-br.csv', (inp) => handleFotos(inp, 'br'));
   await baixarAba(planilhaId, abas.relatorio, 'relatorio.csv', processarCSVRelatorio);
+  await baixarAba(planilhaIdPrazos, abas.prazos, 'prazos.csv', processarCSVPrazos);
 
   const agora = new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
   localStorage.setItem('syncUltimaVez', agora);
