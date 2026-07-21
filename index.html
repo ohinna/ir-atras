@@ -1262,7 +1262,6 @@ function renderListaVendedorasOnline(ordens, grid, empty) {
       </div>
       <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
         <button onclick="event.stopPropagation();exportarVendedoraOnlinePDF('${v.vendedora.replace(/'/g,"\\'")}')" title="Baixar PDF dos atrasados / sem data" style="background:#6366f1;border:none;border-radius:8px;padding:6px 9px;cursor:pointer;font-size:14px;line-height:1">📄</button>
-        <button onclick="event.stopPropagation();exportarVendedoraOnlineImagem('${v.vendedora.replace(/'/g,"\\'")}')" title="Baixar como imagem" style="background:#6366f1;border:none;border-radius:8px;padding:6px 9px;cursor:pointer;font-size:14px;line-height:1">🖼️</button>
         <span style="font-size:16px;color:var(--text4)">›</span>
       </div>
     </div>`;
@@ -2745,28 +2744,6 @@ function exportarVendedoraOnlinePDF(vend) {
   <script>window.onload=()=>{window.print();}<\/script></body></html>`;
   const blob = new Blob([html], {type:'text/html'});
   window.open(URL.createObjectURL(blob), '_blank');
-}
-
-async function exportarVendedoraOnlineImagem(vend) {
-  const rel = _montarRelatorioAtrasadosVendedora(vend);
-  if (!rel) { alert('Nenhum item atrasado ou sem data encontrado.'); return; }
-
-  const container = document.createElement('div');
-  container.style.cssText = 'position:fixed;left:-9999px;top:0;width:680px;background:#fff;padding:24px;box-sizing:border-box';
-  container.innerHTML = rel.styleTag + rel.bodyInner;
-  document.body.appendChild(container);
-
-  try {
-    const canvas = await html2canvas(container, { width: 680, windowWidth: 680, scale: 2, useCORS: true, backgroundColor: '#ffffff' });
-    const link = document.createElement('a');
-    link.download = `Atrasados ${rel.nomeFmt}.png`;
-    link.href = canvas.toDataURL('image/png');
-    link.click();
-  } catch(e) {
-    alert('Não consegui gerar a imagem. Tenta o PDF por enquanto.');
-  } finally {
-    document.body.removeChild(container);
-  }
 }
 
 function compartilharOrdemOnline(ordemNum) {
