@@ -1255,12 +1255,15 @@ function renderListaVendedorasOnline(ordens, grid, empty) {
     const media = v.ordens.length ? v.totalVal / v.ordens.length : 0;
     const nomeFmt = v.vendedora.charAt(0)+v.vendedora.slice(1).toLowerCase();
     const temAlerta = v.ordens.some(o => o.itens.some(it => isAtrasadoOuSemData(it.dataChegada)));
-    return `<div onclick="abrirVendedoraOnline('${v.vendedora.replace(/'/g,"\\'")}')" style="background:var(--bg2);border:0.5px solid ${temAlerta?'#dc2626':'var(--border)'};border-radius:14px;padding:14px;margin-bottom:10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">
+    return `<div onclick="abrirVendedoraOnline('${v.vendedora.replace(/'/g,"\\'")}')" style="background:var(--bg2);border:0.5px solid ${temAlerta?'#dc2626':'var(--border)'};border-radius:14px;padding:14px;margin-bottom:10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px">
       <div>
         <div style="font-size:14px;font-weight:700;color:var(--text)">${nomeFmt}${temAlerta?' 🔴':''}</div>
         <div style="font-size:11px;color:var(--text3);margin-top:3px">${v.ordens.length} ${v.ordens.length===1?'ordem':'ordens'} · média R$ ${media.toFixed(2).replace('.',',')}</div>
       </div>
-      <span style="font-size:16px;color:var(--text4)">›</span>
+      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+        <button onclick="event.stopPropagation();exportarVendedoraOnlinePDF('${v.vendedora.replace(/'/g,"\\'")}')" title="Baixar PDF das pendentes" style="background:#6366f1;border:none;border-radius:8px;padding:6px 9px;cursor:pointer;font-size:14px;line-height:1">📄</button>
+        <span style="font-size:16px;color:var(--text4)">›</span>
+      </div>
     </div>`;
   }).join('') + '<div style="height:90px"></div>';
 }
@@ -2665,6 +2668,70 @@ function exportarOrdemOnlinePDF(ordemNum) {
   <h1>📦 Ordem ${o.ordem} — ${loja}</h1>
   <div class="sub">${origemBadge} · Vendedora: ${nomeFmt} · ${o.itens.length} item(ns), ${pendentes} pendente(s) · Gerado em ${now}</div>
   <table><thead><tr><th>#</th><th>Foto</th><th>Item</th><th>Valor</th><th>Status</th><th>Datas</th></tr></thead><tbody>${rows}</tbody></table>
+  <div class="footer">Bazaar Faltantes · ${now}</div>
+  <script>window.onload=()=>{window.print();}<\/script></body></html>`;
+  const blob = new Blob([html], {type:'text/html'});
+  window.open(URL.createObjectURL(blob), '_blank');
+}
+
+function exportarVendedoraOnlinePDF(vend) {
+  const todas = getOrdensOnlineFiltradas();
+  const ordensVend = todas.filter(o => o.vendedora === vend);
+  const nomeFmt = (vend||'').charAt(0)+(vend||'').slice(1).toLowerCase();
+  const now = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+
+  // Só ordens que ainda têm pelo menos 1 item pendente, e só os itens pendentes dentro delas
+  const ordensComPendente = ordensVend
+    .map(o => ({...o, itensPendentes: o.itens.filter(it => it.conf === 'online')}))
+    .filter(o => o.itensPendentes.length > 0);
+
+  if (ordensComPendente.length === 0) {
+    alert('Nenhuma ordem pendente encontrada pra ' + nomeFmt + '.');
+    return;
+  }
+
+  // Agrupa por loja
+  const porLoja = {};
+  ordensComPendente.forEach(o => {
+    const loja = (o.itens[0]?.loja || 'SEM LOJA').trim() || 'SEM LOJA';
+    if (!porLoja[loja]) porLoja[loja] = [];
+    porLoja[loja].push(o);
+  });
+
+  let totalItensPendentes = 0, totalValPendente = 0;
+  const secoes = Object.keys(porLoja).sort().map(loja => {
+    const ordensDaLoja = porLoja[loja];
+    const blocos = ordensDaLoja.map(o => {
+      const origemBadge = o.origem === 'usa' ? '🇺🇸 USA' : '🇧🇷 BR';
+      const rows = o.itensPendentes.map((it, i) => {
+        totalItensPendentes++;
+        totalValPendente += (it.valor||0);
+        const atrasado = isAtrasadoOuSemData(it.dataChegada);
+        const fotoImg = it.foto ? `<img src="${it.foto}" style="width:44px;height:44px;object-fit:cover;border-radius:6px">` : '';
+        return `<tr>
+          <td style="text-align:center;color:#888">${i+1}</td>
+          <td>${fotoImg}</td>
+          <td><strong>${it.item}</strong><br><span style="font-size:11px;color:#888">${it.marca||''}${it.cor?' · '+it.cor:''}${it.tam?' · '+it.tam:''}</span></td>
+          <td>R$ ${(it.valor||0).toFixed(2).replace('.',',')}</td>
+          <td style="font-size:11px;${atrasado?'color:#dc2626;font-weight:700':''}">${it.dataChegada ? 'Chegada: '+it.dataChegada : 'Sem data de chegada'}</td>
+        </tr>`;
+      }).join('');
+      return `<div style="margin-bottom:14px">
+        <div style="font-size:12px;font-weight:700;color:#444;margin-bottom:4px">📦 Ordem ${o.ordem} · ${origemBadge}</div>
+        <table><thead><tr><th>#</th><th>Foto</th><th>Item</th><th>Valor</th><th>Chegada</th></tr></thead><tbody>${rows}</tbody></table>
+      </div>`;
+    }).join('');
+    return `<div style="margin-bottom:20px">
+      <h2 style="font-size:14px;color:#6366f1;border-bottom:1px solid #ddd;padding-bottom:4px;margin-bottom:10px">🏬 ${loja}</h2>
+      ${blocos}
+    </div>`;
+  }).join('');
+
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Pendentes ${nomeFmt} — Bazaar</title>
+  <style>body{font-family:Arial,sans-serif;font-size:13px;color:#1a1a1a;padding:24px}h1{color:#6366f1;font-size:18px;margin:0 0 4px}h2{font-weight:700}.sub{color:#888;font-size:12px;margin-bottom:20px}table{width:100%;border-collapse:collapse;margin-bottom:4px}th{background:#6366f1;color:#fff;padding:6px 8px;text-align:left;font-size:11px}td{padding:6px 8px;border-bottom:0.5px solid #eee;vertical-align:middle}tr:nth-child(even) td{background:#f5f5ff}.footer{margin-top:16px;font-size:11px;color:#888;text-align:right}@media print{body{padding:0}}</style></head><body>
+  <h1>⏳ Pendentes online — ${nomeFmt}</h1>
+  <div class="sub">${ordensComPendente.length} ordem(ns) com pendência · ${totalItensPendentes} item(ns) pendente(s) · Total R$ ${totalValPendente.toFixed(2).replace('.',',')} · Gerado em ${now}</div>
+  ${secoes}
   <div class="footer">Bazaar Faltantes · ${now}</div>
   <script>window.onload=()=>{window.print();}<\/script></body></html>`;
   const blob = new Blob([html], {type:'text/html'});
