@@ -5484,8 +5484,8 @@ function _calcularDiasAtrasoEStatus(dataChegadaStr) {
   d.setHours(0,0,0,0);
   const diffMs = hoje - d;
   const dias = Math.max(Math.round(diffMs / (1000*60*60*24)), 0);
-  if (dias === 0) return { dias, status: 'NO PRAZO' };
-  if (dias <= 5) return { dias, status: 'Leve' };
+  if (dias === 0) return { dias, status: 'EM PRAZO' };
+  if (dias <= 4) return { dias, status: 'Leve' };
   if (dias <= 7) return { dias, status: 'Atenção' };
   return { dias, status: 'Crítico' };
 }
