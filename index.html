@@ -5469,7 +5469,8 @@ function processarCSVVerificacao(input) {
       const val = (iVerificado>-1 ? row[iVerificado] : '').trim().toUpperCase();
       if (['TRUE','VERDADEIRO','SIM','1'].includes(val)) ordensVerificadas[ordemNum] = true;
     });
-    window._verificacoesPlanilha = { ordens: ordensVerificadas };
+    window._verificacoesPlanilha = window._verificacoesPlanilha || { ordens: {} };
+    Object.assign(window._verificacoesPlanilha.ordens, ordensVerificadas);
     if (window._db) window._db.collection('config').doc('verificacoes_planilha').set({dados: JSON.stringify(window._verificacoesPlanilha), updatedAt: new Date().toISOString()});
   };
   reader.readAsText(file, 'UTF-8');
@@ -5576,7 +5577,11 @@ async function sincronizarAutomaticamente(manual) {
   await baixarAba(planilhaIdBr || planilhaId, abas.fotosBr, 'fotos-br.csv', (inp) => handleFotos(inp, 'br'));
   await baixarAba(planilhaId, abas.relatorio, 'relatorio.csv', processarCSVRelatorio);
   await baixarAba(planilhaIdPrazos, abas.prazos, 'prazos.csv', (inp) => processarCSVPrazos(inp, abas.prazos));
-  await baixarAba(planilhaIdVerificacao, abas.verificacao, 'verificacao.csv', processarCSVVerificacao);
+  window._verificacoesPlanilha = { ordens: {} };
+  const VENDEDORAS_VERIF = ['FABIANA','JESSICA','SABRINA','THAIS'];
+  for (const vend of VENDEDORAS_VERIF) {
+    await baixarAba(planilhaIdVerificacao, (abas.verificacao ? abas.verificacao + ' - ' + vend : ''), 'verificacao-'+vend+'.csv', processarCSVVerificacao);
+  }
 
   const agora = new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
   localStorage.setItem('syncUltimaVez', agora);
