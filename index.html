@@ -344,7 +344,7 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
 
     <div class="upload-card">
       <div class="upload-title">🕑 PDF Automático (12h e 16h)</div>
-      <div class="upload-sub">Salva sozinho o PDF de Faltantes (sem filtro) 2x por dia, direto numa pasta escolhida no seu computador — funciona só no Chrome/Edge, e só enquanto o app estiver aberto nesse horário.</div>
+      <div class="upload-sub">Salva sozinho, 2x por dia, o PDF de Faltantes dentro de HISTORICO ITENS e o PDF de Meta numa pasta META (as duas dentro da pasta que você escolher, organizadas por Ano/Mês/Dia) — funciona só no Chrome/Edge, e só enquanto o app estiver aberto nesse horário.</div>
       <button onclick="escolherPastaPDF()" style="width:100%;padding:10px;border-radius:10px;background:var(--bg2);border:0.5px solid var(--border);color:var(--text);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:10px">📁 Escolher pasta pra salvar</button>
       <label style="display:flex;align-items:center;gap:8px;margin-top:10px;font-size:12px;color:var(--text3);cursor:pointer">
         <input type="checkbox" id="pdf-auto-chk" onchange="toggleAtivarPDFAutomatico(this)" style="width:16px;height:16px">
@@ -4008,7 +4008,7 @@ function abrirSelecaoVendedoraWpp() {
   el.style.display = 'block';
 }
 
-function gerarPdfMeta(filtroVend) {
+function construirHtmlMeta(filtroVend) {
   let metaData = [];
   try { metaData = JSON.parse(localStorage.getItem('meta_vendedoras')||'[]'); } catch(e) {}
   let vendasResumo = {};
@@ -4178,6 +4178,11 @@ function gerarPdfMeta(filtroVend) {
     </div>
   </body></html>`;
 
+  return html;
+}
+
+function gerarPdfMeta(filtroVend) {
+  const html = construirHtmlMeta(filtroVend);
   const win = window.open('','_blank');
   if (win) {
     win.document.write(html);
@@ -5203,13 +5208,16 @@ async function gerarESalvarPDFAutomatico(manual) {
     if (statusEl) statusEl.textContent = '🔄 Gerando PDF...';
     const html = construirHtmlFaltantes('');
     const blob = await gerarPDFBlobReal(html);
+    const htmlMeta = construirHtmlMeta('todas');
+    const blobMeta = await gerarPDFBlobReal(htmlMeta);
     const agora = new Date();
     const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
     const anoStr = String(agora.getFullYear());
     const mesStr = meses[agora.getMonth()];
     const dataStr = agora.toLocaleDateString('pt-BR').slice(0,5).replace(/\//g,'-'); // ex: 20-07
     const horaStr = agora.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}).replace(':','h');
-    const pastaAno = await handle.getDirectoryHandle(anoStr, { create: true });
+    const pastaFaltantesRaiz = await handle.getDirectoryHandle('HISTORICO ITENS', { create: true });
+    const pastaAno = await pastaFaltantesRaiz.getDirectoryHandle(anoStr, { create: true });
     const pastaMes = await pastaAno.getDirectoryHandle(mesStr, { create: true });
     const pastaDia = await pastaMes.getDirectoryHandle(dataStr, { create: true });
     const nomeArquivo = `Faltantes ${horaStr}.pdf`;
@@ -5217,7 +5225,16 @@ async function gerarESalvarPDFAutomatico(manual) {
     const writable = await fileHandle.createWritable();
     await writable.write(blob);
     await writable.close();
-    if (statusEl) statusEl.textContent = '✅ Salvo: ' + anoStr + '/' + mesStr + '/' + dataStr + '/' + nomeArquivo;
+    const pastaMetaRaiz = await handle.getDirectoryHandle('META', { create: true });
+    const pastaMetaAno = await pastaMetaRaiz.getDirectoryHandle(anoStr, { create: true });
+    const pastaMetaMes = await pastaMetaAno.getDirectoryHandle(mesStr, { create: true });
+    const pastaMetaDia = await pastaMetaMes.getDirectoryHandle(dataStr, { create: true });
+    const nomeArquivoMeta = `Meta ${horaStr}.pdf`;
+    const fileHandleMeta = await pastaMetaDia.getFileHandle(nomeArquivoMeta, { create: true });
+    const writableMeta = await fileHandleMeta.createWritable();
+    await writableMeta.write(blobMeta);
+    await writableMeta.close();
+    if (statusEl) statusEl.textContent = '✅ Salvos: HISTORICO ITENS/' + anoStr + '/' + mesStr + '/' + dataStr + '/' + nomeArquivo + ' · META/' + anoStr + '/' + mesStr + '/' + dataStr + '/' + nomeArquivoMeta;
     return true;
   } catch(e) {
     console.error('Erro ao gerar/salvar PDF automático:', e.message);
