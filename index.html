@@ -86,7 +86,7 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
 .card-footer{display:flex;justify-content:space-between;align-items:center;gap:4px;flex-wrap:nowrap}
 .card-val{font-size:11px;color:var(--text2);white-space:nowrap}
 /* Modal */
-.modal-bg{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0);backdrop-filter:blur(0px);transition:background 0.25s,backdrop-filter 0.25s;pointer-events:none}
+.modal-bg{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0);backdrop-filter:blur(0px);transition:none;pointer-events:none}
 .modal-bg.open{display:flex;align-items:flex-end;background:var(--modal-overlay);backdrop-filter:blur(4px);pointer-events:auto}
 .modal-bg.closing{background:rgba(0,0,0,0);backdrop-filter:blur(0px);pointer-events:none}
 .modal{background:var(--bg);border-radius:24px 24px 0 0;box-shadow:0 -8px 40px rgba(0,0,0,0.15);width:100%;max-height:85vh;overflow-y:auto;padding:20px 20px 90px;transform:translateY(100%);transition:transform 0.3s cubic-bezier(0.32,0.72,0,1)}
@@ -2077,6 +2077,8 @@ function openModal(id, focusComment=false) {
   (document.getElementById('modal-val')||{}).textContent = valStr + ' · ' + (p.qty||p.q) + ' un';
   const totalQty = p.qty||p.q;
   const hasTams = p.tams && Object.keys(p.tams).length > 0 && !(Object.keys(p.tams).length === 1 && Object.keys(p.tams)[0] === 'Único');
+  const CATEGORIAS_SEM_TAMANHO_ROUPA = ['COSMÉTICOS','FARMÁCIA','PERFUMARIA','ALIMENTICIO','CASA'];
+  const semTamanhoDeRoupa = CATEGORIAS_SEM_TAMANHO_ROUPA.includes((p.c||'').trim().toUpperCase());
   const tamsInline = document.getElementById('modal-tams-inline');
   const qtyEl = document.getElementById('modal-qty');
   const semTamEl2 = document.getElementById('modal-qty-sem-tam'); if (semTamEl2) semTamEl2.style.display = 'none';
@@ -2097,13 +2099,14 @@ function openModal(id, focusComment=false) {
           tamsInline.appendChild(vendLabel);
           const row = document.createElement('div');
           row.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;margin-bottom:4px';
-          Object.entries(vtams).forEach(([t, q]) => {
+          Object.entries(vtams).forEach(([t, q], idx) => {
             const isUndef = t === '??? (a definir)';
             const nokTams = p.nokTams || {};
             const isNok = nokTams[t];
+            const labelExibido = semTamanhoDeRoupa ? String(idx+1) : (isUndef?'???':t);
             const div = document.createElement('div');
             div.style.cssText = 'border:0.5px solid ' + (isNok?'rgba(200,50,50,0.3)':isUndef?'rgba(180,120,0,0.3)':'rgba(122,11,30,0.2)') + ';border-radius:8px;padding:4px 10px;text-align:center;background:' + (isNok?'rgba(200,50,50,0.08)':'rgba(255,255,255,0.5)') + ';cursor:pointer';
-            div.innerHTML = '<div style="font-size:12px;font-weight:700;color:' + (isNok?'#c0392b':isUndef?'#8a5000':'var(--red)') + ';' + (isNok?'text-decoration:line-through':'') + '">' + (isUndef?'???':t) + '</div>' +
+            div.innerHTML = '<div style="font-size:12px;font-weight:700;color:' + (isNok?'#c0392b':isUndef?'#8a5000':'var(--red)') + ';' + (isNok?'text-decoration:line-through':'') + '">' + labelExibido + '</div>' +
               '<div style="font-size:10px;color:' + (isNok?'rgba(192,57,43,0.5)':isUndef?'#b08070':'rgba(122,11,30,0.6)') + '">' + (isNok?'NOK':q+' un') + '</div>';
             div.addEventListener('click', () => toggleTamNok(p._id, t));
             row.appendChild(div);
@@ -2114,13 +2117,14 @@ function openModal(id, focusComment=false) {
         // Uma só vendedora — layout original
         tamsInline.style.display = 'flex';
         tamsInline.style.flexWrap = 'wrap';
-        Object.entries(p.tams).forEach(([t,q]) => {
+        Object.entries(p.tams).forEach(([t,q], idx) => {
           const isUndef = t === '??? (a definir)';
           const nokTams = p.nokTams || {};
           const isNok = nokTams[t];
+          const labelExibido = semTamanhoDeRoupa ? String(idx+1) : (isUndef?'???':t);
           const div = document.createElement('div');
           div.style.cssText = 'border:0.5px solid ' + (isNok?'rgba(200,50,50,0.3)':isUndef?'rgba(180,120,0,0.3)':'rgba(122,11,30,0.2)') + ';border-radius:8px;padding:4px 10px;text-align:center;background:' + (isNok?'rgba(200,50,50,0.08)':'rgba(255,255,255,0.5)') + ';cursor:pointer;position:relative;transition:all 0.15s';
-          div.innerHTML = '<div style="font-size:12px;font-weight:700;color:' + (isNok?'#c0392b':isUndef?'#8a5000':'var(--red)') + ';' + (isNok?'text-decoration:line-through':'') + '">' + (isUndef?'???':t) + '</div>' +
+          div.innerHTML = '<div style="font-size:12px;font-weight:700;color:' + (isNok?'#c0392b':isUndef?'#8a5000':'var(--red)') + ';' + (isNok?'text-decoration:line-through':'') + '">' + labelExibido + '</div>' +
             '<div style="font-size:10px;color:' + (isNok?'rgba(192,57,43,0.5)':isUndef?'#b08070':'rgba(122,11,30,0.6)') + '">' + (isNok?'NOK':q+' un') + '</div>';
           div.addEventListener('click', () => toggleTamNok(p._id, t));
           tamsInline.appendChild(div);
@@ -4073,6 +4077,11 @@ function gerarPdfMeta(filtroVend) {
     const vr = vendasResumo[normalizarVendedora(v.nome)]||null;
     const pctCor = pct >= 100 ? '#0f6b52' : '#7a0b1e';
     const pctBg = pct >= 100 ? '#e8f5f1' : '#fdf2f3';
+    const faltaMetaRaw = (v.meta||0) - (v.oks||0);
+    const bateuMeta = faltaMetaRaw <= 0;
+    const faltaMetaLabel = bateuMeta ? 'JÁ BATEU A META' : 'FALTA PRA BATER A META';
+    const faltaMetaValor = bateuMeta ? '+' + fmt(Math.abs(faltaMetaRaw)) : fmt(faltaMetaRaw);
+    const faltaMetaCor = bateuMeta ? '#0f6b52' : '#7a0b1e';
 
     let marcasHtml = '';
     if (vr && vr.top3marcas && vr.top3marcas.length) {
@@ -4117,6 +4126,10 @@ function gerarPdfMeta(filtroVend) {
         <div>
           <div style="font-size:18px;font-weight:700;color:#1a1a1a">${v.nome.charAt(0)+v.nome.slice(1).toLowerCase()}</div>
           <div style="font-size:11px;color:#888;margin-top:2px">${mes}</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:9px;color:#888;font-weight:600;letter-spacing:0.3px">${faltaMetaLabel}</div>
+          <div style="font-size:13px;font-weight:700;color:${faltaMetaCor}">${faltaMetaValor}</div>
         </div>
         <div style="background:${pctBg};color:${pctCor};font-size:22px;font-weight:700;padding:8px 16px;border-radius:10px">${pct}%</div>
       </div>
