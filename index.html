@@ -5461,7 +5461,7 @@ function processarCSVVerificacao(input) {
     });
     if (!rows.length) return;
     const h = rows[0].map(c => (c||'').trim().toUpperCase());
-    const iOrdem = h.indexOf('ORDEM'), iVerificado = h.indexOf('VERIFICADO');
+    const iOrdem = h.indexOf('ORDEM'), iVerificado = h.findIndex(c => c.startsWith('VERIFICADO'));
     const ordensVerificadas = {};
     rows.slice(1).forEach(row => {
       const ordemNum = (iOrdem>-1 ? row[iOrdem]?.trim() : '') || '';
@@ -5474,6 +5474,20 @@ function processarCSVVerificacao(input) {
     if (window._db) window._db.collection('config').doc('verificacoes_planilha').set({dados: JSON.stringify(window._verificacoesPlanilha), updatedAt: new Date().toISOString()});
   };
   reader.readAsText(file, 'UTF-8');
+}
+
+function _calcularDiasAtrasoEStatus(dataChegadaStr) {
+  const d = parseDataBR(dataChegadaStr);
+  if (!d) return { dias: '', status: 'Crítico' };
+  const hoje = new Date();
+  hoje.setHours(0,0,0,0);
+  d.setHours(0,0,0,0);
+  const diffMs = hoje - d;
+  const dias = Math.round(diffMs / (1000*60*60*24));
+  if (dias <= 0) return { dias: Math.max(dias,0), status: 'Leve' };
+  if (dias <= 3) return { dias, status: 'Leve' };
+  if (dias <= 7) return { dias, status: 'Atenção' };
+  return { dias, status: 'Crítico' };
 }
 
 // Manda pra planilha de Verificação as ordens que ainda estão pendentes (atrasadas ou não),
@@ -5495,14 +5509,19 @@ async function enviarOrdensParaPlanilhaVerificacao() {
     aba: aba,
     ordens: todas.flatMap(o => o.itens
       .filter(it => it.conf !== 'ok')
-      .map(it => ({
-        ordem: o.ordem,
-        loja: (it.loja || o.itens[0]?.loja || '').trim(),
-        vendedora: o.vendedora,
-        item: it.item || '',
-        dataCompra: it.dataCompra || '',
-        dataChegada: it.dataChegada || '',
-      })))
+      .map(it => {
+        const calc = _calcularDiasAtrasoEStatus(it.dataChegada);
+        return {
+          ordem: o.ordem,
+          loja: (it.loja || o.itens[0]?.loja || '').trim(),
+          vendedora: o.vendedora,
+          item: it.item || '',
+          dataCompra: it.dataCompra || '',
+          dataChegada: it.dataChegada || '',
+          diasAtraso: calc.dias,
+          status: calc.status,
+        };
+      }))
   };
   if (statusEl) statusEl.textContent = '📤 Enviando ' + payload.ordens.length + ' item(ns) pra planilha...';
   try {
