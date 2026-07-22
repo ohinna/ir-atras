@@ -5493,11 +5493,18 @@ async function enviarOrdensParaPlanilhaVerificacao() {
   const payload = {
     senha: SYNC_SENHA,
     aba: aba,
-    ordens: todas
-      .filter(o => pendentesDaOrdem(o) > 0)
-      .map(o => ({ ordem: o.ordem, loja: (o.itens[0]?.loja||'').trim(), vendedora: o.vendedora }))
+    ordens: todas.flatMap(o => o.itens
+      .filter(it => it.conf !== 'ok')
+      .map(it => ({
+        ordem: o.ordem,
+        loja: (it.loja || o.itens[0]?.loja || '').trim(),
+        vendedora: o.vendedora,
+        item: it.item || '',
+        dataCompra: it.dataCompra || '',
+        dataChegada: it.dataChegada || '',
+      })))
   };
-  if (statusEl) statusEl.textContent = '📤 Enviando ' + payload.ordens.length + ' ordem(ns) pra planilha...';
+  if (statusEl) statusEl.textContent = '📤 Enviando ' + payload.ordens.length + ' item(ns) pra planilha...';
   try {
     const resp = await fetch(URL_APPS_SCRIPT_VERIFICACAO, {
       method: 'POST',
@@ -5506,7 +5513,7 @@ async function enviarOrdensParaPlanilhaVerificacao() {
     });
     const resultado = await resp.json();
     if (resultado.erro) throw new Error(resultado.erro);
-    if (statusEl) statusEl.textContent = '✅ Enviado! ' + resultado.adicionadas + ' ordem(ns) nova(s) adicionada(s) na planilha.';
+    if (statusEl) statusEl.textContent = '✅ Enviado! ' + resultado.adicionadas + ' item(ns) novo(s) adicionado(s) na planilha.';
   } catch (err) {
     if (statusEl) statusEl.textContent = '⚠️ Erro ao enviar: ' + err.message;
   }
