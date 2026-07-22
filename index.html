@@ -3926,11 +3926,15 @@ function renderMeta() {
          </div>`;
      }
 
-    const faltaMeta = Math.max(0, (v.meta||0) - (v.oks||0));
+    const faltaMetaRaw = (v.meta||0) - (v.oks||0);
+    const bateuMeta = faltaMetaRaw <= 0;
+    const faltaMetaLabel = bateuMeta ? 'JÁ BATEU A META' : 'FALTA PRA BATER A META';
+    const faltaMetaValor = bateuMeta ? '+' + fmt(Math.abs(faltaMetaRaw)) : fmt(faltaMetaRaw);
+    const faltaMetaCor = bateuMeta ? '#0f6b52' : '#a32d2d';
     return `<div style="background:var(--bg2);border:0.5px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
         <span style="font-size:14px;font-weight:500;color:var(--text)">${v.nome.charAt(0)+v.nome.slice(1).toLowerCase()}</span>
-        <span style="font-size:9px;color:var(--text4);text-align:center;line-height:1.3">FALTA PRA BATER A META<br><b style="font-size:12px;color:#a32d2d">${fmt(faltaMeta)}</b></span>
+        <span style="font-size:9px;color:var(--text4);text-align:center;line-height:1.3">${faltaMetaLabel}<br><b style="font-size:12px;color:${faltaMetaCor}">${faltaMetaValor}</b></span>
         <span style="font-size:10px;font-weight:500;padding:3px 9px;border-radius:20px;background:${pctBg};color:${pctCor}">${v.pct}%</span>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:0">
@@ -5378,6 +5382,7 @@ async function sincronizarAutomaticamente(manual) {
   }
   if (statusEl) statusEl.textContent = '🔄 Sincronizando...';
   let algumErro = false;
+  const errosDetalhados = [];
 
   async function baixarAba(idPlanilha, nomeAba, nomeArquivo, callback) {
     if (!nomeAba || !idPlanilha) return;
@@ -5391,6 +5396,7 @@ async function sincronizarAutomaticamente(manual) {
       callback(inputFalso);
     } catch (err) {
       algumErro = true;
+      errosDetalhados.push(nomeArquivo + ': ' + err.message);
       console.error('Erro sincronizando ' + nomeArquivo + ':', err.message);
     }
   }
@@ -5404,7 +5410,8 @@ async function sincronizarAutomaticamente(manual) {
 
   const agora = new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
   localStorage.setItem('syncUltimaVez', agora);
-  if (statusEl) statusEl.textContent = (algumErro ? '⚠️ Sincronizado com algum erro (confira o Diagnóstico Técnico)' : '✅ Sincronizado') + ' às ' + agora + '.';
+  window._ultimoErroSync = errosDetalhados;
+  if (statusEl) statusEl.textContent = (algumErro ? '⚠️ Erro em: ' + errosDetalhados.join(' · ') : '✅ Sincronizado') + ' às ' + agora + '.';
 }
 
 let _syncTimerId = null;
