@@ -1411,7 +1411,7 @@ function renderOrdensDaVendedora(ordensTodas, grid, empty) {
           ${it.foto ? `<img src="${it.foto}" style="width:40px;height:40px;border-radius:8px;object-fit:cover;flex-shrink:0${entregue?';filter:grayscale(1)':''}" onerror="this.style.display='none'">` : ''}
           <div style="flex:1;min-width:0">
             <div style="font-size:11.5px;color:${entregue?'var(--text3)':'var(--text)'};font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${it.item}</div>
-            ${it.sobra ? `<div style="margin-top:2px"><span style="background:#9333ea;color:#fff;font-size:8px;font-weight:700;padding:1px 5px;border-radius:5px">${it.mesRef||'SOBRA'}</span></div>` : ''}
+            ${it.sobra ? `<div style="margin-top:2px"><span style="background:${it.tagColor||'#9333ea'};color:#fff;font-size:8px;font-weight:700;padding:1px 5px;border-radius:5px">${it.tagLabel||it.mesRef||'SOBRA'}</span></div>` : ''}
             <div style="font-size:10px;color:var(--text4)">${it.marca||''}${it.cor?' · '+it.cor:''}${it.tam?' · '+it.tam:''} · R$ ${(it.valor||0).toFixed(2).replace('.',',')}</div>
           </div>
           <div style="text-align:right;flex-shrink:0">
@@ -5342,6 +5342,12 @@ function _marcarEntregueNaOrdemOriginal(ordemNum, itemTxt) {
   if (mudouBR && window._db) window._db.collection('config').doc('ordens_online_br').set({dados: JSON.stringify(window._ordensOnlineBR), updatedAt: new Date().toISOString()});
 }
 
+function _existeItemNaOrdemOriginal(ordemNum, itemTxt) {
+  const itemNorm = (itemTxt||'').trim().toLowerCase();
+  const acha = lista => (lista||[]).some(o => String(o.ordem).trim() === ordemNum && (o.itens||[]).some(it => (it.item||'').trim().toLowerCase() === itemNorm));
+  return acha(window._ordensOnlineUSA) || acha(window._ordensOnlineBR);
+}
+
 function processarCSVPrazos(input, mesRef) {
   const file = input.files[0];
   if (!file) return;
@@ -5373,16 +5379,18 @@ function processarCSVPrazos(input, mesRef) {
       const entregueTxt = (iEntregue>-1 ? row[iEntregue] : '').trim().toUpperCase();
       const itemTxt = (row[iItem]||'').trim();
 
-      if (status !== 'SOBRAS') {
-        // Não é sobra — só atualiza a entrega do item já existente (vindo da planilha normal
-        // de vendas), se essa linha da PRAZOS disser que já chegou.
-        if (entregueTxt === 'ENTREGUE') {
-          _marcarEntregueNaOrdemOriginal(ordemNum, itemTxt);
-        }
+      // Se já existe um item com esse nome EXATO dentro dessa mesma ordem (vindo da planilha
+      // normal de vendas), só atualiza a entrega dele — não duplica.
+      if (_existeItemNaOrdemOriginal(ordemNum, itemTxt)) {
+        if (entregueTxt === 'ENTREGUE') _marcarEntregueNaOrdemOriginal(ordemNum, itemTxt);
         return;
       }
 
+      // Não existe correspondência — mostra essa linha da PRAZOS como um item extra dentro da
+      // ordem (ou uma ordem solta, se a ordem em si também não existir), com uma etiqueta
+      // indicando de onde ela vem (SOBRAS = mês; outro status = o próprio status, tipo "EST EUA").
       const conf = entregueTxt === 'ENTREGUE' ? 'ok' : 'online';
+      const ehSobraDeVerdade = status === 'SOBRAS';
       if (!sobrasPorOrdem[ordemNum]) sobrasPorOrdem[ordemNum] = { ordem: ordemNum, vendedora: normalizarVendedora(row[iVend]), itens: [] };
       sobrasPorOrdem[ordemNum].itens.push({
         item: itemTxt,
@@ -5398,6 +5406,8 @@ function processarCSVPrazos(input, mesRef) {
         conf,
         sobra: true,
         mesRef: mesRefFmt,
+        tagLabel: ehSobraDeVerdade ? mesRefFmt : (status || 'PRAZOS'),
+        tagColor: ehSobraDeVerdade ? '#9333ea' : '#64748b',
       });
     });
     const listaSobras = Object.values(sobrasPorOrdem);
