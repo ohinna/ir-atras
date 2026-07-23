@@ -467,19 +467,6 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
         <input id="sync-aba-prazos" type="text" placeholder="ex: AGOSTO" style="width:100%;padding:8px 12px;border-radius:10px;border:0.5px solid var(--border);background:var(--bg);color:var(--text);font-size:12px;font-family:inherit;box-sizing:border-box">
       </div>
 
-      <div style="font-size:10px;color:var(--text4);margin:10px 0 6px;text-transform:uppercase;letter-spacing:0.5px">Verificação de ordens online</div>
-      <div style="margin-bottom:8px">
-        <div style="font-size:11px;color:var(--text4);margin-bottom:4px">ID da planilha de Verificação</div>
-        <input id="sync-planilha-id-verificacao" type="text" placeholder="cole aqui o ID da planilha de Verificação" style="width:100%;padding:8px 12px;border-radius:10px;border:0.5px solid var(--border);background:var(--bg);color:var(--text);font-size:12px;font-family:inherit;box-sizing:border-box">
-      </div>
-      <div style="margin-bottom:12px">
-        <div style="font-size:11px;color:var(--text4);margin-bottom:4px">Aba — mês atual (muda todo mês)</div>
-        <input id="sync-aba-verificacao" type="text" placeholder="ex: AGOSTO" style="width:100%;padding:8px 12px;border-radius:10px;border:0.5px solid var(--border);background:var(--bg);color:var(--text);font-size:12px;font-family:inherit;box-sizing:border-box">
-      </div>
-      <div style="margin-bottom:12px">
-        <button onclick="enviarOrdensParaPlanilhaVerificacao()" style="width:100%;padding:10px;border-radius:10px;background:#6366f1;border:none;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📤 Enviar ordens pendentes pra planilha</button>
-      </div>
-
       <div style="display:flex;gap:8px;margin-bottom:8px">
         <button onclick="salvarLinksSync()" style="flex:1;padding:10px;border-radius:10px;background:var(--red);border:none;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Salvar</button>
         <button onclick="sincronizarAutomaticamente(true)" style="flex:1;padding:10px;border-radius:10px;background:#0f6b52;border:none;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Sincronizar agora</button>
@@ -1349,18 +1336,12 @@ function renderListaLojasOnline(ordensTodas, grid, empty) {
   grid.innerHTML = voltarBtn + lista.map(l => {
     const media = l.ordens.length ? l.totalVal / l.ordens.length : 0;
     const temAlerta = l.ordens.some(o => o.itens.some(it => isAtrasadoOuSemData(it.dataChegada)));
-    const chaveVerif = (_onlineVendSelecionada||'') + '|' + l.loja;
-    const verif = window._verificacoesOnline?.lojas?.[chaveVerif];
-    return `<div style="background:var(--bg2);border:0.5px solid ${temAlerta?'#dc2626':'var(--border)'};border-radius:14px;padding:14px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:8px">
-      <div onclick="abrirLojaOnline('${l.loja.replace(/'/g,"\\'")}')" style="cursor:pointer;flex:1;min-width:0">
+    return `<div onclick="abrirLojaOnline('${l.loja.replace(/'/g,"\\'")}')" style="background:var(--bg2);border:0.5px solid ${temAlerta?'#dc2626':'var(--border)'};border-radius:14px;padding:14px;margin-bottom:10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">
+      <div>
         <div style="font-size:14px;font-weight:700;color:var(--text)">${l.loja}${temAlerta?' 🔴':''}</div>
         <div style="font-size:11px;color:var(--text3);margin-top:3px">${l.ordens.length} ${l.ordens.length===1?'ordem':'ordens'} · média R$ ${media.toFixed(2).replace('.',',')}</div>
-        ${verif ? `<div style="font-size:10px;color:#0f6b52;margin-top:3px">✓ Verificado ${_fmtVerificado(verif.ts)}</div>` : ''}
       </div>
-      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-        <button onclick="event.stopPropagation();toggleVerificadoLoja('${(_onlineVendSelecionada||'').replace(/'/g,"\\'")}','${l.loja.replace(/'/g,"\\'")}')" title="Marcar loja como verificada" style="background:${verif?'#0f6b52':'var(--bg)'};border:0.5px solid ${verif?'#0f6b52':'var(--border)'};border-radius:8px;padding:6px 9px;cursor:pointer;font-size:14px;line-height:1;color:#fff">${verif?'✓':'👁️'}</button>
-        <span onclick="abrirLojaOnline('${l.loja.replace(/'/g,"\\'")}')" style="font-size:16px;color:var(--text4);cursor:pointer">›</span>
-      </div>
+      <span style="font-size:16px;color:var(--text4)">›</span>
     </div>`;
   }).join('') + '<div style="height:90px"></div>';
 }
@@ -1410,17 +1391,13 @@ function renderOrdensDaVendedora(ordensTodas, grid, empty) {
     const origemBadge = o.origem === 'usa' ? '🇺🇸' : '🇧🇷';
     const ordemAtrasada = o.itens.some(it => isAtrasadoOuSemData(it.dataChegada));
     const pendentes = pendentesDaOrdem(o);
-    const verifOrdem = window._verificacoesOnline?.ordens?.[String(o.ordem)];
-    const verifPlanilha = !verifOrdem && window._verificacoesPlanilha?.ordens?.[String(o.ordem)];
     return `<div style="background:var(--bg2);border:0.5px solid ${ordemAtrasada?'#dc2626':'var(--border)'};border-radius:14px;margin-bottom:10px;overflow:hidden">
       <div onclick="toggleOrdemOnline(${i})" style="padding:12px 14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer">
         <div>
           <div style="font-size:13px;font-weight:700;color:var(--text)">${o.soltaSobra ? 'SOBRAS' : origemBadge} Ordem ${o.ordem}${ordemAtrasada?' 🔴':''}</div>
           <div style="font-size:10.5px;color:var(--text3);margin-top:2px">${o.itens.length}/${pendentes} incompleta · R$ ${totalVal.toFixed(2).replace('.',',')}</div>
-          ${verifOrdem ? `<div style="font-size:10px;color:#0f6b52;margin-top:2px">✓ Verificado ${_fmtVerificado(verifOrdem.ts)}</div>` : (verifPlanilha ? `<div style="font-size:10px;color:#0f6b52;margin-top:2px">✓ Verificado (planilha)</div>` : '')}
         </div>
         <div style="display:flex;align-items:center;gap:8px">
-          <button onclick="event.stopPropagation();toggleVerificadoOrdem('${o.ordem.replace(/'/g,"\\'")}')" title="Marcar como verificado no site" style="background:${(verifOrdem||verifPlanilha)?'#0f6b52':'var(--bg)'};border:0.5px solid ${(verifOrdem||verifPlanilha)?'#0f6b52':'var(--border)'};border-radius:8px;padding:5px 8px;cursor:pointer;font-size:13px;line-height:1;color:#fff">${(verifOrdem||verifPlanilha)?'✓':'👁️'}</button>
           <button onclick="event.stopPropagation();exportarOrdemOnlinePDF('${o.ordem.replace(/'/g,"\\'")}')" title="Exportar PDF" style="background:#6366f1;border:none;border-radius:8px;padding:5px 8px;cursor:pointer;font-size:13px;line-height:1">📄</button>
           <button onclick="event.stopPropagation();compartilharOrdemOnline('${o.ordem.replace(/'/g,"\\'")}')" title="Compartilhar essa ordem" style="background:#25d366;border:none;border-radius:8px;padding:5px 8px;cursor:pointer;font-size:13px;line-height:1">📲</button>
           <span id="seta-ordem-${i}" style="font-size:12px;color:var(--text4)">▾</span>
@@ -4709,46 +4686,7 @@ function fbListen() {
   const p7 = window._db.collection('config').doc('sobras_online_usa').get().then(doc => {
     window._sobrasOnlineUSA = (doc.exists && doc.data().dados) ? JSON.parse(doc.data().dados) : [];
   }).catch(()=>{ window._sobrasOnlineUSA = []; });
-  const p8 = window._db.collection('config').doc('verificacoes_online').get().then(doc => {
-    window._verificacoesOnline = (doc.exists && doc.data().dados) ? JSON.parse(doc.data().dados) : {ordens:{}, lojas:{}};
-  }).catch(()=>{ window._verificacoesOnline = {ordens:{}, lojas:{}}; });
-  const p9 = window._db.collection('config').doc('verificacoes_planilha').get().then(doc => {
-    window._verificacoesPlanilha = (doc.exists && doc.data().dados) ? JSON.parse(doc.data().dados) : {ordens:{}};
-  }).catch(()=>{ window._verificacoesPlanilha = {ordens:{}}; });
-  Promise.all([p1,p2,p3,p4,p5,p6,p7,p8,p9]).finally(() => { carregarCatalogo(); setTimeout(atualizarVersaoHeader, 500); });
-}
-
-function _salvarVerificacoesOnline() {
-  if (window._db) window._db.collection('config').doc('verificacoes_online').set({dados: JSON.stringify(window._verificacoesOnline), updatedAt: new Date().toISOString()});
-}
-
-function toggleVerificadoOrdem(ordem) {
-  if (!window._verificacoesOnline) window._verificacoesOnline = {ordens:{}, lojas:{}};
-  const chave = String(ordem);
-  if (window._verificacoesOnline.ordens[chave]) {
-    delete window._verificacoesOnline.ordens[chave];
-  } else {
-    window._verificacoesOnline.ordens[chave] = { ts: new Date().toISOString() };
-  }
-  _salvarVerificacoesOnline();
-  renderGrid();
-}
-
-function toggleVerificadoLoja(vend, loja) {
-  if (!window._verificacoesOnline) window._verificacoesOnline = {ordens:{}, lojas:{}};
-  const chave = (vend||'') + '|' + (loja||'');
-  if (window._verificacoesOnline.lojas[chave]) {
-    delete window._verificacoesOnline.lojas[chave];
-  } else {
-    window._verificacoesOnline.lojas[chave] = { ts: new Date().toISOString() };
-  }
-  _salvarVerificacoesOnline();
-  renderGrid();
-}
-
-function _fmtVerificado(iso) {
-  const d = new Date(iso);
-  return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}) + ' às ' + d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  Promise.all([p1,p2,p3,p4,p5,p6,p7]).finally(() => { carregarCatalogo(); setTimeout(atualizarVersaoHeader, 500); });
 }
 
 function _fbListenCore() {
@@ -5352,8 +5290,6 @@ const SYNC_CONFIG_KEYS = {
   abaRelatorio: 'sync-aba-relatorio',
   planilhaIdPrazos: 'sync-planilha-id-prazos',
   abaPrazos: 'sync-aba-prazos',
-  planilhaIdVerificacao: 'sync-planilha-id-verificacao',
-  abaVerificacao: 'sync-aba-verificacao',
 };
 
 function salvarLinksSync() {
@@ -5387,6 +5323,25 @@ function _inputFalsoComTexto(texto, nomeArquivo) {
 
 // Lê a planilha PRAZOS e guarda só as linhas com STATUS = SOBRAS, agrupadas por ORDEM.
 // Cada "sobra" é depois encaixada dentro da ordem de origem (mesmo número de ordem) no getOrdensOnlineFiltradas().
+function _marcarEntregueNaOrdemOriginal(ordemNum, itemTxt) {
+  const itemNorm = (itemTxt||'').trim().toLowerCase();
+  let mudouUSA = false, mudouBR = false;
+  (window._ordensOnlineUSA||[]).forEach(o => {
+    if (String(o.ordem).trim() !== ordemNum) return;
+    (o.itens||[]).forEach(it => {
+      if ((it.item||'').trim().toLowerCase() === itemNorm && it.conf !== 'ok') { it.conf = 'ok'; mudouUSA = true; }
+    });
+  });
+  (window._ordensOnlineBR||[]).forEach(o => {
+    if (String(o.ordem).trim() !== ordemNum) return;
+    (o.itens||[]).forEach(it => {
+      if ((it.item||'').trim().toLowerCase() === itemNorm && it.conf !== 'ok') { it.conf = 'ok'; mudouBR = true; }
+    });
+  });
+  if (mudouUSA && window._db) window._db.collection('config').doc('ordens_online_usa').set({dados: JSON.stringify(window._ordensOnlineUSA), updatedAt: new Date().toISOString()});
+  if (mudouBR && window._db) window._db.collection('config').doc('ordens_online_br').set({dados: JSON.stringify(window._ordensOnlineBR), updatedAt: new Date().toISOString()});
+}
+
 function processarCSVPrazos(input, mesRef) {
   const file = input.files[0];
   if (!file) return;
@@ -5413,14 +5368,24 @@ function processarCSVPrazos(input, mesRef) {
     rows.slice(1).forEach(row => {
       if (!row[iItem]?.trim()) return;
       const status = (iStatus>-1 ? row[iStatus] : '').trim().toUpperCase();
-      if (status !== 'SOBRAS') return;
       const ordemNum = (iOrdem>-1 ? row[iOrdem]?.trim() : '') || '';
       if (!ordemNum) return;
       const entregueTxt = (iEntregue>-1 ? row[iEntregue] : '').trim().toUpperCase();
+      const itemTxt = (row[iItem]||'').trim();
+
+      if (status !== 'SOBRAS') {
+        // Não é sobra — só atualiza a entrega do item já existente (vindo da planilha normal
+        // de vendas), se essa linha da PRAZOS disser que já chegou.
+        if (entregueTxt === 'ENTREGUE') {
+          _marcarEntregueNaOrdemOriginal(ordemNum, itemTxt);
+        }
+        return;
+      }
+
       const conf = entregueTxt === 'ENTREGUE' ? 'ok' : 'online';
       if (!sobrasPorOrdem[ordemNum]) sobrasPorOrdem[ordemNum] = { ordem: ordemNum, vendedora: normalizarVendedora(row[iVend]), itens: [] };
       sobrasPorOrdem[ordemNum].itens.push({
-        item: (row[iItem]||'').trim(),
+        item: itemTxt,
         marca: '',
         cor: '',
         tam: '',
@@ -5442,103 +5407,6 @@ function processarCSVPrazos(input, mesRef) {
   reader.readAsText(file, 'UTF-8');
 }
 
-// Lê a planilha de Verificação (ORDEM / LOJA / VENDEDORA / VERIFICADO) e guarda
-// as ordens marcadas com o checkbox, pra mesclar com as verificações feitas dentro do app.
-function processarCSVVerificacao(input) {
-  const file = input.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    const rows = e.target.result.replace(/\r/g,'').split('\n').map(l => {
-      const cells = []; let cur = '', inQ = false;
-      for (const ch of l) {
-        if (ch === '"') inQ = !inQ;
-        else if (ch === ',' && !inQ) { cells.push(cur.trim()); cur = ''; }
-        else cur += ch;
-      }
-      cells.push(cur.trim());
-      return cells;
-    });
-    if (!rows.length) return;
-    const h = rows[0].map(c => (c||'').trim().toUpperCase());
-    const iOrdem = h.indexOf('ORDEM'), iVerificado = h.findIndex(c => c.startsWith('VERIFICADO'));
-    const ordensVerificadas = {};
-    rows.slice(1).forEach(row => {
-      const ordemNum = (iOrdem>-1 ? row[iOrdem]?.trim() : '') || '';
-      if (!ordemNum) return;
-      const val = (iVerificado>-1 ? row[iVerificado] : '').trim().toUpperCase();
-      if (['TRUE','VERDADEIRO','SIM','1'].includes(val)) ordensVerificadas[ordemNum] = true;
-    });
-    window._verificacoesPlanilha = window._verificacoesPlanilha || { ordens: {} };
-    Object.assign(window._verificacoesPlanilha.ordens, ordensVerificadas);
-    if (window._db) window._db.collection('config').doc('verificacoes_planilha').set({dados: JSON.stringify(window._verificacoesPlanilha), updatedAt: new Date().toISOString()});
-  };
-  reader.readAsText(file, 'UTF-8');
-}
-
-function _calcularDiasAtrasoEStatus(dataChegadaStr) {
-  const d = parseDataBR(dataChegadaStr);
-  if (!d) return { dias: '', status: 'Crítico' };
-  const hoje = new Date();
-  hoje.setHours(0,0,0,0);
-  d.setHours(0,0,0,0);
-  const diffMs = hoje - d;
-  const dias = Math.max(Math.round(diffMs / (1000*60*60*24)), 0);
-  if (dias === 0) return { dias, status: 'EM PRAZO' };
-  if (dias <= 4) return { dias, status: 'Leve' };
-  if (dias <= 7) return { dias, status: 'Atenção' };
-  return { dias, status: 'Crítico' };
-}
-
-// Manda pra planilha de Verificação as ordens que ainda estão pendentes (atrasadas ou não),
-// pra você só precisar marcar o checkbox lá em vez de digitar tudo na mão.
-// O Apps Script do lado de lá nunca duplica nem apaga o que já existe.
-async function enviarOrdensParaPlanilhaVerificacao() {
-  const aba = (localStorage.getItem('sync_abaVerificacao') || '').trim();
-  const URL_APPS_SCRIPT_VERIFICACAO = 'https://script.google.com/macros/s/AKfycbyFHhwhqnl6eTGTCFWqZuHUaRZiPwzpEWjSmrUgKQym8PjEvwh9BhAoR5kj0bOyRK3z/exec';
-  const statusEl = document.getElementById('sync-status');
-  if (!aba) {
-    if (statusEl) statusEl.textContent = '⚠️ Preenche a aba (mês atual) da planilha de Verificação antes de enviar.';
-    return;
-  }
-  const todasUSA = (window._ordensOnlineUSA||[]).map(o => ({...o, origem:'usa'}));
-  const todasBR = (window._ordensOnlineBR||[]).map(o => ({...o, origem:'br'}));
-  const todas = todasUSA.concat(todasBR);
-  const payload = {
-    senha: SYNC_SENHA,
-    aba: aba,
-    ordens: todas.flatMap(o => o.itens
-      .filter(it => it.conf !== 'ok')
-      .map(it => {
-        const calc = _calcularDiasAtrasoEStatus(it.dataChegada);
-        return {
-          ordem: o.ordem,
-          loja: (it.loja || o.itens[0]?.loja || '').trim(),
-          vendedora: o.vendedora,
-          item: it.item || '',
-          dataCompra: it.dataCompra || '',
-          dataChegada: it.dataChegada || '',
-          diasAtraso: calc.dias,
-          status: calc.status,
-        };
-      }))
-  };
-  if (statusEl) statusEl.textContent = '📤 Enviando ' + payload.ordens.length + ' item(ns) pra planilha...';
-  try {
-    const resp = await fetch(URL_APPS_SCRIPT_VERIFICACAO, {
-      method: 'POST',
-      headers: {'Content-Type': 'text/plain'},
-      body: JSON.stringify(payload)
-    });
-    const resultado = await resp.json();
-    if (resultado.erro) throw new Error(resultado.erro);
-    if (statusEl) statusEl.textContent = '✅ Enviado! ' + resultado.adicionadas + ' item(ns) novo(s) adicionado(s) na planilha.';
-  } catch (err) {
-    if (statusEl) statusEl.textContent = '⚠️ Erro ao enviar: ' + err.message;
-  }
-}
-
-
 async function sincronizarAutomaticamente(manual) {
   const statusEl = document.getElementById('sync-status');
   // Proteção: não reimportar produtos enquanto alguém está com um produto aberto
@@ -5558,7 +5426,6 @@ async function sincronizarAutomaticamente(manual) {
   const planilhaId = localStorage.getItem('sync_planilhaId') || '';
   const planilhaIdBr = localStorage.getItem('sync_planilhaIdBr') || '';
   const planilhaIdPrazos = localStorage.getItem('sync_planilhaIdPrazos') || '';
-  const planilhaIdVerificacao = localStorage.getItem('sync_planilhaIdVerificacao') || '';
   const abas = {
     usa: localStorage.getItem('sync_abaUsa') || '',
     br: localStorage.getItem('sync_abaBr') || '',
@@ -5566,7 +5433,6 @@ async function sincronizarAutomaticamente(manual) {
     fotosBr: localStorage.getItem('sync_abaFotosBr') || '',
     relatorio: localStorage.getItem('sync_abaRelatorio') || '',
     prazos: localStorage.getItem('sync_abaPrazos') || '',
-    verificacao: localStorage.getItem('sync_abaVerificacao') || '',
   };
   if (!baseUrl) {
     if (manual && statusEl) statusEl.textContent = '⚠️ Link do Apps Script ainda não configurado.';
@@ -5603,11 +5469,6 @@ async function sincronizarAutomaticamente(manual) {
   await baixarAba(planilhaIdBr || planilhaId, abas.fotosBr, 'fotos-br.csv', (inp) => handleFotos(inp, 'br'));
   await baixarAba(planilhaId, abas.relatorio, 'relatorio.csv', processarCSVRelatorio);
   await baixarAba(planilhaIdPrazos, abas.prazos, 'prazos.csv', (inp) => processarCSVPrazos(inp, abas.prazos));
-  window._verificacoesPlanilha = { ordens: {} };
-  const VENDEDORAS_VERIF = ['FABIANA','JESSICA','SABRINA','THAIS'];
-  for (const vend of VENDEDORAS_VERIF) {
-    await baixarAba(planilhaIdVerificacao, (abas.verificacao ? abas.verificacao + ' - ' + vend : ''), 'verificacao-'+vend+'.csv', processarCSVVerificacao);
-  }
 
   const agora = new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
   localStorage.setItem('syncUltimaVez', agora);
