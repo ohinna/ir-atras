@@ -2682,10 +2682,11 @@ function exportarOrdemOnlinePDF(ordemNum) {
     const statusTxt = entregue ? 'Entregue' : (it.status || 'Aguardando entrega');
     const statusCor = entregue ? '#0f6b52' : '#d97706';
     const fotoImg = it.foto ? `<img src="${it.foto}" style="width:50px;height:50px;object-fit:cover;border-radius:6px">` : '';
+    const tag = it.sobra ? ` <span style="background:${it.tagColor||'#9333ea'};color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:5px;vertical-align:middle">${it.tagLabel||it.mesRef||'SOBRA'}</span>` : '';
     return `<tr>
       <td style="text-align:center;color:#888">${i+1}</td>
       <td>${fotoImg}</td>
-      <td><strong>${it.item}</strong><br><span style="font-size:11px;color:#888">${it.marca||''}${it.cor?' · '+it.cor:''}${it.tam?' · '+it.tam:''}</span></td>
+      <td><strong>${it.item}</strong>${tag}<br><span style="font-size:11px;color:#888">${it.marca||''}${it.cor?' · '+it.cor:''}${it.tam?' · '+it.tam:''}</span></td>
       <td>R$ ${(it.valor||0).toFixed(2).replace('.',',')}</td>
       <td style="color:${statusCor};font-weight:600">${statusTxt}</td>
       <td style="font-size:11px">${it.dataCompra?'Compra: '+it.dataCompra+'<br>':''}Chegada: ${it.dataChegada||'sem data'}</td>
@@ -2734,10 +2735,11 @@ function _montarRelatorioAtrasadosVendedora(vend) {
         totalValPendente += (it.valor||0);
         const atrasado = isAtrasadoOuSemData(it.dataChegada);
         const fotoImg = it.foto ? `<img src="${it.foto}" crossorigin="anonymous" style="width:44px;height:44px;object-fit:cover;border-radius:6px">` : '';
+        const tag = it.sobra ? ` <span style="background:${it.tagColor||'#9333ea'};color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:5px;vertical-align:middle">${it.tagLabel||it.mesRef||'SOBRA'}</span>` : '';
         return `<tr>
           <td style="text-align:center;color:#888">${i+1}</td>
           <td>${fotoImg}</td>
-          <td><strong>${it.item}</strong><br><span style="font-size:11px;color:#888">${it.marca||''}${it.cor?' · '+it.cor:''}${it.tam?' · '+it.tam:''}</span></td>
+          <td><strong>${it.item}</strong>${tag}<br><span style="font-size:11px;color:#888">${it.marca||''}${it.cor?' · '+it.cor:''}${it.tam?' · '+it.tam:''}</span></td>
           <td>R$ ${(it.valor||0).toFixed(2).replace('.',',')}</td>
           <td style="font-size:11px;${atrasado?'color:#dc2626;font-weight:700':''}">${it.dataCompra ? 'Compra: '+it.dataCompra+'<br>' : ''}${it.dataChegada ? 'Chegada: '+it.dataChegada : 'Sem data de chegada'}</td>
         </tr>`;
