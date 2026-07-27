@@ -5408,7 +5408,7 @@ function processarCSVPrazos(input, mesRef) {
         conf,
         sobra: true,
         mesRef: mesRefFmt,
-        tagLabel: ehSobraDeVerdade ? mesRefFmt : (status || 'PRAZOS'),
+        tagLabel: ehSobraDeVerdade ? 'SOBRAS' : (status || 'PRAZOS'),
         tagColor: ehSobraDeVerdade ? '#9333ea' : '#64748b',
       });
     });
