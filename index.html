@@ -260,6 +260,7 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
     <button class="chip active" id="chip-origem-todos" onclick="setOrigem('',this)" style="flex:1;justify-content:center">Todos</button>
     <button class="chip" id="chip-origem-br" onclick="setOrigem('br',this)" style="flex:1;justify-content:center">🇧🇷 <span id="label-mes-br">Mês BR</span></button>
     <button class="chip" id="chip-origem-usa" onclick="setOrigem('usa',this)" style="flex:1;justify-content:center">🇺🇸 <span id="label-mes-usa">Mês USA</span></button>
+    <button class="chip" id="chip-origem-usa2" onclick="setOrigem('usa2',this)" style="flex:1;justify-content:center;display:none">🇺🇸 <span id="label-mes-usa2">Mês USA 2</span></button>
   </div>
   <div class="filter-row" id="vend-row">
     <button class="chip active" id="chip-todas" onclick="setVend('TODAS',this)">Todas</button>
@@ -379,6 +380,38 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
       </label>
       <div class="progress-bar" id="csv-progress"><div class="progress-fill" id="csv-fill"></div></div>
       <div id="csv-status" style="font-size:11px;color:#b08070;margin-top:8px"></div>
+    </div>
+    <div class="upload-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <div class="upload-title" style="margin-bottom:0">🇺🇸 Importar Planilha USA (extra)</div>
+        <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:11px;color:var(--text3)">
+          <input type="checkbox" id="toggle-usa2" onchange="toggleUsa2Ativo(this.checked)">
+          Ativar
+        </label>
+      </div>
+      <div class="upload-sub">Uma terceira fonte USA, separada da principal — útil quando você tem dois meses USA rodando ao mesmo tempo. Importar aqui nunca apaga a planilha USA principal.</div>
+      <div id="secao-usa2" style="display:none">
+        <div style="margin-bottom:10px">
+          <div style="font-size:11px;color:var(--text4);margin-bottom:4px">Nome do mês (aparece no filtro)</div>
+          <div style="display:flex;gap:8px">
+            <input id="input-label-usa2" type="text" placeholder="ex: Setembro USA" style="flex:1;padding:8px 12px;border-radius:10px;border:0.5px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;font-family:inherit">
+            <button onclick="salvarLabelMes('usa2')" style="padding:8px 14px;border-radius:10px;background:var(--red);border:none;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">Salvar</button>
+          </div>
+        </div>
+        <label class="upload-btn">
+          ⬆ Selecionar CSV USA (extra)
+          <input type="file" accept=".csv" style="display:none" onchange="processarCSVUSA2(this)">
+        </label>
+        <div style="font-size:10px;color:var(--text4);margin:10px 0 6px;text-transform:uppercase;letter-spacing:0.5px">Sincronização automática desta fonte</div>
+        <div style="margin-bottom:8px">
+          <div style="font-size:11px;color:var(--text4);margin-bottom:4px">ID da planilha (USA extra)</div>
+          <input id="sync-planilha-id-usa2" type="text" placeholder="cole aqui o ID da planilha" style="width:100%;padding:8px 12px;border-radius:10px;border:0.5px solid var(--border);background:var(--bg);color:var(--text);font-size:12px;font-family:inherit;box-sizing:border-box">
+        </div>
+        <div style="margin-bottom:8px">
+          <div style="font-size:11px;color:var(--text4);margin-bottom:4px">Aba (mês)</div>
+          <input id="sync-aba-usa2" type="text" placeholder="ex: SETEMBRO" style="width:100%;padding:8px 12px;border-radius:10px;border:0.5px solid var(--border);background:var(--bg);color:var(--text);font-size:12px;font-family:inherit;box-sizing:border-box">
+        </div>
+      </div>
     </div>
     <div class="upload-card">
       <div class="upload-title">🇧🇷 Importar Planilha BR</div>
@@ -817,6 +850,7 @@ function limparTodosFiltros() {
   document.getElementById('chip-origem-todos')?.classList.add('active');
   document.getElementById('chip-origem-br')?.classList.remove('active');
   document.getElementById('chip-origem-usa')?.classList.remove('active');
+  document.getElementById('chip-origem-usa2')?.classList.remove('active');
   salvarFiltros();
   renderGrid();
 }
@@ -864,7 +898,7 @@ function restaurarFiltros() {
     const statusId = saved.status ? 'status-'+saved.status : 'status-todos';
     document.getElementById(statusId)?.classList.add('active');
     if (saved.origem !== undefined) fOrigem = saved.origem;
-    document.querySelectorAll('#chip-origem-todos, #chip-origem-br, #chip-origem-usa').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('#chip-origem-todos, #chip-origem-br, #chip-origem-usa, #chip-origem-usa2').forEach(c => c.classList.remove('active'));
     const origemId = saved.origem ? 'chip-origem-'+saved.origem : 'chip-origem-todos';
     document.getElementById(origemId)?.classList.add('active');
     const sortMap = {'marca-asc':'sort-marca','valor-asc':'sort-valor-asc','valor-desc':'sort-valor-desc','qty-asc':'sort-qty-asc','qty-desc':'sort-qty-desc'};
@@ -912,7 +946,7 @@ window._pdfMarcasSel = new Set();
 
 function setOrigem(o, btn) {
   fOrigem = o;
-  document.querySelectorAll('#chip-origem-todos, #chip-origem-br, #chip-origem-usa').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('#chip-origem-todos, #chip-origem-br, #chip-origem-usa, #chip-origem-usa2').forEach(c => c.classList.remove('active'));
   btn.classList.add('active');
   salvarFiltros();
   renderGrid();
@@ -5292,6 +5326,8 @@ const SYNC_CONFIG_KEYS = {
   abaRelatorio: 'sync-aba-relatorio',
   planilhaIdPrazos: 'sync-planilha-id-prazos',
   abaPrazos: 'sync-aba-prazos',
+  planilhaIdUsa2: 'sync-planilha-id-usa2',
+  abaUsa2: 'sync-aba-usa2',
 };
 
 function salvarLinksSync() {
@@ -5314,6 +5350,14 @@ function carregarLinksSyncNaTela() {
   });
   const chk = document.getElementById('sync-auto-ativo');
   if (chk) chk.checked = localStorage.getItem('syncAutoAtivo') === '1';
+
+  const usa2Ligado = localStorage.getItem('sync_usa2Ativo') === '1';
+  const chkUsa2 = document.getElementById('toggle-usa2');
+  if (chkUsa2) chkUsa2.checked = usa2Ligado;
+  const chipUsa2 = document.getElementById('chip-origem-usa2');
+  if (chipUsa2) chipUsa2.style.display = usa2Ligado ? '' : 'none';
+  const secaoUsa2 = document.getElementById('secao-usa2');
+  if (secaoUsa2) secaoUsa2.style.display = usa2Ligado ? '' : 'none';
 }
 
 // Cria um <input> "fake" contendo o texto baixado, pra reaproveitar as funções
@@ -5438,6 +5482,7 @@ async function sincronizarAutomaticamente(manual) {
   const planilhaId = localStorage.getItem('sync_planilhaId') || '';
   const planilhaIdBr = localStorage.getItem('sync_planilhaIdBr') || '';
   const planilhaIdPrazos = localStorage.getItem('sync_planilhaIdPrazos') || '';
+  const planilhaIdUsa2 = localStorage.getItem('sync_planilhaIdUsa2') || '';
   const abas = {
     usa: localStorage.getItem('sync_abaUsa') || '',
     br: localStorage.getItem('sync_abaBr') || '',
@@ -5445,6 +5490,7 @@ async function sincronizarAutomaticamente(manual) {
     fotosBr: localStorage.getItem('sync_abaFotosBr') || '',
     relatorio: localStorage.getItem('sync_abaRelatorio') || '',
     prazos: localStorage.getItem('sync_abaPrazos') || '',
+    usa2: localStorage.getItem('sync_abaUsa2') || '',
   };
   if (!baseUrl) {
     if (manual && statusEl) statusEl.textContent = '⚠️ Link do Apps Script ainda não configurado.';
@@ -5476,6 +5522,9 @@ async function sincronizarAutomaticamente(manual) {
   }
 
   await baixarAba(planilhaId, abas.usa, 'usa.csv', processarCSVUSA);
+  if (localStorage.getItem('sync_usa2Ativo') === '1') {
+    await baixarAba(planilhaIdUsa2, abas.usa2, 'usa2.csv', (inp) => processarCSVUSA(inp, 'usa2'));
+  }
   await baixarAba(planilhaIdBr || planilhaId, abas.br, 'br.csv', processarCSVBR);
   await baixarAba(planilhaId, abas.fotosUsa, 'fotos-usa.csv', (inp) => handleFotos(inp, 'usa'));
   await baixarAba(planilhaIdBr || planilhaId, abas.fotosBr, 'fotos-br.csv', (inp) => handleFotos(inp, 'br'));
@@ -5524,17 +5573,18 @@ function normalizarVendedora(s) {
 function _labelTam(t) { return t === 'Único' ? 'Unidade' : t; }
 const semAcento = normalizarVendedora; // alias — mesma lógica, usada nos filtros pra bater com o dado já normalizado
 
-function processarCSVUSA(input) {
+function processarCSVUSA(input, origemTag) {
+  origemTag = origemTag || 'usa';
   const file = input.files[0];
   if (!file) return;
   // Salvar label do mês se preenchido
-  const inpLabelUsa = document.getElementById('input-label-usa');
+  const inpLabelUsa = document.getElementById('input-label-' + origemTag);
   const novoLabelUsa = inpLabelUsa ? inpLabelUsa.value.trim() : '';
   if (novoLabelUsa) {
-    localStorage.setItem('mes_label_usa', novoLabelUsa);
-    const elUsa = document.getElementById('label-mes-usa');
+    localStorage.setItem('mes_label_' + origemTag, novoLabelUsa);
+    const elUsa = document.getElementById('label-mes-' + origemTag);
     if (elUsa) elUsa.textContent = novoLabelUsa;
-    if (window._db) window._db.collection('config').doc('app').set({mesLabel_usa: novoLabelUsa}, {merge:true});
+    if (window._db) window._db.collection('config').doc('app').set({['mesLabel_'+origemTag]: novoLabelUsa}, {merge:true});
     if (inpLabelUsa) { inpLabelUsa.value = ''; inpLabelUsa.placeholder = novoLabelUsa; }
   }
   document.getElementById('csv-progress').style.display = '';
@@ -5748,8 +5798,10 @@ function processarCSVUSA(input) {
       });
       // Só mantém ordens que ainda têm pelo menos 1 item "online" pendente
       const listaOrdensOnline = Object.values(ordensOnline).filter(o => o.itens.some(it => it.conf === 'online'));
-      window._ordensOnlineUSA = listaOrdensOnline;
-      if (window._db) window._db.collection('config').doc('ordens_online_usa').set({dados: JSON.stringify(listaOrdensOnline), updatedAt: new Date().toISOString()});
+      const varOnline = origemTag === 'usa2' ? '_ordensOnlineUsa2' : '_ordensOnlineUSA';
+      const docOnline = origemTag === 'usa2' ? 'ordens_online_usa2' : 'ordens_online_usa';
+      window[varOnline] = listaOrdensOnline;
+      if (window._db) window._db.collection('config').doc(docOnline).set({dados: JSON.stringify(listaOrdensOnline), updatedAt: new Date().toISOString()});
 
       const groups = {};
       const itemsNaoValidos = /^(CORREIO|CORREIOS|ENTREGA PARCIAL|FABI LEVOU|OPEN|SACOLA|FRETE|CRÉDITO|DESC PG|DESCONTO|PARCIAL|DEVOLUÇÃO|TROCA|TAXA)/i;
@@ -5836,10 +5888,10 @@ function processarCSVUSA(input) {
         if (statusEl) statusEl.innerHTML += '<br><span style="color:#d97706">⚠️ ' + duplicatas.length + ' possíveis duplicatas: ' + dupMsg + (duplicatas.length>3?'...':'') + '</span>';
       }
 
-      salvarOrigemNoFirebase(newData, 'usa', () => {
+      salvarOrigemNoFirebase(newData, origemTag, () => {
         const now = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
         localStorage.setItem('ultima_atualizacao', now);
-        localStorage.setItem('import_ts_usa', now);
+        localStorage.setItem('import_ts_' + origemTag, now);
         atualizarVersaoHeader();
         document.getElementById('csv-fill').style.width = '100%';
         setTimeout(() => { document.getElementById('csv-progress').style.display='none'; }, 3000);
@@ -5854,6 +5906,37 @@ function processarCSVUSA(input) {
     r2.readAsText(file, 'latin1');
   };
   reader.readAsText(file, 'utf-8');
+}
+
+function processarCSVUSA2(input) {
+  processarCSVUSA(input, 'usa2');
+}
+
+// Liga/desliga a terceira fonte (USA extra). Ao desligar, apaga os produtos dela do catálogo.
+function toggleUsa2Ativo(ligado) {
+  localStorage.setItem('sync_usa2Ativo', ligado ? '1' : '0');
+  const chip = document.getElementById('chip-origem-usa2');
+  const secao = document.getElementById('secao-usa2');
+  if (chip) chip.style.display = ligado ? '' : 'none';
+  if (secao) secao.style.display = ligado ? '' : 'none';
+  if (!ligado) {
+    if (fOrigem === 'usa2') setOrigem('', document.getElementById('chip-origem-todos'));
+    if (window._db) {
+      window._db.collection('catalogo').get({source:'server'}).then(snap => {
+        const toDelete = snap.docs.filter(d => (d.data().origem||'') === 'usa2');
+        if (!toDelete.length) return;
+        const batch = window._db.batch();
+        toDelete.forEach(d => batch.delete(d.ref));
+        return batch.commit();
+      }).then(() => {
+        PRODUTOS = PRODUTOS.filter(p => p.origem !== 'usa2');
+        renderGrid();
+      });
+    } else {
+      PRODUTOS = PRODUTOS.filter(p => p.origem !== 'usa2');
+      renderGrid();
+    }
+  }
 }
 
 // Apaga só os produtos da origem informada e salva os novos, sem mexer na outra origem
@@ -5891,7 +5974,7 @@ function salvarOrigemNoFirebase(newData, origem, onDone) {
       snap.docs.forEach(doc => {
         const d = doc.data();
         const o = doc.data().origem;
-        const pertenceOrigem = origem === 'usa' ? (!o || o === 'usa') : o === 'br';
+        const pertenceOrigem = o === origem || (origem === 'usa' && !o);
         const docIdNum = parseInt(doc.id);
         const p = PRODUTOS.find(x => x._id === docIdNum);
         if (pertenceOrigem && p) {
@@ -5910,7 +5993,7 @@ function salvarOrigemNoFirebase(newData, origem, onDone) {
       });
       const toDelete = snap.docs.filter(doc => {
         const o = doc.data().origem;
-        return origem === 'usa' ? (!o || o === 'usa') : o === 'br';
+        return o === origem || (origem === 'usa' && !o);
       });
       if (!toDelete.length) return;
       const batch = window._db.batch();
@@ -6559,6 +6642,10 @@ document.addEventListener('DOMContentLoaded', () => {
   if (savedBr) (document.getElementById('label-mes-br')||{}).textContent = savedBr;
   const savedUsa = localStorage.getItem('mes_label_usa');
   if (savedUsa) (document.getElementById('label-mes-usa')||{}).textContent = savedUsa;
+  const savedUsa2 = localStorage.getItem('mes_label_usa2');
+  if (savedUsa2) (document.getElementById('label-mes-usa2')||{}).textContent = savedUsa2;
+  const inpLabelUsa2 = document.getElementById('input-label-usa2');
+  if (inpLabelUsa2) inpLabelUsa2.placeholder = savedUsa2 || 'ex: Setembro USA';
   const inpLabelBr = document.getElementById('input-label-br');
   if (inpLabelBr) inpLabelBr.placeholder = savedBr || 'ex: Julho BR';
   const inpLabelUsa = document.getElementById('input-label-usa');
