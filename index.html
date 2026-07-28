@@ -1622,7 +1622,7 @@ function renderGrid() {
             const bg = isNok?'rgba(192,57,43,0.06)':isCompra?'rgba(245,158,11,0.08)':isUndef?'#fff8e8':'transparent';
             const textCol = isNok?'#c0392b':isCompra?'#d97706':isUndef?'#8a5000':'var(--text)';
             return '<div style="border:0.5px solid ' + border + ';border-radius:6px;padding:3px 2px;text-align:center;background:' + bg + '">' +
-              '<div style="font-size:10px;font-weight:600;color:' + textCol + ';' + (isNok?'text-decoration:line-through':'') + '">' + (isUndef?'???':t) + '</div>' +
+              '<div style="font-size:10px;font-weight:600;color:' + textCol + ';' + (isNok?'text-decoration:line-through':'') + '">' + (isUndef?'???':_labelTam(t)) + '</div>' +
               '<div style="font-size:9px;color:' + (isNok?'rgba(192,57,43,0.5)':isCompra?'#d97706':isUndef?'#b08070':'var(--text2)') + '">' + (isNok?'NOK':isCompra?'🛒'+ecQty:q+' un') + '</div>' +
             '</div>';
           }).join('') + '</div>' : ''}
@@ -2104,7 +2104,7 @@ function openModal(id, focusComment=false) {
             const isUndef = t === '??? (a definir)';
             const nokTams = p.nokTams || {};
             const isNok = nokTams[t];
-            const labelExibido = semTamanhoDeRoupa ? String(idx+1) : (isUndef?'???':t);
+            const labelExibido = semTamanhoDeRoupa ? String(idx+1) : (isUndef?'???':_labelTam(t));
             const div = document.createElement('div');
             div.style.cssText = 'border:0.5px solid ' + (isNok?'rgba(200,50,50,0.3)':isUndef?'rgba(180,120,0,0.3)':'rgba(122,11,30,0.2)') + ';border-radius:8px;padding:4px 10px;text-align:center;background:' + (isNok?'rgba(200,50,50,0.08)':'rgba(255,255,255,0.5)') + ';cursor:pointer';
             div.innerHTML = '<div style="font-size:12px;font-weight:700;color:' + (isNok?'#c0392b':isUndef?'#8a5000':'var(--red)') + ';' + (isNok?'text-decoration:line-through':'') + '">' + labelExibido + '</div>' +
@@ -2122,7 +2122,7 @@ function openModal(id, focusComment=false) {
           const isUndef = t === '??? (a definir)';
           const nokTams = p.nokTams || {};
           const isNok = nokTams[t];
-          const labelExibido = semTamanhoDeRoupa ? String(idx+1) : (isUndef?'???':t);
+          const labelExibido = semTamanhoDeRoupa ? String(idx+1) : (isUndef?'???':_labelTam(t));
           const div = document.createElement('div');
           div.style.cssText = 'border:0.5px solid ' + (isNok?'rgba(200,50,50,0.3)':isUndef?'rgba(180,120,0,0.3)':'rgba(122,11,30,0.2)') + ';border-radius:8px;padding:4px 10px;text-align:center;background:' + (isNok?'rgba(200,50,50,0.08)':'rgba(255,255,255,0.5)') + ';cursor:pointer;position:relative;transition:all 0.15s';
           div.innerHTML = '<div style="font-size:12px;font-weight:700;color:' + (isNok?'#c0392b':isUndef?'#8a5000':'var(--red)') + ';' + (isNok?'text-decoration:line-through':'') + '">' + labelExibido + '</div>' +
@@ -2225,7 +2225,7 @@ function baixarPdfProduto() {
         const isNok = p.nokTams?.[t];
         const isUndef = t === '??? (a definir)';
         return '<div style="border:0.5px solid ' + (isUndef?'#f5d4a4':'#ede0d4') + ';border-radius:8px;padding:5px 10px;text-align:center;background:' + (isNok?'#fff0f0':isUndef?'#fff8e8':'#fdf8f4') + ';min-width:44px">' +
-          '<div style="font-size:13px;font-weight:700;color:' + (isNok?'#c0392b':isUndef?'#8a5000':'#7a0b1e') + ';' + (isNok?'text-decoration:line-through':'') + '">' + (isUndef?'???':t) + '</div>' +
+          '<div style="font-size:13px;font-weight:700;color:' + (isNok?'#c0392b':isUndef?'#8a5000':'#7a0b1e') + ';' + (isNok?'text-decoration:line-through':'') + '">' + (isUndef?'???':_labelTam(t)) + '</div>' +
           '<div style="font-size:10px;color:#aaa;margin-top:1px">' + (isNok?'NOK':q+' un') + '</div>' +
         '</div>';
       }).join('') + '</div>'
@@ -5521,6 +5521,7 @@ function extrairTamMult(nomeRaw) {
 function normalizarVendedora(s) {
   return (s||'').trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
 }
+function _labelTam(t) { return t === 'Único' ? 'Unidade' : t; }
 const semAcento = normalizarVendedora; // alias — mesma lógica, usada nos filtros pra bater com o dado já normalizado
 
 function processarCSVUSA(input) {
