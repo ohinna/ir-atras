@@ -4738,7 +4738,7 @@ function _fbListenCore() {
           localStorage.setItem('app_subtitulo', data.subtitulo);
         }
       }
-      ['br','usa'].forEach(tipo => {
+      ['br','usa','usa2'].forEach(tipo => {
         const key = 'mesLabel_' + tipo;
         if (data[key]) {
           const el = document.getElementById('label-mes-' + tipo);
@@ -4748,6 +4748,15 @@ function _fbListenCore() {
           }
         }
       });
+      if (data.usa2Ativo !== undefined) {
+        localStorage.setItem('sync_usa2Ativo', data.usa2Ativo ? '1' : '0');
+        const chip = document.getElementById('chip-origem-usa2');
+        const secao = document.getElementById('secao-usa2');
+        const chkUsa2 = document.getElementById('toggle-usa2');
+        if (chip) chip.style.display = data.usa2Ativo ? '' : 'none';
+        if (secao) secao.style.display = data.usa2Ativo ? '' : 'none';
+        if (chkUsa2) chkUsa2.checked = !!data.usa2Ativo;
+      }
       if (data.meta_vendedoras) {
         localStorage.setItem('meta_vendedoras', data.meta_vendedoras);
         renderMeta();
@@ -5839,7 +5848,7 @@ function processarCSVUSA(input, origemTag) {
           return _isBazaarUSA ? Math.round(v / 0.8 * 100) / 100 : v;
         })();
         const key = base.toLowerCase().trim() + '||' + (row[iMarca]?.trim()||'').toLowerCase();
-        if (!groups[key]) groups[key] = {n:base,m:row[iMarca]?.trim()||'',c:row[iCat]?.trim()||'',cor:(iCor>-1?row[iCor]?.trim():'')||'',vs:[],v:valUnit,q:0,_vals:[],f:resolverFoto(row[iFoto]?.trim()||''),_fOriginal:row[iFoto]?.trim()||'',tams:{},tams_por_vend:{},est_eua:false,est_br:false,origem:'usa'};
+        if (!groups[key]) groups[key] = {n:base,m:row[iMarca]?.trim()||'',c:row[iCat]?.trim()||'',cor:(iCor>-1?row[iCor]?.trim():'')||'',vs:[],v:valUnit,q:0,_vals:[],f:resolverFoto(row[iFoto]?.trim()||''),_fOriginal:row[iFoto]?.trim()||'',tams:{},tams_por_vend:{},est_eua:false,est_br:false,origem:origemTag};
         const g = groups[key];
         if (isEstEua) g.est_eua = true;
         if (isEstBr)  g.est_br  = true;
@@ -5915,6 +5924,7 @@ function processarCSVUSA2(input) {
 // Liga/desliga a terceira fonte (USA extra). Ao desligar, apaga os produtos dela do catálogo.
 function toggleUsa2Ativo(ligado) {
   localStorage.setItem('sync_usa2Ativo', ligado ? '1' : '0');
+  if (window._db) window._db.collection('config').doc('app').set({usa2Ativo: ligado}, {merge:true});
   const chip = document.getElementById('chip-origem-usa2');
   const secao = document.getElementById('secao-usa2');
   if (chip) chip.style.display = ligado ? '' : 'none';
