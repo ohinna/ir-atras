@@ -1416,6 +1416,7 @@ function renderOrdensDaVendedora(ordensTodas, grid, empty) {
     if (su.includes('INCOMPLETA')) return '#dc2626';
     if (su.includes('PICK UP')) return '#0f6b52';
     if (su.includes('AGUARDANDO')) return '#d97706';
+    if (su.includes('CANCELADO')) return '#dc2626';
     if (su.includes('OLHO')) return '#6366f1';
     return 'var(--text4)';
   };
@@ -2714,7 +2715,7 @@ function exportarOrdemOnlinePDF(ordemNum) {
   const rows = o.itens.map((it, i) => {
     const entregue = it.conf === 'ok';
     const statusTxt = entregue ? 'Entregue' : (it.status || 'Aguardando entrega');
-    const statusCor = entregue ? '#0f6b52' : '#d97706';
+    const statusCor = entregue ? '#0f6b52' : (statusTxt.toUpperCase().includes('CANCELADO') ? '#dc2626' : '#d97706');
     const fotoImg = it.foto ? `<img src="${it.foto}" style="width:50px;height:50px;object-fit:cover;border-radius:6px">` : '';
     const tag = it.sobra ? ` <span style="background:${it.tagColor||'#9333ea'};color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:5px;vertical-align:middle">${it.tagLabel||it.mesRef||'SOBRA'}</span>` : '';
     return `<tr>
@@ -2775,7 +2776,7 @@ function _montarRelatorioAtrasadosVendedora(vend) {
           <td>${fotoImg}</td>
           <td><strong>${it.item}</strong>${tag}<br><span style="font-size:11px;color:#888">${it.marca||''}${it.cor?' · '+it.cor:''}${it.tam?' · '+it.tam:''}</span></td>
           <td>R$ ${(it.valor||0).toFixed(2).replace('.',',')}</td>
-          <td style="font-size:11px;${atrasado?'color:#dc2626;font-weight:700':''}">${it.dataCompra ? 'Compra: '+it.dataCompra+'<br>' : ''}${it.dataChegada ? 'Chegada: '+it.dataChegada : 'Sem data de chegada'}</td>
+          <td style="font-size:11px;${atrasado?'color:#dc2626;font-weight:700':''}">${(it.status||'').toUpperCase().includes('CANCELADO') ? '<span style="color:#dc2626;font-weight:700">CANCELADO</span><br>' : ''}${it.dataCompra ? 'Compra: '+it.dataCompra+'<br>' : ''}${it.dataChegada ? 'Chegada: '+it.dataChegada : 'Sem data de chegada'}</td>
         </tr>`;
       }).join('');
       return `<div style="margin-bottom:14px">
@@ -5445,6 +5446,7 @@ function processarCSVPrazos(input, mesRef) {
       // ordem (ou uma ordem solta, se a ordem em si também não existir), com uma etiqueta
       // indicando de onde ela vem (SOBRAS = mês; outro status = o próprio status, tipo "EST EUA").
       const conf = entregueTxt === 'ENTREGUE' ? 'ok' : 'online';
+      const statusItem = entregueTxt === 'CANCELADO' ? 'CANCELADO' : 'AGUARDANDO ENTREGA';
       const ehSobraDeVerdade = status === 'SOBRAS';
       if (!sobrasPorOrdem[ordemNum]) sobrasPorOrdem[ordemNum] = { ordem: ordemNum, vendedora: normalizarVendedora(row[iVend]), itens: [] };
       sobrasPorOrdem[ordemNum].itens.push({
@@ -5456,7 +5458,7 @@ function processarCSVPrazos(input, mesRef) {
         foto: resolverFoto(row[iFoto]?.trim()||''),
         dataCompra: iDataCompra>-1 ? (row[iDataCompra]||'').trim() : '',
         dataChegada: iDataEntrega>-1 ? (row[iDataEntrega]||'').trim() : '',
-        status: 'AGUARDANDO ENTREGA',
+        status: statusItem,
         loja: iLoja>-1 ? (row[iLoja]||'').trim() : '',
         conf,
         sobra: true,
