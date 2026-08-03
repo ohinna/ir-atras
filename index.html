@@ -6281,6 +6281,7 @@ function processarCSVBR(input) {
       const iTam=h.indexOf('TAM'), iCor=h.indexOf('COR');
       // Segunda coluna COD (lastIndexOf) tem o valor real do item IA
       const iCodVal = h.lastIndexOf('COD');
+      const iBox = h.indexOf('BOX');
       const iOrdem=h.indexOf('ORDEM'), iDataCompra=h.indexOf('DATA COMPRA'), iDataChegada=h.indexOf('DATA CHEGADA'), iStatusOrdem=h.indexOf('STATUS'), iLoja=h.indexOf('LOJA');
 
       const pv = (v) => {
@@ -6290,8 +6291,10 @@ function processarCSVBR(input) {
         const n = parseFloat(s); return isNaN(n) ? 0 : n;
       };
       
-      // Pega o valor do item: prefere COD (segunda coluna), cai para VALOR se vazio
+      // Pega o valor do item: prefere BOX, depois COD (segunda coluna), cai para VALOR se vazio
       const pvBR = (row) => {
+        const vBox = iBox > -1 ? pv(row[iBox]) : 0;
+        if (vBox > 0) return vBox;
         const vCod = iCodVal > -1 ? pv(row[iCodVal]) : 0;
         if (vCod > 0) return vCod;
         return pv(row[iVal]);
