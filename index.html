@@ -5576,8 +5576,8 @@ function extrairTamMult(nomeRaw) {
   var m3 = nome.match(/\s*grau\s+([\d.,]+)\s*$/i);
   if (m3) return {base: nome.slice(0,m3.index).trim(), tam: 'Grau ' + m3[1], mult: 1};
   // Cor no final do nome (ex: "cor 29N", "cor 24N", "cor 33W", "cor 2C")
-  var m4 = nome.match(/\s+cor\s+([\w.]+)\s*$/i);
-  if (m4) return {base: nome.slice(0,m4.index).trim(), tam: 'Cor ' + m4[1].toUpperCase(), mult: 1};
+  var m4 = nome.match(/\s+cor\s+(.+)$/i);
+  if (m4) return {base: nome.slice(0,m4.index).trim(), tam: 'Cor ' + m4[1].trim().toUpperCase(), mult: 1};
   return {base: nome, tam: null, mult: 1};
 }
 
