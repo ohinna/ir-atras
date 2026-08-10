@@ -287,6 +287,7 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
     <button class="chip" id="status-eua" onclick="setStatus('eua',this)">🇺🇸 USA</button>
     <button class="chip" id="status-br" onclick="setStatus('br',this)">🇧🇷 BR</button>
     <button class="chip" id="status-online" onclick="setStatus('online',this)">🌐 Online</button>
+    <button class="chip" id="status-korea" onclick="setStatus('korea',this)">🇰🇷 Korea</button>
   </div>
   <div class="filter-row" id="marca-row">
     <button class="chip active" id="chip-all-marca" onclick="setMarca('',this)">Todas marcas</button>
@@ -743,7 +744,7 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
 
     </div>
     <div style="display:flex;gap:8px;margin-bottom:16px">
-      <div style="flex:1;background:var(--bg2);border:0.5px solid var(--border);border-radius:12px;padding:10px 14px;text-align:center">
+      <div id="modal-vend-wrap" style="flex:1;background:var(--bg2);border:0.5px solid var(--border);border-radius:12px;padding:10px 14px;text-align:center">
         <div style="font-size:9px;color:var(--text4);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:3px">Vendedora</div>
         <div id="modal-vend" style="font-size:12px;font-weight:600;color:var(--red);line-height:1.3"></div>
       </div>
@@ -1486,6 +1487,7 @@ function getFiltered() {
     if (fStatus === 'eua'    && !p.est_eua) return false;
     if (fStatus === 'br'     && !p.est_br) return false;
     if (fStatus === 'online' && !p.online) return false;
+    if (fStatus === 'korea'  && (((p.cor||'').trim().toLowerCase() !== 'korea') || p.nok)) return false;
     if (fOrigem && p.origem !== fOrigem) return false;
     if (q && !p.n.toLowerCase().includes(q) && !(p.m||'').toLowerCase().includes(q) && !(p.vs||[]).some(v=>v.toLowerCase().includes(q))) return false;
     if (minQty > 0 && (p.qty||p.q||0) < minQty) return false;
@@ -1667,7 +1669,7 @@ function renderGrid() {
             '</div>';
           }).join('') + '</div>' : ''}
         <div style="margin-top:2px;font-size:9px;color:#c4a898;display:flex;justify-content:space-between;align-items:center">
-          <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${(p.vs||[]).map(v=>v.charAt(0)+v.slice(1).toLowerCase()).join(', ')}</span>
+          <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${fStatus==='korea' ? '' : (p.vs||[]).map(v=>v.charAt(0)+v.slice(1).toLowerCase()).join(', ')}</span>
           ${unread>0 ? '<span style="flex-shrink:0;background:rgba(122,11,30,0.08);border:0.5px solid rgba(122,11,30,0.15);border-radius:8px;padding:1px 6px;color:var(--red);font-weight:600;display:inline-flex;align-items:center;gap:3px"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>'+unread+'</span>' : ''}
         </div>
       </div>
@@ -2182,6 +2184,8 @@ function openModal(id, focusComment=false) {
   const tamsEl = document.getElementById('modal-tams');
   if (tamsEl) { tamsEl.style.display = 'none'; }
   (document.getElementById('modal-vend')||{}).textContent = (p.vs||[]).map(v=>v.charAt(0)+v.slice(1).toLowerCase()).join(', ') || '—';
+  const vendWrap = document.getElementById('modal-vend-wrap');
+  if (vendWrap) vendWrap.style.display = fStatus === 'korea' ? 'none' : '';
   (document.getElementById('modal-marca')||{}).textContent = p.m || '—';
   // Cor
   const corWrap = document.getElementById('modal-cor-wrap');
