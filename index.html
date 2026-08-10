@@ -2192,7 +2192,8 @@ function openModal(id, focusComment=false) {
   const corEl = document.getElementById('modal-cor');
   if (corWrap && corEl) {
     const tamsJaSaoCor = p.tams && Object.keys(p.tams).some(t => /^cor /i.test(t));
-    if (p.cor && !tamsJaSaoCor) { corEl.textContent = p.cor; corWrap.style.display = ''; }
+    const corEhKorea = (p.cor||'').trim().toLowerCase() === 'korea';
+    if (p.cor && !tamsJaSaoCor && !corEhKorea) { corEl.textContent = p.cor; corWrap.style.display = ''; }
     else corWrap.style.display = 'none';
   }
 
