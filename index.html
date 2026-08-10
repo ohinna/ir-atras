@@ -2187,7 +2187,8 @@ function openModal(id, focusComment=false) {
   const corWrap = document.getElementById('modal-cor-wrap');
   const corEl = document.getElementById('modal-cor');
   if (corWrap && corEl) {
-    if (p.cor) { corEl.textContent = p.cor; corWrap.style.display = ''; }
+    const tamsJaSaoCor = p.tams && Object.keys(p.tams).some(t => /^cor /i.test(t));
+    if (p.cor && !tamsJaSaoCor) { corEl.textContent = p.cor; corWrap.style.display = ''; }
     else corWrap.style.display = 'none';
   }
 
