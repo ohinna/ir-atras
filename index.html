@@ -3552,14 +3552,37 @@ function renderModoNok() {
     </div>`;
   }).join('');
 
+  const agora = new Date();
+  const dataStr = agora.toLocaleDateString('pt-BR');
+  const horaStr = agora.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  const mesLabel = cfg.origem === 'usa' ? (localStorage.getItem('mes_label_usa')||'')
+    : cfg.origem === 'br' ? (localStorage.getItem('mes_label_br')||'')
+    : [localStorage.getItem('mes_label_usa'), localStorage.getItem('mes_label_br')].filter(Boolean).join(' / ');
+  const tituloCompleto = 'NOK — ' + vendLabel + (mesLabel ? ' — ' + mesLabel : '') + ' — ' + dataStr + ' ' + horaStr;
+  document.title = tituloCompleto;
+
   root.innerHTML = `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#141414;color:#fff;min-height:100vh">
     <div style="position:sticky;top:0;background:#1a1a1a;padding:16px;border-bottom:0.5px solid #2a2a2a;z-index:10">
-      <div style="font-size:16px;font-weight:700;color:#dc2626">Marcar NOK — ${vendLabel}</div>
+      <div style="font-size:15px;font-weight:700;color:#dc2626">Marcar NOK — ${vendLabel}</div>
+      <div style="font-size:11px;color:#888;margin-top:2px">${[mesLabel, dataStr + ' ' + horaStr].filter(Boolean).join(' · ')}</div>
       <div style="font-size:11px;color:#888;margin-top:2px">${prods.length} itens · toque no quadrado pra marcar/desmarcar</div>
+      <button onclick="baixarPdfModoNok()" style="margin-top:10px;width:100%;padding:10px;border-radius:10px;background:#2a2a2a;border:0.5px solid #444;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📥 Baixar PDF</button>
     </div>
-    ${itensHtml || '<div style="padding:24px;text-align:center;color:#888">Nenhum item encontrado.</div>'}
+    <div id="modo-nok-lista">
+      ${itensHtml || '<div style="padding:24px;text-align:center;color:#888">Nenhum item encontrado.</div>'}
+    </div>
     <div style="height:40px"></div>
   </div>`;
+}
+
+async function baixarPdfModoNok() {
+  const el = document.getElementById('modo-nok-lista');
+  if (!el || !window.html2canvas || !window.jspdf) return;
+  const canvas = await html2canvas(el, { backgroundColor: '#141414', scale: 2, useCORS: true });
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF({ unit: 'px', format: [canvas.width/2, canvas.height/2] });
+  pdf.addImage(canvas.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, canvas.width/2, canvas.height/2);
+  pdf.save((document.title || 'NOK') + '.pdf');
 }
 
 function toggleTamNokSimples(id, tam) {
