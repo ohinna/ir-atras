@@ -327,6 +327,15 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
         <div id="pdf-vend-chips" style="display:flex;flex-wrap:wrap;gap:6px"></div>
         <input type="hidden" id="pdf-vend" value="">
       </div>
+      <div style="margin-bottom:10px">
+        <div style="font-size:10px;font-weight:600;color:#b08070;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px">Origem</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          <button class="chip active" id="pdf-origem-todas" onclick="setPdfOrigem('',this)" style="background:#7a0b1e;color:#fff;border:none;border-radius:20px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Todas</button>
+          <button class="chip" id="pdf-origem-br" onclick="setPdfOrigem('br',this)" style="background:#fdf8f4;color:#1a1a1a;border:0.5px solid #ede0d4;border-radius:20px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">🇧🇷 BR</button>
+          <button class="chip" id="pdf-origem-usa" onclick="setPdfOrigem('usa',this)" style="background:#fdf8f4;color:#1a1a1a;border:0.5px solid #ede0d4;border-radius:20px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">🇺🇸 EUA</button>
+        </div>
+        <input type="hidden" id="pdf-origem" value="">
+      </div>
       <div style="margin-bottom:14px">
         <div style="font-size:10px;font-weight:600;color:#b08070;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px">Marca</div>
         <div style="position:relative;margin-bottom:6px">
@@ -4948,13 +4957,15 @@ function filtrarPdfMarcas(q) {
   });
 }
 
-function construirHtmlFaltantes(vendFiltroRaw) {
+function construirHtmlFaltantes(vendFiltroRaw, origemFiltro) {
   const vendFiltros = vendFiltroRaw ? vendFiltroRaw.split(',').filter(Boolean) : [];
   const vendFiltro = vendFiltros.length === 1 ? vendFiltros[0] : vendFiltroRaw;
 
   let prods = PRODUTOS.filter(p => !p.nok);
   if (vendFiltros.length > 0) prods = prods.filter(p => (p.vs||[]).some(v => vendFiltros.includes(v)));
   else if (vendFiltro && !vendFiltros.length) prods = prods.filter(p => (p.vs||[]).some(v => v === vendFiltro));
+  if (origemFiltro === 'usa') prods = prods.filter(p => (p.origem||'usa') === 'usa');
+  else if (origemFiltro === 'br') prods = prods.filter(p => p.origem === 'br');
   if (window._pdfMarcasSel && window._pdfMarcasSel.size > 0) {
     prods = prods.filter(p => window._pdfMarcasSel.has((p.m||'').trim()));
   }
@@ -5043,11 +5054,17 @@ function construirHtmlFaltantes(vendFiltroRaw) {
           const tamsStr = p.tams && Object.keys(p.tams).length > 0
             ? Object.entries(p.tams).filter(([t])=>!(p.nokTams||{})[t])
                 .map(([t,q])=>`<span style="display:inline-block;background:#f5ede8;border-radius:3px;padding:1px 4px;font-size:9px;margin-right:2px">${t}: ${q}</span>`).join('') : '';
+          const fotoImg = p.f ? `<img src="${p.f}" crossorigin="anonymous" style="width:36px;height:36px;object-fit:cover;border-radius:5px;vertical-align:middle;margin-right:8px">` : '';
           return `<tr style="border-bottom:0.5px solid #f5ede8">
             <td style="padding:6px 12px;font-size:11px;color:#1a1a1a">
-              <span style="font-weight:500">${p.n}</span>
-              ${tamsStr ? ' <span>'+tamsStr+'</span>' : ''}
-              ${p.cor ? '<span style="font-size:9px;color:#b08070;margin-left:6px">'+p.cor+'</span>' : ''}
+              <div style="display:flex;align-items:center">
+                ${fotoImg}
+                <span>
+                  <span style="font-weight:500">${p.n}</span>
+                  ${tamsStr ? ' <span>'+tamsStr+'</span>' : ''}
+                  ${p.cor ? '<span style="font-size:9px;color:#b08070;margin-left:6px">'+p.cor+'</span>' : ''}
+                </span>
+              </div>
             </td>
             <td style="padding:6px 12px;font-size:11px;font-weight:600;color:${cor};text-align:right;white-space:nowrap">
               ${fmt(p.vmin||p.vt||p.v)}
@@ -5156,9 +5173,18 @@ function construirHtmlFaltantes(vendFiltroRaw) {
   return html;
 }
 
+function setPdfOrigem(origem, btn) {
+  document.getElementById('pdf-origem').value = origem;
+  document.querySelectorAll('#pdf-origem-todas, #pdf-origem-br, #pdf-origem-usa').forEach(c => {
+    c.style.background = '#fdf8f4'; c.style.color = '#1a1a1a'; c.style.border = '0.5px solid #ede0d4';
+  });
+  btn.style.background = '#7a0b1e'; btn.style.color = '#fff'; btn.style.border = 'none';
+}
+
 function gerarPDF() {
   const vendFiltroRaw = document.getElementById('pdf-vend')?.value || '';
-  const html = construirHtmlFaltantes(vendFiltroRaw);
+  const origemFiltro = document.getElementById('pdf-origem')?.value || '';
+  const html = construirHtmlFaltantes(vendFiltroRaw, origemFiltro);
   const blob = new Blob([html], {type:'text/html'});
   window.open(URL.createObjectURL(blob), '_blank');
 }
