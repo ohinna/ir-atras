@@ -350,7 +350,9 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
         </div>
         <div id="pdf-marcas-chips" style="display:flex;flex-wrap:wrap;gap:5px;max-height:120px;overflow-y:auto"></div>
       </div>
-      <button onclick="gerarPDF()" style="width:100%;padding:12px;border-radius:12px;background:#7a0b1e;border:none;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">↓ Gerar PDF</button>
+      <button onclick="gerarPDF()" style="width:100%;padding:12px;border-radius:12px;background:#7a0b1e;border:none;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:8px">📄 PDF Padrão</button>
+      <button onclick="gerarLinkNok()" style="width:100%;padding:12px;border-radius:12px;background:#2a2a2a;border:0.5px solid #dc2626;color:#dc2626;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">✕ Gerar Link pra NOK</button>
+      <div id="link-nok-status" style="font-size:11px;color:#b08070;margin-top:8px;word-break:break-all"></div>
     </div>
 
     <div class="upload-card">
@@ -809,6 +811,19 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
 // Captura erros de JS silenciosamente (sem mostrar pra todo mundo) — fica guardado em memória
 // e é exibido de forma discreta no final da aba Dados, pra diagnóstico quando precisar.
 window._errosCapturados = [];
+
+// Link simplificado só pra marcar NOK — ex: ?nokview=1&vend=FABIANA&origem=usa&marcas=A,B
+(function() {
+  const params = new URLSearchParams(location.search);
+  if (params.get('nokview') === '1') {
+    window._modoNok = {
+      vend: params.get('vend') || '',
+      origem: params.get('origem') || '',
+      marcas: (params.get('marcas') || '').split(',').filter(Boolean),
+    };
+  }
+})();
+
 window.addEventListener('error', function(e) {
   try {
     const linha = '⚠️ ' + (e.message||'erro') + ' — ' + (e.filename||'').split('/').pop() + ':' + e.lineno + ':' + e.colno;
@@ -930,6 +945,37 @@ const IDLE_TIMEOUT = 5 * 60 * 1000; // 5 minutos
 
 // ── Usuário logado ──────────────────────────
 let _usuarioLogado = null;
+
+// Lê filtros vindos por link (ex: ?vend=FABIANA&marca=TIRTIR&origem=usa) e já aplica na tela,
+// pra facilitar mandar um link pronto pra uma vendedora conferir só os itens dela.
+function aplicarFiltrosDaURL() {
+  const params = new URLSearchParams(location.search);
+  const vend = params.get('vend');
+  const marca = params.get('marca');
+  const origem = params.get('origem');
+  if (!vend && !marca && !origem) return;
+
+  if (vend) {
+    fVends = new Set(vend.split(',').map(v => semAcento(v)).filter(Boolean));
+    if (fVends.size === 0) fVends = new Set(['TODAS']);
+  }
+  if (marca) {
+    fMarcas = new Set(marca.split(',').map(m => m.trim()).filter(Boolean));
+  }
+  if (origem) fOrigem = origem;
+
+  document.querySelectorAll('#vend-row .chip').forEach(c => {
+    c.classList.toggle('active', fVends.has('TODAS') ? c.id === 'chip-todas' : fVends.has(semAcento(c.textContent)));
+  });
+  document.querySelectorAll('#marca-row .chip:not(#chip-all-marca)').forEach(c => {
+    c.classList.toggle('active', fMarcas.has(c.textContent.trim()));
+  });
+  if (origem) {
+    document.querySelectorAll('#chip-origem-todos, #chip-origem-br, #chip-origem-usa, #chip-origem-usa2').forEach(c => c.classList.remove('active'));
+    (document.getElementById('chip-origem-' + origem) || {}).classList?.add('active');
+  }
+  salvarFiltros();
+}
 
 function getNomeUsuario() {
   if (_usuarioLogado && _usuarioLogado.displayName) return _usuarioLogado.displayName;
@@ -1639,7 +1685,7 @@ function renderGrid() {
     return `<div class="card ${p.nok?'is-nok':''}" id="card-${p._id}">
       <div class="card-img" onclick="openModal(${p._id})">
         ${img}
-        ${p.nok ? '<div class="nok-overlay show"><div class="nok-bg"></div><div class="nok-content"><div class="nok-label">✕ NOK</div>' + (p.nokWho ? '<div style="font-size:9px;color:rgba(255,255,255,0.75);margin-top:2px">'+p.nokWho+'</div>' : '') + '</div></div>' : ''}
+        ${p.nok ? '<div class="nok-overlay show"><div class="nok-bg"></div><div class="nok-content"><div class="nok-label">✕ NOK</div>' + (p.nokWho ? '<div style="font-size:9px;color:rgba(255,255,255,0.75);margin-top:2px">'+p.nokWho+((p.nokHistory&&p.nokHistory.length)?' · '+p.nokHistory[p.nokHistory.length-1].time:'')+'</div>' : '') + '</div></div>' : ''}
         ${(() => {
           const ec = p.em_compra;
           if (!ec) return '';
@@ -2948,7 +2994,7 @@ function exportarNokPDF() {
             <td style="padding:6px 12px;font-size:11px;color:#1a1a1a">
               <span style="font-weight:500">${p.n}</span>
               ${tams ? ' <span>'+tams+'</span>' : ''}
-              <br><span style="font-size:9px;color:#b08070">NOK por: ${p.nokWho||'—'}</span>
+              <br><span style="font-size:9px;color:#b08070">NOK por: ${p.nokWho||'—'}${(p.nokHistory&&p.nokHistory.length)?' · '+p.nokHistory[p.nokHistory.length-1].time:''}</span>
             </td>
             <td style="padding:6px 12px;font-size:11px;font-weight:600;color:${cor};text-align:right;white-space:nowrap">
               ${fmt(p.vt||p.v)}
@@ -3037,7 +3083,7 @@ function exportarNokWhatsApp() {
       lines.push(`Qtd: ${qtd} un`);
     }
     if ((p.vs||[]).length) lines.push(`Vend: ${p.vs.map(v=>v.charAt(0)+v.slice(1).toLowerCase()).join(', ')}`);
-    if (p.nokWho) lines.push(`NOK por: ${p.nokWho}`);
+    if (p.nokWho) lines.push(`NOK por: ${p.nokWho}${(p.nokHistory&&p.nokHistory.length)?' · '+p.nokHistory[p.nokHistory.length-1].time:''}`);
     lines.push('');
   });
   lines.push(`Total: ${noks.length} item(s) NOK`);
@@ -3437,6 +3483,74 @@ function atualizarBotoesModal(p) {
   if (btnEua) { btnEua.style.background = p.est_eua ? '#0a6648' : '#0f6b52'; btnEua.textContent = p.est_eua ? '🇺🇸 Est USA ✓' : '🇺🇸 Est USA'; }
   const btnBr = document.getElementById('btn-est-br');
   if (btnBr) { btnBr.style.background = p.est_br ? '#7a4615' : '#783c18'; btnBr.textContent = p.est_br ? '🇧🇷 Est BR ✓' : '🇧🇷 Est BR'; }
+}
+
+// Tela simplificada (sem o resto do app) só pra marcar NOK — usada quando o link
+// tem ?nokview=1 na URL. Filtra pelos mesmos critérios da tela "Gerar PDF".
+function renderModoNok() {
+  if (!window._modoNok) return;
+  const cfg = window._modoNok;
+  let root = document.getElementById('modo-nok-root');
+  if (!root) {
+    document.body.innerHTML = '<div id="modo-nok-root"></div>';
+    root = document.getElementById('modo-nok-root');
+  }
+
+  let prods = PRODUTOS.slice();
+  if (cfg.vend) prods = prods.filter(p => (p.vs||[]).some(v => semAcento(v) === semAcento(cfg.vend)));
+  if (cfg.origem === 'usa') prods = prods.filter(p => (p.origem||'usa') === 'usa');
+  else if (cfg.origem === 'br') prods = prods.filter(p => p.origem === 'br');
+  if (cfg.marcas.length > 0) prods = prods.filter(p => cfg.marcas.includes((p.m||'').trim()));
+
+  prods.sort((a,b) => {
+    const mc = (a.m||'').localeCompare(b.m||'','pt-BR');
+    return mc !== 0 ? mc : a.n.localeCompare(b.n,'pt-BR');
+  });
+
+  const vendLabel = cfg.vend ? cfg.vend.charAt(0)+cfg.vend.slice(1).toLowerCase() : 'Todas';
+
+  const itensHtml = prods.map(p => {
+    const tamsStr = p.tams && Object.keys(p.tams).length > 0
+      ? Object.entries(p.tams).map(([t,q])=>`<span style="display:inline-block;background:#2a2a2a;border-radius:4px;padding:2px 6px;font-size:10px;margin-right:3px;color:#ccc">${t}: ${q}</span>`).join('') : '';
+    const marcado = !!p.nok;
+    const infoLateral = marcado ? `<div style="font-size:10px;color:#dc2626;text-align:right;white-space:nowrap;margin-left:10px">✕ NOK<br>${p.nokWho||''}<br>${(p.nokHistory||[]).slice(-1)[0]?.time||''}</div>` : '';
+    return `<div style="display:flex;align-items:center;gap:10px;padding:12px;border-bottom:0.5px solid #2a2a2a;${marcado?'opacity:0.55':''}">
+      ${p.f ? `<img src="${p.f}" style="width:48px;height:48px;object-fit:cover;border-radius:8px;flex-shrink:0">` : '<div style="width:48px;height:48px;background:#2a2a2a;border-radius:8px;flex-shrink:0"></div>'}
+      <div style="flex:1;min-width:0">
+        <div style="font-size:11px;color:#888">${p.m||''}</div>
+        <div style="font-size:13px;font-weight:600;color:#fff;${marcado?'text-decoration:line-through':''}">${p.n}</div>
+        ${tamsStr ? '<div style="margin-top:3px">'+tamsStr+'</div>' : ''}
+      </div>
+      ${infoLateral}
+      <input type="checkbox" onchange="toggleNokSimples(${p._id})" ${marcado?'checked':''} style="width:26px;height:26px;flex-shrink:0;accent-color:#dc2626">
+    </div>`;
+  }).join('');
+
+  root.innerHTML = `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#141414;color:#fff;min-height:100vh">
+    <div style="position:sticky;top:0;background:#1a1a1a;padding:16px;border-bottom:0.5px solid #2a2a2a;z-index:10">
+      <div style="font-size:16px;font-weight:700;color:#dc2626">Marcar NOK — ${vendLabel}</div>
+      <div style="font-size:11px;color:#888;margin-top:2px">${prods.length} itens · toque no quadrado pra marcar/desmarcar</div>
+    </div>
+    ${itensHtml || '<div style="padding:24px;text-align:center;color:#888">Nenhum item encontrado.</div>'}
+    <div style="height:40px"></div>
+  </div>`;
+}
+
+function toggleNokSimples(id) {
+  const p = PRODUTOS.find(x => x._id === id);
+  if (!p) return;
+  p.nok = !p.nok;
+  const _quem = getNomeUsuario();
+  p.nokWho = p.nok ? _quem : '';
+  if (p.nok) {
+    p.nokHistory = p.nokHistory || [];
+    p.nokHistory.push({ who: _quem, time: new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) });
+  }
+  const _tamsProduto = Object.keys(p.tams||{});
+  const _tamanhoTxt = _tamsProduto.length === 1 ? _tamsProduto[0] : _tamsProduto.join(', ');
+  enviarNokParaPlanilha(p, _tamanhoTxt, p.nok ? 'marcou' : 'desmarcou', _quem);
+  fbSave(id);
+  renderModoNok();
 }
 
 function toggleNok() {
@@ -4594,6 +4708,7 @@ let _pendingSaves = new Set();
 let _fbRenderTimer = null;
 
 function fbRenderDebounced() {
+  if (window._modoNok) { renderModoNok(); return; }
   if (_fbRenderTimer) clearTimeout(_fbRenderTimer);
   _fbRenderTimer = setTimeout(() => {
     // Don't re-render if user is actively typing in an input or textarea
@@ -5179,6 +5294,28 @@ function setPdfOrigem(origem, btn) {
     c.style.background = '#fdf8f4'; c.style.color = '#1a1a1a'; c.style.border = '0.5px solid #ede0d4';
   });
   btn.style.background = '#7a0b1e'; btn.style.color = '#fff'; btn.style.border = 'none';
+}
+
+function gerarLinkNok() {
+  const vendFiltroRaw = document.getElementById('pdf-vend')?.value || '';
+  const origemFiltro = document.getElementById('pdf-origem')?.value || '';
+  const marcas = window._pdfMarcasSel && window._pdfMarcasSel.size > 0 ? [...window._pdfMarcasSel].join(',') : '';
+  const params = new URLSearchParams();
+  params.set('nokview', '1');
+  if (vendFiltroRaw) params.set('vend', vendFiltroRaw.split(',')[0]);
+  if (origemFiltro) params.set('origem', origemFiltro);
+  if (marcas) params.set('marcas', marcas);
+  const url = location.origin + location.pathname + '?' + params.toString();
+  const statusEl = document.getElementById('link-nok-status');
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(url).then(() => {
+      if (statusEl) statusEl.textContent = '✅ Link copiado! ' + url;
+    }).catch(() => {
+      if (statusEl) statusEl.textContent = '🔗 ' + url;
+    });
+  } else if (statusEl) {
+    statusEl.textContent = '🔗 ' + url;
+  }
 }
 
 function gerarPDF() {
@@ -6719,6 +6856,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   renderGrid();
   restaurarFiltros();
+  aplicarFiltrosDaURL();
   renderGrid();
   renderMeta();
   fbListen();
