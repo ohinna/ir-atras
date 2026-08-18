@@ -4703,12 +4703,9 @@ function renderMarcasBloco(bloco, titulo, marcas, turnoLabel, vendNome) {
 }
 
 function resolverFotoMeta(raw) {
-  if (!raw) return '';
-  if (raw.startsWith('http')) return raw;
-  try {
-    const fm = (window._fotoMap && Object.keys(window._fotoMap).length) ? window._fotoMap : JSON.parse(localStorage.getItem('foto_map')||'{}');
-    return fm[raw] || fm[raw.replace(/\.[^.]+$/,'')] || '';
-  } catch(e) { return ''; }
+  // Usa a mesma lógica robusta da resolverFoto: procura no mapa USA e no BR,
+  // com/sem extensão e maiúsculo/minúsculo, e sabe lidar com link do Drive.
+  return resolverFoto(raw);
 }
 
 function abrirPopupMetaEl(el) {
