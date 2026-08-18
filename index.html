@@ -1784,6 +1784,7 @@ function enviarComentarioRapido(id) {
   });
   fbSave(id);
   registrarAtividade('comentario', id, getNomeUsuario(), new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}));
+  enviarComentarioParaPlanilha(p, txt, getNomeUsuario());
   input.value = '';
   renderGrid();
   updateChatBadge();
@@ -1843,6 +1844,36 @@ function enviarNokParaPlanilha(p, tamanho, acao, quem) {
     })
   }).then(() => logLinha('fetch() concluído sem erro de rede (modo no-cors não confirma se o Google recebeu)'))
     .catch((err) => logLinha('ERRO no fetch(): ' + err.message)); // se falhar, não trava o app — é só um aviso extra
+}
+
+// Manda cada comentário novo pra uma planilha de controle (com a foto do item junto).
+// A URL só funciona depois que a planilha for criada e o Apps Script implantado —
+// até lá, fica registrado no log mas não trava o app.
+function enviarComentarioParaPlanilha(p, texto, quem) {
+  const URL_APPS_SCRIPT_COMENTARIOS = 'COLE_AQUI_DEPOIS';
+  window._comentarioWebhookLog = window._comentarioWebhookLog || [];
+  const logLinha = (msg) => {
+    window._comentarioWebhookLog.push(new Date().toLocaleTimeString('pt-BR') + ' — ' + msg);
+    if (window._comentarioWebhookLog.length > 20) window._comentarioWebhookLog.shift();
+  };
+  logLinha('Chamada iniciada: ' + (p.n||'?'));
+  if (!URL_APPS_SCRIPT_COMENTARIOS || URL_APPS_SCRIPT_COMENTARIOS.startsWith('COLE_AQUI')) { logLinha('ABORTOU: URL não configurada ainda'); return; }
+  const vend = (p.vs||[]).map(v=>v.charAt(0)+v.slice(1).toLowerCase()).join(', ');
+  fetch(URL_APPS_SCRIPT_COMENTARIOS, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: {'Content-Type': 'text/plain'},
+    body: JSON.stringify({
+      produto: p.n || '',
+      marca: p.m || '',
+      foto: p.f || '',
+      vendedora: vend,
+      comentario: texto || '',
+      quemComentou: quem || getNomeUsuario(),
+      quando: new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})
+    })
+  }).then(() => logLinha('fetch() concluído sem erro de rede'))
+    .catch((err) => logLinha('ERRO no fetch(): ' + err.message));
 }
 
 function resetCat() {
@@ -3655,8 +3686,20 @@ function renderModalComments(p) {
     div.style.position = 'relative';
     div.innerHTML =
       '<div class="comment-who">' + (c.who||'Anônimo') + '</div>' +
-      '<div class="comment-text" style="padding-right:20px">' + (c.text||c.msg||'') + '</div>' +
+      '<div class="comment-text" style="padding-right:40px">' + (c.text||c.msg||'') + '</div>' +
       '<div class="comment-time">' + (c.time||'') + '</div>';
+    const btnCopiar = document.createElement('button');
+    btnCopiar.textContent = '⧉';
+    btnCopiar.title = 'Copiar comentário';
+    btnCopiar.style.cssText = 'position:absolute;top:6px;right:26px;background:none;border:none;color:#c4a898;font-size:13px;cursor:pointer;padding:0;line-height:1';
+    btnCopiar.addEventListener('click', () => {
+      const texto = c.text || c.msg || '';
+      navigator.clipboard?.writeText(texto).then(() => {
+        btnCopiar.textContent = '✓';
+        setTimeout(() => { btnCopiar.textContent = '⧉'; }, 1200);
+      });
+    });
+    div.appendChild(btnCopiar);
     const btn = document.createElement('button');
     btn.textContent = '✕';
     btn.style.cssText = 'position:absolute;top:6px;right:6px;background:none;border:none;color:#f5c4c4;font-size:13px;cursor:pointer;padding:0;line-height:1';
@@ -3726,6 +3769,7 @@ function sendComment() {
   const time = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
   p.comments = Array.isArray(p.comments) ? p.comments : [];
   p.comments.push({who, text, time, ts: Date.now()});
+  enviarComentarioParaPlanilha(p, text, who);
   inp.value = '';
   fbSave(modalId);
   renderModalComments(p);
