@@ -426,6 +426,15 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
       </div>
     </div>
     <div class="upload-card">
+      <div class="upload-title">💬 Textos rápidos pra comentários</div>
+      <div class="upload-sub">Aparecem como botões prontos dentro do produto, na hora de comentar.</div>
+      <div id="textos-rapidos-config-list" style="margin-bottom:10px"></div>
+      <div style="display:flex;gap:8px">
+        <input id="novo-texto-rapido" type="text" placeholder="ex: Enviar para Ingrid localizar" style="flex:1;padding:8px 12px;border-radius:10px;border:0.5px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;font-family:inherit" onkeydown="if(event.key==='Enter')adicionarTextoRapido()">
+        <button onclick="adicionarTextoRapido()" style="padding:8px 14px;border-radius:10px;background:var(--red);border:none;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">Adicionar</button>
+      </div>
+    </div>
+    <div class="upload-card">
       <div class="upload-title">🇧🇷 Importar Planilha BR</div>
       <div class="upload-sub">Importe o CSV da planilha BR (itens marcados como "IA" — Ir Atrás) para atualizar os produtos dessa origem.</div>
       <div style="margin-bottom:10px">
@@ -766,6 +775,7 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
     </div>
     <div class="modal-section">Comentários</div>
     <div id="modal-comments"></div>
+    <div id="modal-textos-rapidos" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px"></div>
     <div class="comment-input-wrap">
       <input class="comment-input" id="comment-input" placeholder="Escrever comentário..." type="text" onkeydown="if(event.key==='Enter')sendComment()">
       <button class="comment-send" onclick="sendComment()">➤</button>
@@ -2315,6 +2325,7 @@ function openModal(id, focusComment=false) {
   const hist = (p.compraHistory||[]).slice(-3).reverse();
   compraHistEl.innerHTML = hist.length ? hist.map(h=>`<span style="margin-right:8px">🛒 <b>${h.who}</b> ${h.action} em ${h.time}</span>`).join('<br>') : '';
   renderModalComments(p);
+  renderTextosRapidos();
   } catch(e) {
     console.error('openModal error:', e.message, e.stack);
   }
@@ -3749,6 +3760,55 @@ function notificarSeNovo(prodId, prevLen) {
   });
 }
 
+function renderTextosRapidos() {
+  const wrap = document.getElementById('modal-textos-rapidos');
+  if (!wrap) return;
+  const textos = (window._textosRapidos && window._textosRapidos.length) ? window._textosRapidos : ['Enviar para Ingrid localizar'];
+  wrap.innerHTML = textos.map(t =>
+    `<button onclick="usarTextoRapido('${t.replace(/'/g,"\\'")}')" style="background:var(--bg2);border:0.5px solid var(--border);border-radius:14px;padding:5px 10px;font-size:11px;color:var(--text3);cursor:pointer;font-family:inherit">${t}</button>`
+  ).join('');
+}
+
+function usarTextoRapido(texto) {
+  const inp = document.getElementById('comment-input');
+  if (inp) { inp.value = texto; inp.focus(); }
+}
+
+function renderTextosRapidosConfig() {
+  const wrap = document.getElementById('textos-rapidos-config-list');
+  if (!wrap) return;
+  const textos = (window._textosRapidos && window._textosRapidos.length) ? window._textosRapidos : ['Enviar para Ingrid localizar'];
+  wrap.innerHTML = textos.map((t, i) =>
+    `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:0.5px solid var(--border)">
+      <span style="flex:1;font-size:12px;color:var(--text)">${t}</span>
+      <button onclick="removerTextoRapido(${i})" style="background:none;border:none;color:#dc2626;font-size:13px;cursor:pointer">✕</button>
+    </div>`
+  ).join('');
+}
+
+function adicionarTextoRapido() {
+  const inp = document.getElementById('novo-texto-rapido');
+  const texto = (inp?.value || '').trim();
+  if (!texto) return;
+  window._textosRapidos = window._textosRapidos && window._textosRapidos.length ? window._textosRapidos : ['Enviar para Ingrid localizar'];
+  window._textosRapidos.push(texto);
+  salvarTextosRapidos();
+  if (inp) inp.value = '';
+  renderTextosRapidosConfig();
+}
+
+function removerTextoRapido(idx) {
+  if (!window._textosRapidos) return;
+  window._textosRapidos.splice(idx, 1);
+  salvarTextosRapidos();
+  renderTextosRapidosConfig();
+}
+
+function salvarTextosRapidos() {
+  localStorage.setItem('textosRapidos', JSON.stringify(window._textosRapidos||[]));
+  if (window._db) window._db.collection('config').doc('app').set({textosRapidos: window._textosRapidos||[]}, {merge:true});
+}
+
 function deletarComentario(prodId, idx) {
   const p = PRODUTOS.find(x => x._id === prodId);
   if (!p || !Array.isArray(p.comments)) return;
@@ -5007,6 +5067,12 @@ function _fbListenCore() {
         if (chip) chip.style.display = data.usa2Ativo ? '' : 'none';
         if (secao) secao.style.display = data.usa2Ativo ? '' : 'none';
         if (chkUsa2) chkUsa2.checked = !!data.usa2Ativo;
+      }
+      if (data.textosRapidos) {
+        window._textosRapidos = data.textosRapidos;
+        localStorage.setItem('textosRapidos', JSON.stringify(data.textosRapidos));
+        renderTextosRapidos();
+        renderTextosRapidosConfig();
       }
       if (data.meta_vendedoras) {
         localStorage.setItem('meta_vendedoras', data.meta_vendedoras);
@@ -6958,6 +7024,11 @@ document.addEventListener('DOMContentLoaded', () => {
   if (savedUsa) (document.getElementById('label-mes-usa')||{}).textContent = savedUsa;
   const savedUsa2 = localStorage.getItem('mes_label_usa2');
   if (savedUsa2) (document.getElementById('label-mes-usa2')||{}).textContent = savedUsa2;
+  try {
+    const savedTextos = JSON.parse(localStorage.getItem('textosRapidos') || 'null');
+    if (savedTextos && savedTextos.length) window._textosRapidos = savedTextos;
+  } catch(eTextos) {}
+  renderTextosRapidosConfig();
   const inpLabelUsa2 = document.getElementById('input-label-usa2');
   if (inpLabelUsa2) inpLabelUsa2.placeholder = savedUsa2 || 'ex: Setembro USA';
   const inpLabelBr = document.getElementById('input-label-br');
