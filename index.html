@@ -289,7 +289,7 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
     <button class="chip" id="status-online" onclick="setStatus('online',this)">🌐 Online</button>
     <button class="chip" id="status-korea" onclick="setStatus('korea',this)">🇰🇷 Korea</button>
   </div>
-  <div class="filter-row" id="marca-row">
+  <div class="filter-row" id="marca-row" style="display:none">
     <button class="chip active" id="chip-all-marca" onclick="setMarca('',this)">Todas marcas</button>
     <button class="chip" onclick="setMarca('32 DEGREES',this)">32 DEGREES</button><button class="chip" onclick="setMarca('ADIDAS',this)">ADIDAS</button><button class="chip" onclick="setMarca('AERIE',this)">AERIE</button><button class="chip" onclick="setMarca('BABE LASH',this)">BABE LASH</button><button class="chip" onclick="setMarca('BALANCE',this)">BALANCE</button><button class="chip" onclick="setMarca('BANANA REPUBLIC',this)">BANANA REPUBLIC</button><button class="chip" onclick="setMarca('BB',this)">BB</button><button class="chip" onclick="setMarca('BBW',this)">BBW</button><button class="chip" onclick="setMarca('BENADRYL',this)">BENADRYL</button><button class="chip" onclick="setMarca('BI-FLEX',this)">BI-FLEX</button><button class="chip" onclick="setMarca('BIOPURE',this)">BIOPURE</button><button class="chip" onclick="setMarca('BLUE LOVE',this)">BLUE LOVE</button><button class="chip" onclick="setMarca('BOMBAY',this)">BOMBAY</button><button class="chip" onclick="setMarca('BOOGIE',this)">BOOGIE</button><button class="chip" onclick="setMarca('CALVIN KLEIN',this)">CALVIN KLEIN</button><button class="chip" onclick="setMarca('CARTERS',this)">CARTERS</button><button class="chip" onclick="setMarca('CENTELLA',this)">CENTELLA</button><button class="chip" onclick="setMarca('CHARLOTTE',this)">CHARLOTTE</button><button class="chip" onclick="setMarca('COLUMBIA',this)">COLUMBIA</button><button class="chip" onclick="setMarca('CONVERSE',this)">CONVERSE</button><button class="chip" onclick="setMarca('CORE KITCHEN',this)">CORE KITCHEN</button><button class="chip" onclick="setMarca('DERMASIL',this)">DERMASIL</button><button class="chip" onclick="setMarca('EGG TIMER',this)">EGG TIMER</button><button class="chip" onclick="setMarca('EPIELLE',this)">EPIELLE</button><button class="chip" onclick="setMarca('FASHION NOVA',this)">FASHION NOVA</button><button class="chip" onclick="setMarca('GAP',this)">GAP</button><button class="chip" onclick="setMarca('GLORIA VANDERBILT',this)">GLORIA VANDERBILT</button><button class="chip" onclick="setMarca('GREAT VALUE',this)">GREAT VALUE</button><button class="chip" onclick="setMarca('JESSICA SIMPSON',this)">JESSICA SIMPSON</button><button class="chip" onclick="setMarca('JOURNEE',this)">JOURNEE</button><button class="chip" onclick="setMarca('JUICY COUTURE',this)">JUICY COUTURE</button><button class="chip" onclick="setMarca('K18',this)">K18</button><button class="chip" onclick="setMarca('KEITH HARING',this)">KEITH HARING</button><button class="chip" onclick="setMarca('KITCHENAID',this)">KITCHENAID</button><button class="chip" onclick="setMarca('LA COLORS',this)">LA COLORS</button><button class="chip" onclick="setMarca('LAURA ASHLEY',this)">LAURA ASHLEY</button><button class="chip" onclick="setMarca('LOREAL',this)">LOREAL</button><button class="chip" onclick="setMarca('MARIE CLAIRE PARIS',this)">MARIE CLAIRE PARIS</button><button class="chip" onclick="setMarca('MARIO BADESCU',this)">MARIO BADESCU</button><button class="chip" onclick="setMarca('MELISSA E DOUG',this)">MELISSA E DOUG</button><button class="chip" onclick="setMarca('MONDAY',this)">MONDAY</button><button class="chip" onclick="setMarca('MONDETTA',this)">MONDETTA</button><button class="chip" onclick="setMarca('MR BUBBLE',this)">MR BUBBLE</button><button class="chip" onclick="setMarca('NATROL',this)">NATROL</button><button class="chip" onclick="setMarca('OLD NAVY',this)">OLD NAVY</button><button class="chip" onclick="setMarca('OLD NAVY X GAP',this)">OLD NAVY X GAP</button><button class="chip" onclick="setMarca('PARK LIFE',this)">PARK LIFE</button><button class="chip" onclick="setMarca('RALPH LAUREN',this)">RALPH LAUREN</button><button class="chip" onclick="setMarca('RUSSEL STOVER',this)">RUSSEL STOVER</button><button class="chip" onclick="setMarca('SINOPANT',this)">SINOPANT</button><button class="chip" onclick="setMarca('SKECHERS',this)">SKECHERS</button><button class="chip" onclick="setMarca('SMART CARE',this)">SMART CARE</button><button class="chip" onclick="setMarca('SNUGGLE',this)">SNUGGLE</button><button class="chip" onclick="setMarca('STEVE MADDEN',this)">STEVE MADDEN</button><button class="chip" onclick="setMarca('TOMMY',this)">TOMMY</button><button class="chip" onclick="setMarca('VASELINE',this)">VASELINE</button><button class="chip" onclick="setMarca(&quot;VICTORIA'S SECRET&quot;,this)">VICTORIA'S SECRET</button><button class="chip" onclick="setMarca('VOLCOM',this)">VOLCOM</button><button class="chip" onclick="setMarca('WALYFREI',this)">WALYFREI</button><button class="chip" onclick="setMarca('WET',this)">WET</button>
   </div>
@@ -1779,7 +1779,8 @@ function enviarComentarioRapido(id) {
   p.comments.push({
     text: txt,
     who: getNomeUsuario(),
-    time: new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})
+    time: new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}),
+    ts: Date.now()
   });
   fbSave(id);
   registrarAtividade('comentario', id, getNomeUsuario(), new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}));
@@ -3724,7 +3725,7 @@ function sendComment() {
   const who = getNomeUsuario();
   const time = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
   p.comments = Array.isArray(p.comments) ? p.comments : [];
-  p.comments.push({who, text, time});
+  p.comments.push({who, text, time, ts: Date.now()});
   inp.value = '';
   fbSave(modalId);
   renderModalComments(p);
@@ -4741,6 +4742,11 @@ function updateNokBadge() {
 function renderChat() {
   const list = document.getElementById('chat-list');
   const prods = PRODUTOS.filter(p => Array.isArray(p.comments) && p.comments.length > 0);
+  prods.sort((a, b) => {
+    const la = a.comments[a.comments.length-1];
+    const lb = b.comments[b.comments.length-1];
+    return (lb.ts || 0) - (la.ts || 0);
+  });
   (document.getElementById('chat-sub')||{}).textContent = prods.length + ' produto(s) com comentários';
   if (!prods.length) {
     list.innerHTML = '<div style="text-align:center;padding:60px 20px;color:#c4a898;font-size:13px">Nenhum comentário ainda</div>';
@@ -5821,6 +5827,13 @@ function normalizarVendedora(s) {
   return (s||'').trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
 }
 function _labelTam(t) { return t === 'Único' ? 'Unidade' : t; }
+// Rejeita valores da coluna TAM que claramente não são um tamanho de verdade
+// (erro de digitação na planilha, tipo "12 anos" indo parar na coluna errada).
+function _tamValido(t) {
+  if (!t) return t;
+  if (/^\d+\s*anos?$/i.test(t.trim())) return '';
+  return t;
+}
 const semAcento = normalizarVendedora; // alias — mesma lógica, usada nos filtros pra bater com o dado já normalizado
 
 function processarCSVUSA(input, origemTag) {
@@ -6238,6 +6251,7 @@ function salvarOrigemNoFirebase(newData, origem, onDone) {
             est_br: d.est_br || false,
             nokTams: d.nokTams || {},
             nokWho: d.nokWho || '',
+            comments: d.comments || [],
             _nome: (p.n||'').toLowerCase().trim(),
           };
         }
@@ -6295,7 +6309,8 @@ function salvarOrigemNoFirebase(newData, origem, onDone) {
           const bk = backupSnapshot[key];
           if (!bk) return;
           // Restaura tudo — chave nome+marca garante produto correto
-          if (bk.em_compra || bk.nok || bk.est_eua || bk.est_br) {
+          const temComentarios = bk.comments && bk.comments.length > 0;
+          if (bk.em_compra || bk.nok || bk.est_eua || bk.est_br || temComentarios) {
             p.em_compra = bk.em_compra;
             p.compraHistory = bk.compraHistory;
             p.nok = bk.nok;
@@ -6303,13 +6318,14 @@ function salvarOrigemNoFirebase(newData, origem, onDone) {
             p.est_br = bk.est_br;
             p.nokTams = bk.nokTams;
             p.nokWho = bk.nokWho;
+            p.comments = bk.comments || [];
             const ref = window._db.collection('faltantes').doc(String(p._id));
             batch2.set(ref, {...bk, origem}, {merge:true});
             restored++;
           }
         });
         // Diagnóstico: quantas chaves do backup (que tinham algum status ativo) não encontraram produto correspondente
-        const chavesComStatus = Object.entries(backupSnapshot).filter(([,bk]) => bk.em_compra||bk.nok||bk.est_eua||bk.est_br);
+        const chavesComStatus = Object.entries(backupSnapshot).filter(([,bk]) => bk.em_compra||bk.nok||bk.est_eua||bk.est_br||(bk.comments&&bk.comments.length>0));
         const prodKeysAtuais = new Set(PRODUTOS.filter(p=>(p.origem||'usa')===origem).map(p => (p.n||'').toLowerCase().trim() + '||' + (p.m||'').toLowerCase().trim()));
         chavesComStatus.forEach(([k]) => { if (!prodKeysAtuais.has(k)) chavesNaoEncontradas.push(k); });
         window._ultimoRestoreDiag = {
