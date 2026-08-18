@@ -1850,7 +1850,7 @@ function enviarNokParaPlanilha(p, tamanho, acao, quem) {
 // A URL só funciona depois que a planilha for criada e o Apps Script implantado —
 // até lá, fica registrado no log mas não trava o app.
 function enviarComentarioParaPlanilha(p, texto, quem) {
-  const URL_APPS_SCRIPT_COMENTARIOS = 'COLE_AQUI_DEPOIS';
+  const URL_APPS_SCRIPT_COMENTARIOS = 'https://script.google.com/macros/s/AKfycby6FAnkavVeqXtm7wUCC372e6runFuEyBBm7V2CjQGMx_VLzfXMdWRA39EziH59YzbG/exec';
   window._comentarioWebhookLog = window._comentarioWebhookLog || [];
   const logLinha = (msg) => {
     window._comentarioWebhookLog.push(new Date().toLocaleTimeString('pt-BR') + ' — ' + msg);
