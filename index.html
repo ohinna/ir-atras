@@ -6146,8 +6146,14 @@ function processarCSVUSA(input, origemTag) {
       const ordensOnline = {};
       rows.slice(headerIdx+1).forEach(row => {
         if (!row[iItem]?.trim()) return;
-        const confRaw = (row[iConf]||'').trim().toLowerCase();
-        if (confRaw !== 'online' && confRaw !== 'ok') return;
+        const confRawOriginal = (row[iConf]||'').trim().toLowerCase();
+        // 'online' = aguardando entrega. Qualquer outra marcação reconhecida (ok, ent, br) = já entregue.
+        // Outros valores (em branco, ou não reconhecidos) continuam sendo ignorados.
+        const CONF_ENTREGUE = ['ok', 'ent', 'br'];
+        let confRaw;
+        if (confRawOriginal === 'online') confRaw = 'online';
+        else if (CONF_ENTREGUE.includes(confRawOriginal)) confRaw = 'ok';
+        else return;
         const ordemNum = (iOrdem>-1 ? row[iOrdem]?.trim() : '') || '';
         if (!ordemNum) return; // sem número de ordem, não entra
         if (!ordensOnline[ordemNum]) ordensOnline[ordemNum] = { ordem: ordemNum, vendedora: normalizarVendedora(row[iVend]), itens: [] };
@@ -6665,8 +6671,13 @@ function processarCSVBR(input) {
       const ordensOnlineBR = {};
       rows.slice(headerIdx+1).forEach(row => {
         if (!row[iItem]?.trim()) return;
-        const confRawBR = (row[iConf]||'').trim().toLowerCase();
-        if (confRawBR !== 'online' && confRawBR !== 'ok') return;
+        const confRawBROriginal = (row[iConf]||'').trim().toLowerCase();
+        // 'online' = aguardando entrega. Qualquer outra marcação reconhecida (ok, ent, br) = já entregue.
+        const CONF_ENTREGUE_BR = ['ok', 'ent', 'br'];
+        let confRawBR;
+        if (confRawBROriginal === 'online') confRawBR = 'online';
+        else if (CONF_ENTREGUE_BR.includes(confRawBROriginal)) confRawBR = 'ok';
+        else return;
         const ordemNumBR = (iOrdem>-1 ? row[iOrdem]?.trim() : '') || '';
         if (!ordemNumBR) return; // sem número de ordem, não entra
         if (!ordensOnlineBR[ordemNumBR]) ordensOnlineBR[ordemNumBR] = { ordem: ordemNumBR, vendedora: normalizarVendedora(row[iVend]), itens: [] };
