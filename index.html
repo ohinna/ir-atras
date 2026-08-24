@@ -4003,6 +4003,36 @@ function renderCompra() {
   });
 }
 
+async function buscarCotacaoDolar(forcar) {
+  try {
+    const cache = JSON.parse(localStorage.getItem('cotacao_dolar')||'null');
+    const agora = Date.now();
+    if (!forcar && cache && (agora - cache.ts) < 30*60*1000) {
+      window._metaCotacao = cache.valor;
+      return cache.valor;
+    }
+    const resp = await fetch('https://economia.awesomeapi.com.br/last/USD-BRL');
+    const json = await resp.json();
+    const valor = parseFloat(json.USDBRL.bid);
+    if (!isNaN(valor)) {
+      window._metaCotacao = valor;
+      localStorage.setItem('cotacao_dolar', JSON.stringify({valor, ts: agora}));
+    }
+    return window._metaCotacao;
+  } catch(e) {
+    console.warn('Não foi possível buscar a cotação do dólar', e);
+    return window._metaCotacao || null;
+  }
+}
+
+async function toggleMetaDolar() {
+  window._metaDolar = !window._metaDolar;
+  if (window._metaDolar && !window._metaCotacao) {
+    await buscarCotacaoDolar();
+  }
+  renderMeta();
+}
+
 function renderMeta() {
   const container = document.getElementById('meta-content');
   if (!container) return;
@@ -4013,7 +4043,18 @@ function renderMeta() {
     return;
   }
 
-  const fmt = v => 'R$ ' + (v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  // Busca a cotação do dólar em segundo plano (sem travar o render) e reexibe quando chegar
+  if (!window._metaCotacao) {
+    buscarCotacaoDolar().then(() => { if (document.getElementById('meta-content')) renderMeta(); });
+  }
+
+  const fmt = v => {
+    const num = v || 0;
+    if (window._metaDolar && window._metaCotacao) {
+      return 'US$ ' + (num / window._metaCotacao).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    return 'R$ ' + num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
   const fmtPct = v => (v >= 0 ? '+' : '') + v.toFixed(2).replace('.',',') + '%';
   const cores = ['#7a0b1e','#f59e0b','#0f6b52','#6366f1','#783c18','#ea580c'];
 
@@ -4173,6 +4214,13 @@ function renderMeta() {
   }
 
   container.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--bg2);border:0.5px solid var(--border);border-radius:12px;padding:10px 14px;margin-bottom:12px">
+      <div>
+        <div style="font-size:9px;color:var(--text4);text-transform:uppercase;letter-spacing:0.5px;font-weight:600;margin-bottom:2px">Cotação do dólar</div>
+        <div style="font-size:13px;font-weight:700;color:var(--text)">${window._metaCotacao ? ('US$ 1 = R$ ' + window._metaCotacao.toFixed(2).replace('.',',')) : 'Buscando cotação...'}</div>
+      </div>
+      <button onclick="toggleMetaDolar()" style="padding:9px 14px;border-radius:10px;border:none;background:${window._metaDolar ? '#0f6b52' : '#7a0b1e'};color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">${window._metaDolar ? '🇧🇷 Ver em R$' : '🇺🇸 Ver em US$'}</button>
+    </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
       <button onclick="gerarPdfMeta('todas')" style="padding:10px;border-radius:12px;background:#7a0b1e;border:none;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px">📄 PDF</button>
       <button onclick="enviarWppMeta('todas')" style="padding:10px;border-radius:12px;background:#0f6b52;border:none;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px">💬 WhatsApp</button>
