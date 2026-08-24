@@ -690,6 +690,7 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
         <div class="chat-title">🎯 Meta</div>
         <div class="chat-sub" id="meta-sub">Desempenho por vendedora</div>
       </div>
+      <button id="meta-toggle-dolar" onclick="toggleMetaDolar()" style="padding:6px 10px;border-radius:8px;border:none;background:#7a0b1e;color:#fff;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0">🇺🇸 Ver em US$</button>
     </div>
   </div>
   <div id="meta-content" style="padding:12px 16px">
@@ -4214,16 +4215,27 @@ function renderMeta() {
   }
 
   container.innerHTML = `
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--bg2);border:0.5px solid var(--border);border-radius:12px;padding:10px 14px;margin-bottom:12px">
-      <div>
-        <div style="font-size:9px;color:var(--text4);text-transform:uppercase;letter-spacing:0.5px;font-weight:600;margin-bottom:2px">Cotação do dólar</div>
-        <div style="font-size:13px;font-weight:700;color:var(--text)">${window._metaCotacao ? ('US$ 1 = R$ ' + window._metaCotacao.toFixed(2).replace('.',',')) : 'Buscando cotação...'}</div>
-      </div>
-      <button onclick="toggleMetaDolar()" style="padding:9px 14px;border-radius:10px;border:none;background:${window._metaDolar ? '#0f6b52' : '#7a0b1e'};color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">${window._metaDolar ? '🇧🇷 Ver em R$' : '🇺🇸 Ver em US$'}</button>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
+      <button onclick="gerarPdfMeta('todas')" style="padding:8px;border-radius:10px;background:#7a0b1e;border:none;color:#fff;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px">📄 PDF</button>
+      <button onclick="enviarWppMeta('todas')" style="padding:8px;border-radius:10px;background:#0f6b52;border:none;color:#fff;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px">💬 WhatsApp</button>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
-      <button onclick="gerarPdfMeta('todas')" style="padding:10px;border-radius:12px;background:#7a0b1e;border:none;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px">📄 PDF</button>
-      <button onclick="enviarWppMeta('todas')" style="padding:10px;border-radius:12px;background:#0f6b52;border:none;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px">💬 WhatsApp</button>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">
+      <svg viewBox="0 0 200 200" width="140" height="140" style="flex-shrink:0">${pizzaSlices}</svg>
+      <div style="flex:1;min-width:100px">${legendaItems}</div>
+    </div>
+    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;margin-bottom:14px">
+      <table style="width:100%;border-collapse:collapse;font-size:11px;table-layout:fixed">
+        <thead>
+          <tr style="background:var(--red)">
+            <th style="padding:4px 6px;text-align:left;color:#fff;font-size:9px;width:18%">Vendedora</th>
+            <th style="padding:4px 6px;text-align:right;color:#fff;font-size:9px;width:22%">OKs</th>
+            <th style="padding:4px 6px;text-align:right;color:#fff;font-size:9px;width:22%">Faltantes</th>
+            <th style="padding:4px 6px;text-align:right;color:#fff;font-size:9px;width:22%">Meta</th>
+            <th style="padding:4px 6px;text-align:right;color:#fff;font-size:9px;width:10%">%</th>
+          </tr>
+        </thead>
+        <tbody>${linhas}</tbody>
+      </table>
     </div>
     ${budgetHtml}
     ${categoriaTicketHtml}
@@ -4240,25 +4252,15 @@ function renderMeta() {
       <div style="margin-top:4px;font-size:11px;color:var(--text3)">
         🇺🇸 ${localStorage.getItem('mes_label_usa')||'Mês USA'}
       </div>
-    </div>
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">
-      <svg viewBox="0 0 200 200" width="140" height="140" style="flex-shrink:0">${pizzaSlices}</svg>
-      <div style="flex:1;min-width:100px">${legendaItems}</div>
-    </div>
-    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch">
-      <table style="width:100%;border-collapse:collapse;font-size:11px;table-layout:fixed">
-        <thead>
-          <tr style="background:var(--red)">
-            <th style="padding:4px 6px;text-align:left;color:#fff;font-size:9px;width:18%">Vendedora</th>
-            <th style="padding:4px 6px;text-align:right;color:#fff;font-size:9px;width:22%">OKs</th>
-            <th style="padding:4px 6px;text-align:right;color:#fff;font-size:9px;width:22%">Faltantes</th>
-            <th style="padding:4px 6px;text-align:right;color:#fff;font-size:9px;width:22%">Meta</th>
-            <th style="padding:4px 6px;text-align:right;color:#fff;font-size:9px;width:10%">%</th>
-          </tr>
-        </thead>
-        <tbody>${linhas}</tbody>
-      </table>
     </div>`;
+
+  // Atualiza o botão de conversão de moeda no cabeçalho da aba
+  const btnDolar = document.getElementById('meta-toggle-dolar');
+  if (btnDolar) {
+    btnDolar.textContent = window._metaDolar ? '🇧🇷 Ver em R$' : '🇺🇸 Ver em US$';
+    btnDolar.style.background = window._metaDolar ? '#0f6b52' : '#7a0b1e';
+    btnDolar.title = window._metaCotacao ? ('US$ 1 = R$ ' + window._metaCotacao.toFixed(2).replace('.',',')) : 'Buscando cotação...';
+  }
 
   // Atualizar subtítulo da aba
   const sub = document.getElementById('meta-sub');
