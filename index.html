@@ -4180,8 +4180,8 @@ function renderMeta() {
         <div style="font-size:18px;font-weight:800;color:${budCor}">${budEmoji} ${fmtPct(bud)}</div>
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:12px;border-bottom:0.5px solid var(--border)">
-        <div style="font-size:10px;color:var(--text4);font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Budget gasto a mais</div>
-        <div style="font-size:15px;font-weight:800;color:${budDolar > 0 ? '#dc2626' : '#0f6b52'}">${fmtUsd(budDolar)}</div>
+        <div style="font-size:10px;color:var(--text4);font-weight:600;text-transform:uppercase;letter-spacing:0.5px">${budDolar > 0 ? 'Budget gasto a mais' : 'Budget gasto a menos'}</div>
+        <div style="font-size:15px;font-weight:800;color:${budDolar > 0 ? '#dc2626' : '#0f6b52'}">${fmtUsd(Math.abs(budDolar))}</div>
       </div>
       ${Object.entries(relatorio.vendedoras).map(([nome, vd]) => {
         if (!vd.meta) return '';
@@ -4197,7 +4197,7 @@ function renderMeta() {
             '<div style="font-size:12px;font-weight:700;color:var(--text)">'+nomeF+'</div>' +
             '<div style="text-align:right">' +
               '<div style="font-size:10px;font-weight:600;color:'+vBudCor+'">Budget: '+fmtPct(vBud)+'</div>' +
-              '<div style="font-size:10px;font-weight:700;color:'+vBudDolarCor+'">'+fmtUsd(vBudDolar)+' gasto a mais</div>' +
+              '<div style="font-size:10px;font-weight:700;color:'+vBudDolarCor+'">'+fmtUsd(Math.abs(vBudDolar))+(vBudDolar > 0 ? ' gasto a mais' : ' gasto a menos')+'</div>' +
             '</div>' +
           '</div>' +
           '<div style="background:var(--bg);border-radius:6px;height:10px;overflow:hidden;position:relative">' +
@@ -4501,7 +4501,7 @@ function construirHtmlMeta(filtroVend) {
         '</td>' +
         '<td style="padding:6px 10px;font-size:11px;font-weight:700;color:'+vBudCor+';white-space:nowrap;text-align:right">' +
           'Budget: '+fmtBud(vBud)+'<br>' +
-          '<span style="font-size:10px;color:'+vBudDolarCor+'">'+fmtUsdPdf(vBudDolar)+' a mais</span>' +
+          '<span style="font-size:10px;color:'+vBudDolarCor+'">'+fmtUsdPdf(Math.abs(vBudDolar))+(vBudDolar > 0 ? ' a mais' : ' a menos')+'</span>' +
         '</td>' +
       '</tr>';
     }).join('');
@@ -4511,8 +4511,8 @@ function construirHtmlMeta(filtroVend) {
         '<div style="font-size:20px;font-weight:800;color:'+budCor+'">'+budEmoji+' '+fmtBud(bud)+'</div>' +
       '</div>' +
       '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid #eee">' +
-        '<div style="font-size:10px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:0.5px">Budget gasto a mais</div>' +
-        '<div style="font-size:15px;font-weight:800;color:'+(budDolar > 0 ? '#dc2626' : '#0f6b52')+'">'+fmtUsdPdf(budDolar)+'</div>' +
+        '<div style="font-size:10px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:0.5px">'+(budDolar > 0 ? 'Budget gasto a mais' : 'Budget gasto a menos')+'</div>' +
+        '<div style="font-size:15px;font-weight:800;color:'+(budDolar > 0 ? '#dc2626' : '#0f6b52')+'">'+fmtUsdPdf(Math.abs(budDolar))+'</div>' +
       '</div>' +
       '<table style="width:100%;border-collapse:collapse"><tbody>'+barrasHtml+'</tbody></table>' +
       '<div style="margin-top:10px;display:flex;gap:14px;font-size:9px;color:#888">' +
@@ -4681,7 +4681,7 @@ function enviarWppMeta(filtroVend) {
     const budDolar = relatorioWpp.budgetDolar || 0;
     texto += `${budEmoji} *% Budget Geral: ${bud >= 0 ? '+' : ''}${bud.toFixed(2).replace('.',',')}%*
 `;
-    texto += `${budDolar > 0 ? '🔴' : '🟢'} *Budget gasto a mais: ${fmtUsdWpp(budDolar)}*
+    texto += `${budDolar > 0 ? '🔴' : '🟢'} *Budget gasto a ${budDolar > 0 ? 'mais' : 'menos'}: ${fmtUsdWpp(Math.abs(budDolar))}*
 
 `;
   }
@@ -4710,7 +4710,7 @@ function enviarWppMeta(filtroVend) {
         const pReal = vdRel[1].meta > 0 ? Math.round((vdRel[1].realizadas||0)/vdRel[1].meta*100) : 0;
         const pMais = vdRel[1].meta > 0 ? Math.round((vdRel[1].realizadoMais||0)/vdRel[1].meta*100) : 0;
         texto += '• Budget: ' + (vBud >= 0 ? '+' : '') + vBud.toFixed(2).replace('.',',') + '%\n';
-        texto += '• Budget gasto a mais: ' + (vBudDolar > 0 ? '🔴 ' : '🟢 ') + fmtUsdWpp(vBudDolar) + '\n';
+        texto += '• Budget gasto a ' + (vBudDolar > 0 ? 'mais: 🔴 ' : 'menos: 🟢 ') + fmtUsdWpp(Math.abs(vBudDolar)) + '\n';
         texto += '• Progresso: 🟢 ' + pReal + '% vendido · 🟡 ' + pMais + '% c/ compras\n';
       }
     }
