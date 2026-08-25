@@ -4004,6 +4004,9 @@ function renderCompra() {
   });
 }
 
+// Restaura a preferência salva de exibir a aba Meta em dólar ou reais
+window._metaDolar = localStorage.getItem('meta_ver_dolar') === '1';
+
 async function buscarCotacaoDolar(forcar) {
   try {
     const cache = JSON.parse(localStorage.getItem('cotacao_dolar')||'null');
@@ -4012,23 +4015,36 @@ async function buscarCotacaoDolar(forcar) {
       window._metaCotacao = cache.valor;
       return cache.valor;
     }
-    const resp = await fetch('https://economia.awesomeapi.com.br/last/USD-BRL');
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 6000);
+    const resp = await fetch('https://economia.awesomeapi.com.br/last/USD-BRL', { signal: controller.signal });
+    clearTimeout(timeoutId);
     const json = await resp.json();
     const valor = parseFloat(json.USDBRL.bid);
-    if (!isNaN(valor)) {
+    if (!isNaN(valor) && valor > 0) {
       window._metaCotacao = valor;
       localStorage.setItem('cotacao_dolar', JSON.stringify({valor, ts: agora}));
+      return valor;
     }
-    return window._metaCotacao;
+    throw new Error('Valor de cotação inválido recebido da API');
   } catch(e) {
-    console.warn('Não foi possível buscar a cotação do dólar', e);
-    return window._metaCotacao || null;
+    console.warn('Não foi possível buscar a cotação do dólar, usando valor salvo/reserva', e);
+    // Se já tem algo em memória, mantém. Senão, tenta o último valor salvo (mesmo vencido). Em último caso, usa uma cotação de reserva aproximada.
+    if (window._metaCotacao) return window._metaCotacao;
+    try {
+      const cacheVencido = JSON.parse(localStorage.getItem('cotacao_dolar')||'null');
+      if (cacheVencido && cacheVencido.valor) { window._metaCotacao = cacheVencido.valor; return window._metaCotacao; }
+    } catch(e2) {}
+    window._metaCotacao = 5.30; // cotação de reserva aproximada, usada só se tudo mais falhar
+    window._metaCotacaoReserva = true;
+    return window._metaCotacao;
   }
 }
 
 async function toggleMetaDolar() {
   window._metaDolar = !window._metaDolar;
-  if (window._metaDolar && !window._metaCotacao) {
+  localStorage.setItem('meta_ver_dolar', window._metaDolar ? '1' : '0');
+  if (!window._metaCotacao) {
     await buscarCotacaoDolar();
   }
   renderMeta();
