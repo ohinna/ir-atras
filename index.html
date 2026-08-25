@@ -4147,10 +4147,25 @@ function renderMeta() {
     const bud = relatorio.budget;
     const budCor = bud >= 0 ? '#0f6b52' : '#dc2626';
     const budEmoji = bud >= 0 ? '✅' : '🚨';
+    const budDolar = relatorio.budgetDolar || 0;
+    const fmtUsd = v => {
+      if (window._metaDolar) {
+        return (v < 0 ? '-' : '') + 'US$ ' + Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      }
+      if (window._metaCotacao) {
+        const conv = v * window._metaCotacao;
+        return (conv < 0 ? '-' : '') + 'R$ ' + Math.abs(conv).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      }
+      return (v < 0 ? '-' : '') + 'US$ ' + Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    };
     budgetHtml = `<div style="background:var(--bg2);border:0.5px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:12px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
         <div style="font-size:11px;color:var(--text4);font-weight:600;text-transform:uppercase;letter-spacing:0.5px">% Budget</div>
         <div style="font-size:18px;font-weight:800;color:${budCor}">${budEmoji} ${fmtPct(bud)}</div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:12px;border-bottom:0.5px solid var(--border)">
+        <div style="font-size:10px;color:var(--text4);font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Budget gasto a mais</div>
+        <div style="font-size:15px;font-weight:800;color:${budDolar > 0 ? '#dc2626' : '#0f6b52'}">${fmtUsd(budDolar)}</div>
       </div>
       ${Object.entries(relatorio.vendedoras).map(([nome, vd]) => {
         if (!vd.meta) return '';
@@ -4158,11 +4173,16 @@ function renderMeta() {
         const pMais = Math.min(100, Math.round((vd.realizadoMais||0)/vd.meta*100));
         const vBud = vd.budget || 0;
         const vBudCor = vBud >= 0 ? '#0f6b52' : '#dc2626';
+        const vBudDolar = vd.budgetDolar || 0;
+        const vBudDolarCor = vBudDolar > 0 ? '#dc2626' : '#0f6b52';
         const nomeF = nome.charAt(0)+nome.slice(1).toLowerCase();
         return '<div style="margin-bottom:10px">' +
           '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">' +
             '<div style="font-size:12px;font-weight:700;color:var(--text)">'+nomeF+'</div>' +
-            '<div style="font-size:10px;font-weight:600;color:'+vBudCor+'">Budget: '+fmtPct(vBud)+'</div>' +
+            '<div style="text-align:right">' +
+              '<div style="font-size:10px;font-weight:600;color:'+vBudCor+'">Budget: '+fmtPct(vBud)+'</div>' +
+              '<div style="font-size:10px;font-weight:700;color:'+vBudDolarCor+'">'+fmtUsd(vBudDolar)+' gasto a mais</div>' +
+            '</div>' +
           '</div>' +
           '<div style="background:var(--bg);border-radius:6px;height:10px;overflow:hidden;position:relative">' +
             '<div style="position:absolute;left:0;top:0;height:100%;width:'+pMais+'%;background:#f59e0b33;border-radius:6px"></div>' +
@@ -4431,6 +4451,17 @@ function construirHtmlMeta(filtroVend) {
     const bud = relatorio.budget;
     const budCor = bud >= 0 ? '#0f6b52' : '#dc2626';
     const budEmoji = bud >= 0 ? '✅' : '🚨';
+    const budDolar = relatorio.budgetDolar || 0;
+    const fmtUsdPdf = v => {
+      if (window._metaDolar) {
+        return (v < 0 ? '-' : '') + 'US$ ' + Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      }
+      if (window._metaCotacao) {
+        const conv = v * window._metaCotacao;
+        return (conv < 0 ? '-' : '') + 'R$ ' + Math.abs(conv).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      }
+      return (v < 0 ? '-' : '') + 'US$ ' + Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    };
     const vendsRel = Object.entries(relatorio.vendedoras || {});
     const barrasHtml = vendsRel.map(([nome, vd]) => {
       if (!vd.meta) return '';
@@ -4438,6 +4469,8 @@ function construirHtmlMeta(filtroVend) {
       const pMais = Math.min(100, Math.round((vd.realizadoMais||0)/vd.meta*100));
       const vBud = vd.budget || 0;
       const vBudCor = vBud >= 0 ? '#0f6b52' : '#dc2626';
+      const vBudDolar = vd.budgetDolar || 0;
+      const vBudDolarCor = vBudDolar > 0 ? '#dc2626' : '#0f6b52';
       const nomeF = nome.charAt(0)+nome.slice(1).toLowerCase();
       return '<tr><td style="padding:6px 10px;font-size:11px;font-weight:700;color:#1a1a1a;width:90px">'+nomeF+'</td>' +
         '<td style="padding:6px 10px">' +
@@ -4450,13 +4483,20 @@ function construirHtmlMeta(filtroVend) {
             '<span style="font-size:9px;color:#d97706">🟡 '+pMais+'% c/ compras</span>' +
           '</div>' +
         '</td>' +
-        '<td style="padding:6px 10px;font-size:11px;font-weight:700;color:'+vBudCor+';white-space:nowrap;text-align:right">Budget: '+fmtBud(vBud)+'</td>' +
+        '<td style="padding:6px 10px;font-size:11px;font-weight:700;color:'+vBudCor+';white-space:nowrap;text-align:right">' +
+          'Budget: '+fmtBud(vBud)+'<br>' +
+          '<span style="font-size:10px;color:'+vBudDolarCor+'">'+fmtUsdPdf(vBudDolar)+' a mais</span>' +
+        '</td>' +
       '</tr>';
     }).join('');
     budgetPdfHtml = '<div style="background:#fff;border-radius:12px;padding:16px;margin-bottom:20px;box-shadow:0 1px 4px rgba(0,0,0,0.08)">' +
-      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">' +
         '<div style="font-size:12px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.5px">% Budget Geral</div>' +
         '<div style="font-size:20px;font-weight:800;color:'+budCor+'">'+budEmoji+' '+fmtBud(bud)+'</div>' +
+      '</div>' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid #eee">' +
+        '<div style="font-size:10px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:0.5px">Budget gasto a mais</div>' +
+        '<div style="font-size:15px;font-weight:800;color:'+(budDolar > 0 ? '#dc2626' : '#0f6b52')+'">'+fmtUsdPdf(budDolar)+'</div>' +
       '</div>' +
       '<table style="width:100%;border-collapse:collapse"><tbody>'+barrasHtml+'</tbody></table>' +
       '<div style="margin-top:10px;display:flex;gap:14px;font-size:9px;color:#888">' +
@@ -4592,6 +4632,16 @@ function enviarWppMeta(filtroVend) {
   try { metaData = JSON.parse(localStorage.getItem('meta_vendedoras')||'[]'); } catch(e) {}
   const mes = localStorage.getItem('mes_label_usa') || 'Mês USA';
   const fmt = v => 'R$' + (v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const fmtUsdWpp = v => {
+    if (window._metaDolar) {
+      return (v < 0 ? '-' : '') + 'US$ ' + Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    if (window._metaCotacao) {
+      const conv = v * window._metaCotacao;
+      return (conv < 0 ? '-' : '') + 'R$ ' + Math.abs(conv).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    return (v < 0 ? '-' : '') + 'US$ ' + Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
 
   let _metaFalt2 = [];
   try { _metaFalt2 = JSON.parse(localStorage.getItem('meta_vendedoras')||'[]'); } catch(e) {}
@@ -4612,7 +4662,10 @@ function enviarWppMeta(filtroVend) {
   if (relatorioWpp) {
     const bud = relatorioWpp.budget;
     const budEmoji = bud >= 0 ? '✅' : '🚨';
+    const budDolar = relatorioWpp.budgetDolar || 0;
     texto += `${budEmoji} *% Budget Geral: ${bud >= 0 ? '+' : ''}${bud.toFixed(2).replace('.',',')}%*
+`;
+    texto += `${budDolar > 0 ? '🔴' : '🟢'} *Budget gasto a mais: ${fmtUsdWpp(budDolar)}*
 
 `;
   }
@@ -4637,9 +4690,11 @@ function enviarWppMeta(filtroVend) {
       const vdRel = Object.entries(relatorioWpp.vendedoras).find(([k]) => k.toUpperCase() === nomeUp || k.toUpperCase().startsWith(nomeUp.slice(0,4)));
       if (vdRel) {
         const vBud = vdRel[1].budget || 0;
+        const vBudDolar = vdRel[1].budgetDolar || 0;
         const pReal = vdRel[1].meta > 0 ? Math.round((vdRel[1].realizadas||0)/vdRel[1].meta*100) : 0;
         const pMais = vdRel[1].meta > 0 ? Math.round((vdRel[1].realizadoMais||0)/vdRel[1].meta*100) : 0;
         texto += '• Budget: ' + (vBud >= 0 ? '+' : '') + vBud.toFixed(2).replace('.',',') + '%\n';
+        texto += '• Budget gasto a mais: ' + (vBudDolar > 0 ? '🔴 ' : '🟢 ') + fmtUsdWpp(vBudDolar) + '\n';
         texto += '• Progresso: 🟢 ' + pReal + '% vendido · 🟡 ' + pMais + '% c/ compras\n';
       }
     }
@@ -6539,6 +6594,7 @@ function processarCSVRelatorio(input) {
 
     const pv = s => { let v = String(s||'').replace(/R\$\s*/g,'').replace(/\./g,'').replace(',','.').trim(); const n=parseFloat(v); return isNaN(n)?0:n; };
     const pp = s => { let v = String(s||'').replace('%','').replace(',','.').trim(); const n=parseFloat(v); return isNaN(n)?0:n; };
+    const pvd = s => { let v = String(s||'').replace(/\$\s*/g,'').replace(/\./g,'').replace(',','.').trim(); const n=parseFloat(v); return isNaN(n)?0:n; };
 
     const dados = { budget: 0, geral: {}, vendedoras: {}, ticketMedio: {}, categorias: [], categoriaTop: null };
 
@@ -6547,6 +6603,9 @@ function processarCSVRelatorio(input) {
       const label = (r[0]||'').trim().toUpperCase();
       if (label === '% BUDGET' && !dados._pastTicket) {
         dados.budget = pp(r[5]);
+      }
+      if (label === 'BUDGET GASTO A MAIS EM DÓLAR' && !dados._pastTicket) {
+        dados.budgetDolar = pvd(r[5]);
       }
       if (label === 'VENDAS REALIZADAS' && !dados._pastTicket) dados.geral.realizadas = pv(r[5]);
       if (label === 'REALIZADO + A COMPRAR' && !dados._pastTicket) dados.geral.realizadoMais = pv(r[5]);
@@ -6610,6 +6669,7 @@ function processarCSVRelatorio(input) {
         if (label === 'REALIZADO + A COMPRAR') vd.realizadoMais = pv(r[5]);
         if (label === 'PEDIDOS EM ABERTO') vd.emAberto = pv(r[5]);
         if (label === '% BUDGET') { vd.budget = pp(r[5]); }
+        if (label === 'BUDGET GASTO A MAIS EM DÓLAR') { vd.budgetDolar = pvd(r[5]); }
       }
       if (vEnd2) {
         const vd2 = dados.vendedoras[vEnd2];
@@ -6617,7 +6677,8 @@ function processarCSVRelatorio(input) {
         if (label === 'VENDAS REALIZADAS') vd2.realizadas = pv(r[15]);
         if (label === 'REALIZADO + A COMPRAR') vd2.realizadoMais = pv(r[15]);
         if (label === 'PEDIDOS EM ABERTO') vd2.emAberto = pv(r[15]);
-        if (label === '% BUDGET') { vd2.budget = pp(r[15]); vEnd1 = null; vEnd2 = null; }
+        if (label === '% BUDGET') { vd2.budget = pp(r[15]); }
+        if (label === 'BUDGET GASTO A MAIS EM DÓLAR') { vd2.budgetDolar = pvd(r[15]); vEnd1 = null; vEnd2 = null; }
       }
     }
 
