@@ -1902,27 +1902,30 @@ function enviarComentarioParaPlanilha(p, texto, quem) {
 // na sincronização mais próxima das 13:40 (não em toda sincronização, senão a planilha cresce rápido demais).
 // Um mesmo produto com mais de uma vendedora aparece uma vez pra cada vendedora (cada uma vira uma aba na planilha).
 // Passe forcar=true (ex: pelo botão de teste) pra ignorar o horário e o "já enviou hoje" e mandar na hora.
-function enviarHistoricoIAParaPlanilha(produtos, quando, forcar) {
+function enviarHistoricoIAParaPlanilha(produtos, quando, forcar, origemFlag) {
   window._histIaWebhookLog = window._histIaWebhookLog || [];
   const logLinha = (msg) => {
     window._histIaWebhookLog.push(new Date().toLocaleTimeString('pt-BR') + ' — ' + msg);
     if (window._histIaWebhookLog.length > 20) window._histIaWebhookLog.shift();
   };
 
+  // Cada origem (BR, USA, USA2...) tem seu próprio controle de "já enviou hoje" —
+  // senão, a primeira que sincronizar no dia fazia as outras serem puladas por engano.
+  const chaveFlag = 'hist_ia_ultimo_dia_' + (origemFlag || 'br');
   const agora = new Date();
   const hoje = agora.toISOString().slice(0,10); // YYYY-MM-DD
-  const jaEnviouHoje = localStorage.getItem('hist_ia_ultimo_dia') === hoje;
+  const jaEnviouHoje = localStorage.getItem(chaveFlag) === hoje;
   const dentroDaJanela = agora.getHours() === 13; // qualquer sincronização dentro da hora das 13h
 
   if (!forcar) {
-    if (jaEnviouHoje) { logLinha('Pulou: já enviou o histórico de hoje (' + hoje + ')'); return; }
-    if (!dentroDaJanela) { logLinha('Pulou: só envia por volta das 13:40 (agora são ' + agora.getHours() + 'h' + String(agora.getMinutes()).padStart(2,'0') + ')'); return; }
+    if (jaEnviouHoje) { logLinha('Pulou (' + (origemFlag||'br') + '): já enviou o histórico de hoje (' + hoje + ')'); return; }
+    if (!dentroDaJanela) { logLinha('Pulou (' + (origemFlag||'br') + '): só envia por volta das 13:40 (agora são ' + agora.getHours() + 'h' + String(agora.getMinutes()).padStart(2,'0') + ')'); return; }
   } else {
-    logLinha('Envio forçado manualmente (ignorando horário e "já enviou hoje")');
+    logLinha('Envio forçado manualmente (' + (origemFlag||'br') + ', ignorando horário e "já enviou hoje")');
   }
 
   const URL_APPS_SCRIPT_HIST_IA = 'https://script.google.com/macros/s/AKfycby_n2xz3yV8h4eF3i5YjwVO4wRVUfhp9-Llbowcme5UlbQednC9eTHw7KUeallJBCLZ/exec';
-  logLinha('Chamada iniciada: ' + (produtos||[]).length + ' produto(s)');
+  logLinha('Chamada iniciada (' + (origemFlag||'br') + '): ' + (produtos||[]).length + ' produto(s)');
   if (!URL_APPS_SCRIPT_HIST_IA || URL_APPS_SCRIPT_HIST_IA.startsWith('COLE_AQUI')) { logLinha('ABORTOU: URL não configurada ainda'); return; }
   const itens = [];
   (produtos||[]).forEach(p => {
@@ -1941,7 +1944,7 @@ function enviarHistoricoIAParaPlanilha(produtos, quando, forcar) {
     });
   });
   // Marca como enviado hoje já na hora de disparar (modo no-cors nunca confirma sucesso mesmo)
-  localStorage.setItem('hist_ia_ultimo_dia', hoje);
+  localStorage.setItem(chaveFlag, hoje);
   fetch(URL_APPS_SCRIPT_HIST_IA, {
     method: 'POST',
     mode: 'no-cors',
@@ -1957,15 +1960,18 @@ function enviarHistoricoIAParaPlanilha(produtos, quando, forcar) {
 // Botão de teste: pega os produtos BR já carregados no app agora e força o envio do
 // histórico pra planilha, ignorando o horário e o "já enviou hoje" (só pra testar).
 function testarEnvioHistoricoIA() {
-  const produtosBr = (typeof PRODUTOS !== 'undefined' ? PRODUTOS : []).filter(p => p.origem === 'br');
+  const todos = typeof PRODUTOS !== 'undefined' ? PRODUTOS : [];
+  const produtosBr = todos.filter(p => p.origem === 'br');
+  const produtosUsa = todos.filter(p => p.origem === 'usa' || p.origem === 'usa2');
+  const produtosJuntos = produtosBr.concat(produtosUsa);
   const status = document.getElementById('sync-status');
-  if (!produtosBr.length) {
-    if (status) status.textContent = '⚠️ Nenhum produto BR carregado ainda — sincronize a planilha BR primeiro.';
+  if (!produtosJuntos.length) {
+    if (status) status.textContent = '⚠️ Nenhum produto carregado ainda — sincronize as planilhas primeiro.';
     return;
   }
   const quando = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
-  enviarHistoricoIAParaPlanilha(produtosBr, quando, true);
-  if (status) status.textContent = '🧪 Teste disparado: ' + produtosBr.length + ' produto(s) BR enviado(s) ao histórico (modo no-cors não confirma recebimento — confira direto na planilha).';
+  enviarHistoricoIAParaPlanilha(produtosJuntos, quando, true, 'ambos');
+  if (status) status.textContent = '🧪 Teste disparado: ' + produtosBr.length + ' produto(s) BR e ' + produtosUsa.length + ' produto(s) USA enviados juntos ao histórico (modo no-cors não confirma recebimento — confira direto na planilha).';
 }
 
 function resetCat() {
@@ -6470,7 +6476,7 @@ function processarCSVUSA(input, origemTag) {
 
       salvarOrigemNoFirebase(newData, origemTag, () => {
         const now = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
-        enviarHistoricoIAParaPlanilha(newData, now);
+        enviarHistoricoIAParaPlanilha(newData, now, false, origemTag);
         localStorage.setItem('ultima_atualizacao', now);
         localStorage.setItem('import_ts_' + origemTag, now);
         atualizarVersaoHeader();
@@ -6969,7 +6975,7 @@ function processarCSVBR(input) {
       if (fillEl) fillEl.style.width = '100%';
       const now = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
 
-      enviarHistoricoIAParaPlanilha(newData, now);
+      enviarHistoricoIAParaPlanilha(newData, now, false, 'br');
 
       salvarOrigemNoFirebase(newData, 'br', () => {
         const tsBR = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
