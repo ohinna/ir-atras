@@ -1272,6 +1272,16 @@ function converterLinkDrive(url) {
   return url;
 }
 
+// Pede ao Google uma versão menor da mesma foto (mais rápida de carregar) — pra usar
+// em miniaturas de lista. Sem isso, toda miniatura pequena baixava a imagem em 1000px.
+function fotoThumb(url, w) {
+  if (!url) return url;
+  if (url.includes('lh3.googleusercontent.com/d/')) {
+    return url.replace(/=w\d+(-h\d+)?(-[a-z])?$/i, '=w' + (w || 150));
+  }
+  return url;
+}
+
 function abbrev(n, marca) {
   if (marca && marca.trim()) return marca.trim().charAt(0).toUpperCase();
   const w = (n||'').split(' ').filter(x => x.length > 2 && !/^(de|da|do|em|com|para|a|e|o|as|os)$/i.test(x));
@@ -1515,7 +1525,7 @@ function renderOrdensDaVendedora(ordensTodas, grid, empty) {
           const entregue = it.conf === 'ok';
           const alerta = !entregue && isAtrasadoOuSemData(it.dataChegada);
           return `<div style="padding:10px 14px;display:flex;gap:10px;align-items:center;border-bottom:0.5px solid var(--border);${alerta?'background:rgba(220,38,38,0.08)':''}${entregue?'opacity:0.45':''}">
-          ${it.foto ? `<img src="${it.foto}" style="width:40px;height:40px;border-radius:8px;object-fit:cover;flex-shrink:0${entregue?';filter:grayscale(1)':''}" onerror="this.style.display='none'">` : ''}
+          ${it.foto ? `<img src="${fotoThumb(it.foto,120)}" style="width:40px;height:40px;border-radius:8px;object-fit:cover;flex-shrink:0${entregue?';filter:grayscale(1)':''}" onerror="this.style.display='none'">` : ''}
           <div style="flex:1;min-width:0">
             <div style="font-size:11.5px;color:${entregue?'var(--text3)':'var(--text)'};font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${it.item}</div>
             ${it.sobra ? `<div style="margin-top:2px"><span style="background:${it.tagColor||'#9333ea'};color:#fff;font-size:8px;font-weight:700;padding:1px 5px;border-radius:5px">${it.tagLabel||it.mesRef||'SOBRA'}</span></div>` : ''}
@@ -1686,8 +1696,8 @@ function renderGrid() {
   grid.innerHTML = prods.map(p => {
     const ab = abbrev(p.n, p.m);
     const driveId = (p.f||'').match(/(?:lh3\.googleusercontent\.com\/d\/|drive\.google\.com\/thumbnail\?id=)([a-zA-Z0-9_-]+)/)?.[1];
-    const fallbackSrc = driveId ? `https://drive.google.com/thumbnail?id=${driveId}&sz=w1000` : '';
-    const img = p.f ? `<img src="${p.f}" style="width:100%;height:100%;object-fit:cover;cursor:pointer" onerror="${fallbackSrc ? `if(!this.dataset.fb){this.dataset.fb=1;this.src='${fallbackSrc}';}else{` : ''}this.style.display='none';this.nextElementSibling.style.display='flex';${fallbackSrc ? '}' : ''}">
+    const fallbackSrc = driveId ? `https://drive.google.com/thumbnail?id=${driveId}&sz=w200` : '';
+    const img = p.f ? `<img src="${fotoThumb(p.f,200)}" style="width:100%;height:100%;object-fit:cover;cursor:pointer" onerror="${fallbackSrc ? `if(!this.dataset.fb){this.dataset.fb=1;this.src='${fallbackSrc}';}else{` : ''}this.style.display='none';this.nextElementSibling.style.display='flex';${fallbackSrc ? '}' : ''}">
       <span class="card-abbrev" style="display:none">${ab}</span>` 
       : `<span class="card-abbrev">${ab}</span>`;
     const cmts = Array.isArray(p.comments) ? p.comments : [];
@@ -1884,6 +1894,57 @@ function enviarComentarioParaPlanilha(p, texto, quem) {
       quando: new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})
     })
   }).then(() => logLinha('fetch() concluído sem erro de rede'))
+    .catch((err) => logLinha('ERRO no fetch(): ' + err.message));
+}
+
+// Manda uma "foto" de todos os produtos IA (Ir Atrás) de uma vez — só UMA VEZ POR DIA,
+// na sincronização mais próxima das 13:40 (não em toda sincronização, senão a planilha cresce rápido demais).
+// Um mesmo produto com mais de uma vendedora aparece uma vez pra cada vendedora (cada uma vira uma aba na planilha).
+function enviarHistoricoIAParaPlanilha(produtos, quando) {
+  window._histIaWebhookLog = window._histIaWebhookLog || [];
+  const logLinha = (msg) => {
+    window._histIaWebhookLog.push(new Date().toLocaleTimeString('pt-BR') + ' — ' + msg);
+    if (window._histIaWebhookLog.length > 20) window._histIaWebhookLog.shift();
+  };
+
+  const agora = new Date();
+  const hoje = agora.toISOString().slice(0,10); // YYYY-MM-DD
+  const jaEnviouHoje = localStorage.getItem('hist_ia_ultimo_dia') === hoje;
+  const dentroDaJanela = agora.getHours() === 13; // qualquer sincronização dentro da hora das 13h
+
+  if (jaEnviouHoje) { logLinha('Pulou: já enviou o histórico de hoje (' + hoje + ')'); return; }
+  if (!dentroDaJanela) { logLinha('Pulou: só envia por volta das 13:40 (agora são ' + agora.getHours() + 'h' + String(agora.getMinutes()).padStart(2,'0') + ')'); return; }
+
+  const URL_APPS_SCRIPT_HIST_IA = 'COLE_AQUI_A_URL_DO_APPS_SCRIPT';
+  logLinha('Chamada iniciada: ' + (produtos||[]).length + ' produto(s)');
+  if (!URL_APPS_SCRIPT_HIST_IA || URL_APPS_SCRIPT_HIST_IA.startsWith('COLE_AQUI')) { logLinha('ABORTOU: URL não configurada ainda'); return; }
+  const itens = [];
+  (produtos||[]).forEach(p => {
+    const vendedoras = (p.vs && p.vs.length) ? p.vs.map(v=>v.charAt(0)+v.slice(1).toLowerCase()) : ['Sem vendedora'];
+    vendedoras.forEach(vend => {
+      itens.push({
+        vendedora: vend,
+        produto: p.n || '',
+        marca: p.m || '',
+        categoria: p.c || '',
+        cor: p.cor || '',
+        quantidade: p.q || 0,
+        tamanhos: p.tams_str || '',
+        valorMedio: p.vt || 0,
+      });
+    });
+  });
+  // Marca como enviado hoje já na hora de disparar (modo no-cors nunca confirma sucesso mesmo)
+  localStorage.setItem('hist_ia_ultimo_dia', hoje);
+  fetch(URL_APPS_SCRIPT_HIST_IA, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: {'Content-Type': 'text/plain'},
+    body: JSON.stringify({
+      quando: quando || new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}),
+      itens: itens
+    })
+  }).then(() => logLinha('fetch() concluído sem erro de rede (modo no-cors não confirma se o Google recebeu)'))
     .catch((err) => logLinha('ERRO no fetch(): ' + err.message));
 }
 
@@ -2826,7 +2887,7 @@ function exportarOrdemOnlinePDF(ordemNum) {
     const entregue = it.conf === 'ok';
     const statusTxt = entregue ? 'Entregue' : (it.status || 'Aguardando entrega');
     const statusCor = entregue ? '#0f6b52' : (statusTxt.toUpperCase().includes('CANCELADO') ? '#dc2626' : '#d97706');
-    const fotoImg = it.foto ? `<img src="${it.foto}" style="width:50px;height:50px;object-fit:cover;border-radius:6px">` : '';
+    const fotoImg = it.foto ? `<img src="${fotoThumb(it.foto,120)}" style="width:50px;height:50px;object-fit:cover;border-radius:6px">` : '';
     const tag = it.sobra ? ` <span style="background:${it.tagColor||'#9333ea'};color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:5px;vertical-align:middle">${it.tagLabel||it.mesRef||'SOBRA'}</span>` : '';
     return `<tr>
       <td style="text-align:center;color:#888">${i+1}</td>
@@ -2879,7 +2940,7 @@ function _montarRelatorioAtrasadosVendedora(vend) {
         totalItensPendentes++;
         totalValPendente += (it.valor||0);
         const atrasado = isAtrasadoOuSemData(it.dataChegada);
-        const fotoImg = it.foto ? `<img src="${it.foto}" crossorigin="anonymous" style="width:44px;height:44px;object-fit:cover;border-radius:6px">` : '';
+        const fotoImg = it.foto ? `<img src="${fotoThumb(it.foto,120)}" crossorigin="anonymous" style="width:44px;height:44px;object-fit:cover;border-radius:6px">` : '';
         const tag = it.sobra ? ` <span style="background:${it.tagColor||'#9333ea'};color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:5px;vertical-align:middle">${it.tagLabel||it.mesRef||'SOBRA'}</span>` : '';
         return `<tr>
           <td style="text-align:center;color:#888">${i+1}</td>
@@ -3570,7 +3631,7 @@ function renderModoNok() {
       }).join('');
       return `<div style="border-bottom:0.5px solid #2a2a2a">
         <div style="display:flex;align-items:center;gap:10px;padding:12px">
-          ${p.f ? `<img src="${p.f}" style="width:48px;height:48px;object-fit:cover;border-radius:8px;flex-shrink:0">` : '<div style="width:48px;height:48px;background:#2a2a2a;border-radius:8px;flex-shrink:0"></div>'}
+          ${p.f ? `<img src="${fotoThumb(p.f,120)}" style="width:48px;height:48px;object-fit:cover;border-radius:8px;flex-shrink:0">` : '<div style="width:48px;height:48px;background:#2a2a2a;border-radius:8px;flex-shrink:0"></div>'}
           <div style="flex:1;min-width:0">
             <div style="font-size:11px;color:#888">${p.m||''}</div>
             <div style="font-size:13px;font-weight:600;color:#fff">${p.n}</div>
@@ -3585,7 +3646,7 @@ function renderModoNok() {
     const marcado = !!p.nok;
     const infoLateral = marcado ? `<div style="font-size:10px;color:#dc2626;text-align:right;white-space:nowrap;margin-left:10px">✕ NOK<br>${p.nokWho||''}<br>${(p.nokHistory||[]).slice(-1)[0]?.time||''}</div>` : '';
     return `<div style="display:flex;align-items:center;gap:10px;padding:12px;border-bottom:0.5px solid #2a2a2a;${marcado?'opacity:0.55':''}">
-      ${p.f ? `<img src="${p.f}" style="width:48px;height:48px;object-fit:cover;border-radius:8px;flex-shrink:0">` : '<div style="width:48px;height:48px;background:#2a2a2a;border-radius:8px;flex-shrink:0"></div>'}
+      ${p.f ? `<img src="${fotoThumb(p.f,120)}" style="width:48px;height:48px;object-fit:cover;border-radius:8px;flex-shrink:0">` : '<div style="width:48px;height:48px;background:#2a2a2a;border-radius:8px;flex-shrink:0"></div>'}
       <div style="flex:1;min-width:0">
         <div style="font-size:11px;color:#888">${p.m||''}</div>
         <div style="font-size:13px;font-weight:600;color:#fff;${marcado?'text-decoration:line-through':''}">${p.n}</div>
@@ -4797,7 +4858,7 @@ function renderMarcasBloco(bloco, titulo, marcas, turnoLabel, vendNome) {
     const cor = barCores[i] || barCores[2];
     const fotoSrc = m.itemFoto ? resolverFotoMeta(m.itemFoto) : '';
     const fotoHtml = fotoSrc
-      ? '<img src="' + fotoSrc + '" style="width:32px;height:32px;border-radius:6px;object-fit:cover;border:0.5px solid var(--border);flex-shrink:0" onerror="this.style.display=&quot;none&quot;">'
+      ? '<img src="' + fotoThumb(fotoSrc,100) + '" style="width:32px;height:32px;border-radius:6px;object-fit:cover;border:0.5px solid var(--border);flex-shrink:0" onerror="this.style.display=&quot;none&quot;">'
       : '<div style="width:32px;height:32px;border-radius:6px;background:var(--bg2);border:0.5px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--text4)">?</div>';
     const div = document.createElement('div');
     div.style.cssText = 'margin-bottom:10px';
@@ -5470,7 +5531,7 @@ function construirHtmlFaltantes(vendFiltroRaw, origemFiltro) {
           const tamsStr = p.tams && Object.keys(p.tams).length > 0
             ? Object.entries(p.tams).filter(([t])=>!(p.nokTams||{})[t])
                 .map(([t,q])=>`<span style="display:inline-block;background:#f5ede8;border-radius:3px;padding:1px 4px;font-size:9px;margin-right:2px">${t}: ${q}</span>`).join('') : '';
-          const fotoImg = p.f ? `<img src="${p.f}" crossorigin="anonymous" style="width:36px;height:36px;object-fit:cover;border-radius:5px;vertical-align:middle;margin-right:8px">` : '';
+          const fotoImg = p.f ? `<img src="${fotoThumb(p.f,100)}" crossorigin="anonymous" style="width:36px;height:36px;object-fit:cover;border-radius:5px;vertical-align:middle;margin-right:8px">` : '';
           return `<tr style="border-bottom:0.5px solid #f5ede8">
             <td style="padding:6px 12px;font-size:11px;color:#1a1a1a">
               <div style="display:flex;align-items:center">
@@ -6836,7 +6897,7 @@ function processarCSVBR(input) {
         if (!item || item.toUpperCase() === 'PARCIAL') return;
         if (cliente.toLowerCase().endsWith('total')) return;
         const conf = (row[iConf]||'').trim().toUpperCase();
-        if (conf !== 'IA') return; // só itens marcados como "Ir Atrás"
+        if (conf !== 'IA' && conf !== '') return; // itens marcados "Ir Atrás" ou ainda sem confirmação (em branco) — ambos precisam comprar
 
         const marca = row[iMarca]?.trim() || '';
         const cat = row[iCat]?.trim() || '';
@@ -6886,6 +6947,8 @@ function processarCSVBR(input) {
 
       if (fillEl) fillEl.style.width = '100%';
       const now = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+
+      enviarHistoricoIAParaPlanilha(newData, now);
 
       salvarOrigemNoFirebase(newData, 'br', () => {
         const tsBR = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
@@ -7018,41 +7081,60 @@ function handleFotos(input, origem) {
       });
     }
     if (PRODUTOS.length > 0) {
+      // Corrige as fotos em pequenos lotes, dando um respiro ao navegador entre eles —
+      // evita travar a tela quando há muitos produtos (fazer tudo de uma vez de forma síncrona travava o app).
       const corrigidos = [];
-      PRODUTOS.forEach(p => {
-        const fOriginal = p._fOriginal || p.f;
-        const resolved = resolverFoto(fOriginal);
-        if (resolved && resolved !== p.f) {
-          p._fOriginal = fOriginal;
-          p.f = resolved;
-          if (p._id !== undefined && p._id !== null) corrigidos.push(p);
-        }
-      });
-      if (corrigidos.length && window._db) {
-        // Persistir a correção no Firebase em lotes de 400 (limite do batch do Firestore é 500)
-        const chunks = [];
-        for (let i = 0; i < corrigidos.length; i += 400) chunks.push(corrigidos.slice(i, i+400));
-        const totalChunks = chunks.length;
-        let chunksFeitos = 0, chunksComErro = 0;
-        chunks.forEach(chunk => {
-          const batch = window._db.batch();
-          chunk.forEach(p => {
-            batch.set(window._db.collection('catalogo').doc(String(p._id)), { f: p.f, _fOriginal: p._fOriginal }, { merge: true });
-          });
-          batch.commit().then(() => {
-            chunksFeitos++;
-            if (chunksFeitos + chunksComErro === totalChunks) {
+      const total = PRODUTOS.length;
+      let idx = 0;
+      const statusEl = document.getElementById(statusId);
+      const finalizarCorrecaoFotos = () => {
+        if (corrigidos.length && window._db) {
+          // Persistir a correção no Firebase em lotes de 400 (limite do batch do Firestore é 500)
+          const chunks = [];
+          for (let i = 0; i < corrigidos.length; i += 400) chunks.push(corrigidos.slice(i, i+400));
+          const totalChunks = chunks.length;
+          let chunksFeitos = 0, chunksComErro = 0;
+          chunks.forEach(chunk => {
+            const batch = window._db.batch();
+            chunk.forEach(p => {
+              batch.set(window._db.collection('catalogo').doc(String(p._id)), { f: p.f, _fOriginal: p._fOriginal }, { merge: true });
+            });
+            batch.commit().then(() => {
+              chunksFeitos++;
+              if (chunksFeitos + chunksComErro === totalChunks) {
+                const el = document.getElementById(statusId);
+                if (el) el.textContent += (chunksComErro ? ` ⚠️ ${corrigidos.length} foto(s) corrigida(s), mas houve erro ao salvar ${chunksComErro} lote(s) no banco — pode reverter ao atualizar a página.` : ` · ${corrigidos.length} foto(s) corrigida(s) e salvas permanentemente.`);
+              }
+            }).catch(err => {
+              chunksComErro++;
+              console.error('Erro ao persistir correção de fotos:', err.message);
               const el = document.getElementById(statusId);
-              if (el) el.textContent += (chunksComErro ? ` ⚠️ ${corrigidos.length} foto(s) corrigida(s), mas houve erro ao salvar ${chunksComErro} lote(s) no banco — pode reverter ao atualizar a página.` : ` · ${corrigidos.length} foto(s) corrigida(s) e salvas permanentemente.`);
-            }
-          }).catch(err => {
-            chunksComErro++;
-            console.error('Erro ao persistir correção de fotos:', err.message);
-            const el = document.getElementById(statusId);
-            if (el && chunksFeitos + chunksComErro === totalChunks) el.textContent += ` ⚠️ Erro ao salvar correção de fotos no banco: ${err.message}`;
+              if (el && chunksFeitos + chunksComErro === totalChunks) el.textContent += ` ⚠️ Erro ao salvar correção de fotos no banco: ${err.message}`;
+            });
           });
-        });
-      }
+        }
+        renderGrid();
+      };
+      const processarLoteFotos = () => {
+        const fim = Math.min(idx + 250, total);
+        for (; idx < fim; idx++) {
+          const p = PRODUTOS[idx];
+          const fOriginal = p._fOriginal || p.f;
+          const resolved = resolverFoto(fOriginal);
+          if (resolved && resolved !== p.f) {
+            p._fOriginal = fOriginal;
+            p.f = resolved;
+            if (p._id !== undefined && p._id !== null) corrigidos.push(p);
+          }
+        }
+        if (statusEl) statusEl.textContent = `Conferindo fotos dos produtos... ${idx}/${total}`;
+        if (idx < total) {
+          setTimeout(processarLoteFotos, 0);
+        } else {
+          finalizarCorrecaoFotos();
+        }
+      };
+      processarLoteFotos();
     }
     const fotoTs = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
     const fotoEntry = {nome: (origem==='br'?'🇧🇷':'🇺🇸') + ' Fotos ' + (origem||'usa').toUpperCase() + ' atualizadas (' + Object.keys(map).length + ')', ts: fotoTs, uid: getNomeUsuario()};
