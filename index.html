@@ -6924,7 +6924,7 @@ function processarCSVBR(input) {
         if (!item || item.toUpperCase() === 'PARCIAL') return;
         if (cliente.toLowerCase().endsWith('total')) return;
         const conf = (row[iConf]||'').trim().toUpperCase();
-        if (conf !== 'IA' && conf !== '') return; // itens marcados "Ir Atrás" ou ainda sem confirmação (em branco) — ambos precisam comprar
+        if (conf !== 'IA') return; // só itens marcados como "Ir Atrás"
 
         const marca = row[iMarca]?.trim() || '';
         const cat = row[iCat]?.trim() || '';
