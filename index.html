@@ -367,6 +367,67 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
       <button onclick="gerarESalvarPDFAutomatico(true)" style="width:100%;padding:8px;border-radius:10px;background:none;border:0.5px solid var(--border);color:var(--text3);font-size:11px;cursor:pointer;font-family:inherit;margin-top:8px">Testar agora</button>
     </div>
 
+    <div class="upload-card" style="margin-top:12px">
+      <div class="upload-title">🔄 Sincronização automática</div>
+      <div class="upload-sub">Configure uma vez. Todo mês, quando a planilha nova nascer, só precisa trocar o "ID da planilha do mês" — o resto fica igual.</div>
+
+      <div style="margin-bottom:8px">
+        <div style="font-size:11px;color:var(--text4);margin-bottom:4px">Link do Apps Script (configura uma vez só)</div>
+        <input id="sync-url-base" type="text" placeholder="https://script.google.com/macros/s/.../exec" style="width:100%;padding:8px 12px;border-radius:10px;border:0.5px solid var(--border);background:var(--bg);color:var(--text);font-size:12px;font-family:inherit;box-sizing:border-box">
+      </div>
+      <div style="margin-bottom:12px">
+        <div style="font-size:11px;color:var(--text4);margin-bottom:4px">ID da planilha do mês — USA (muda todo mês)</div>
+        <input id="sync-planilha-id" type="text" placeholder="cole aqui o ID (fica no meio do link da planilha)" style="width:100%;padding:8px 12px;border-radius:10px;border:0.5px solid var(--border);background:var(--bg);color:var(--text);font-size:12px;font-family:inherit;box-sizing:border-box">
+        <div style="font-size:10px;color:var(--text4);margin-top:4px">Ex: no link .../d/<b>1AbCdEfGhIjKlMnOp</b>/edit — o ID é essa parte do meio.</div>
+      </div>
+      <div style="margin-bottom:12px">
+        <div style="font-size:11px;color:var(--text4);margin-bottom:4px">ID da planilha do mês — BR (usado só pra Fotos BR)</div>
+        <input id="sync-planilha-id-br" type="text" placeholder="cole aqui o ID da planilha BR" style="width:100%;padding:8px 12px;border-radius:10px;border:0.5px solid var(--border);background:var(--bg);color:var(--text);font-size:12px;font-family:inherit;box-sizing:border-box">
+      </div>
+
+      <div style="font-size:10px;color:var(--text4);margin:10px 0 6px;text-transform:uppercase;letter-spacing:0.5px">Nomes das abas (raramente mudam)</div>
+      <div style="margin-bottom:8px">
+        <div style="font-size:11px;color:var(--text4);margin-bottom:4px">Aba — Produtos USA</div>
+        <input id="sync-aba-usa" type="text" placeholder="ex: EUA - AGOSTO" style="width:100%;padding:8px 12px;border-radius:10px;border:0.5px solid var(--border);background:var(--bg);color:var(--text);font-size:12px;font-family:inherit;box-sizing:border-box">
+      </div>
+      <div style="margin-bottom:8px">
+        <div style="font-size:11px;color:var(--text4);margin-bottom:4px">Aba — Produtos BR</div>
+        <input id="sync-aba-br" type="text" placeholder="ex: BR - AGOSTO" style="width:100%;padding:8px 12px;border-radius:10px;border:0.5px solid var(--border);background:var(--bg);color:var(--text);font-size:12px;font-family:inherit;box-sizing:border-box">
+      </div>
+      <div style="margin-bottom:8px">
+        <div style="font-size:11px;color:var(--text4);margin-bottom:4px">Aba — Fotos USA</div>
+        <input id="sync-aba-fotos-usa" type="text" placeholder="ex: FotoIDs" style="width:100%;padding:8px 12px;border-radius:10px;border:0.5px solid var(--border);background:var(--bg);color:var(--text);font-size:12px;font-family:inherit;box-sizing:border-box">
+      </div>
+      <div style="margin-bottom:8px">
+        <div style="font-size:11px;color:var(--text4);margin-bottom:4px">Aba — Fotos BR</div>
+        <input id="sync-aba-fotos-br" type="text" placeholder="ex: FotoIDs BR" style="width:100%;padding:8px 12px;border-radius:10px;border:0.5px solid var(--border);background:var(--bg);color:var(--text);font-size:12px;font-family:inherit;box-sizing:border-box">
+      </div>
+      <div style="margin-bottom:12px">
+        <div style="font-size:11px;color:var(--text4);margin-bottom:4px">Aba — Relatório de Vendas</div>
+        <input id="sync-aba-relatorio" type="text" placeholder="ex: RELATORIOS_VENDAS" style="width:100%;padding:8px 12px;border-radius:10px;border:0.5px solid var(--border);background:var(--bg);color:var(--text);font-size:12px;font-family:inherit;box-sizing:border-box">
+      </div>
+
+      <div style="font-size:10px;color:var(--text4);margin:10px 0 6px;text-transform:uppercase;letter-spacing:0.5px">Sobras (planilha PRAZOS)</div>
+      <div style="margin-bottom:8px">
+        <div style="font-size:11px;color:var(--text4);margin-bottom:4px">ID da planilha PRAZOS</div>
+        <input id="sync-planilha-id-prazos" type="text" placeholder="cole aqui o ID da planilha PRAZOS" style="width:100%;padding:8px 12px;border-radius:10px;border:0.5px solid var(--border);background:var(--bg);color:var(--text);font-size:12px;font-family:inherit;box-sizing:border-box">
+      </div>
+      <div style="margin-bottom:12px">
+        <div style="font-size:11px;color:var(--text4);margin-bottom:4px">Aba — mês atual (muda todo mês)</div>
+        <input id="sync-aba-prazos" type="text" placeholder="ex: AGOSTO" style="width:100%;padding:8px 12px;border-radius:10px;border:0.5px solid var(--border);background:var(--bg);color:var(--text);font-size:12px;font-family:inherit;box-sizing:border-box">
+      </div>
+
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <button onclick="salvarLinksSync()" style="flex:1;padding:10px;border-radius:10px;background:var(--red);border:none;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Salvar</button>
+        <button onclick="sincronizarAutomaticamente(true)" style="flex:1;padding:10px;border-radius:10px;background:#0f6b52;border:none;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Sincronizar agora</button>
+      </div>
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text3);cursor:pointer">
+        <input type="checkbox" id="sync-auto-ativo" onchange="salvarLinksSync()">
+        Ativar verificação automática a cada 30 minutos
+      </label>
+      <div id="sync-status" style="font-size:11px;color:#b08070;margin-top:8px"></div>
+      <button onclick="testarEnvioHistoricoIA()" style="width:100%;margin-top:10px;padding:8px;border-radius:10px;background:var(--bg2);border:0.5px solid var(--border);color:var(--text3);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">🧪 Testar envio do histórico IA agora (ignora horário)</button>
+    </div>
     <div class="upload-card">
       <div class="upload-title">📊 Importar Relatório de Vendas</div>
       <div class="upload-sub">Importa o CSV de relatório com % Budget e barras de progresso por vendedora.</div>
@@ -471,67 +532,6 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
     </div>
     <div id="ultima-atualizacao" style="font-size:11px;color:#c4a898;text-align:center;margin-top:8px"></div>
 
-    <div class="upload-card" style="margin-top:12px">
-      <div class="upload-title">🔄 Sincronização automática</div>
-      <div class="upload-sub">Configure uma vez. Todo mês, quando a planilha nova nascer, só precisa trocar o "ID da planilha do mês" — o resto fica igual.</div>
-
-      <div style="margin-bottom:8px">
-        <div style="font-size:11px;color:var(--text4);margin-bottom:4px">Link do Apps Script (configura uma vez só)</div>
-        <input id="sync-url-base" type="text" placeholder="https://script.google.com/macros/s/.../exec" style="width:100%;padding:8px 12px;border-radius:10px;border:0.5px solid var(--border);background:var(--bg);color:var(--text);font-size:12px;font-family:inherit;box-sizing:border-box">
-      </div>
-      <div style="margin-bottom:12px">
-        <div style="font-size:11px;color:var(--text4);margin-bottom:4px">ID da planilha do mês — USA (muda todo mês)</div>
-        <input id="sync-planilha-id" type="text" placeholder="cole aqui o ID (fica no meio do link da planilha)" style="width:100%;padding:8px 12px;border-radius:10px;border:0.5px solid var(--border);background:var(--bg);color:var(--text);font-size:12px;font-family:inherit;box-sizing:border-box">
-        <div style="font-size:10px;color:var(--text4);margin-top:4px">Ex: no link .../d/<b>1AbCdEfGhIjKlMnOp</b>/edit — o ID é essa parte do meio.</div>
-      </div>
-      <div style="margin-bottom:12px">
-        <div style="font-size:11px;color:var(--text4);margin-bottom:4px">ID da planilha do mês — BR (usado só pra Fotos BR)</div>
-        <input id="sync-planilha-id-br" type="text" placeholder="cole aqui o ID da planilha BR" style="width:100%;padding:8px 12px;border-radius:10px;border:0.5px solid var(--border);background:var(--bg);color:var(--text);font-size:12px;font-family:inherit;box-sizing:border-box">
-      </div>
-
-      <div style="font-size:10px;color:var(--text4);margin:10px 0 6px;text-transform:uppercase;letter-spacing:0.5px">Nomes das abas (raramente mudam)</div>
-      <div style="margin-bottom:8px">
-        <div style="font-size:11px;color:var(--text4);margin-bottom:4px">Aba — Produtos USA</div>
-        <input id="sync-aba-usa" type="text" placeholder="ex: EUA - AGOSTO" style="width:100%;padding:8px 12px;border-radius:10px;border:0.5px solid var(--border);background:var(--bg);color:var(--text);font-size:12px;font-family:inherit;box-sizing:border-box">
-      </div>
-      <div style="margin-bottom:8px">
-        <div style="font-size:11px;color:var(--text4);margin-bottom:4px">Aba — Produtos BR</div>
-        <input id="sync-aba-br" type="text" placeholder="ex: BR - AGOSTO" style="width:100%;padding:8px 12px;border-radius:10px;border:0.5px solid var(--border);background:var(--bg);color:var(--text);font-size:12px;font-family:inherit;box-sizing:border-box">
-      </div>
-      <div style="margin-bottom:8px">
-        <div style="font-size:11px;color:var(--text4);margin-bottom:4px">Aba — Fotos USA</div>
-        <input id="sync-aba-fotos-usa" type="text" placeholder="ex: FotoIDs" style="width:100%;padding:8px 12px;border-radius:10px;border:0.5px solid var(--border);background:var(--bg);color:var(--text);font-size:12px;font-family:inherit;box-sizing:border-box">
-      </div>
-      <div style="margin-bottom:8px">
-        <div style="font-size:11px;color:var(--text4);margin-bottom:4px">Aba — Fotos BR</div>
-        <input id="sync-aba-fotos-br" type="text" placeholder="ex: FotoIDs BR" style="width:100%;padding:8px 12px;border-radius:10px;border:0.5px solid var(--border);background:var(--bg);color:var(--text);font-size:12px;font-family:inherit;box-sizing:border-box">
-      </div>
-      <div style="margin-bottom:12px">
-        <div style="font-size:11px;color:var(--text4);margin-bottom:4px">Aba — Relatório de Vendas</div>
-        <input id="sync-aba-relatorio" type="text" placeholder="ex: RELATORIOS_VENDAS" style="width:100%;padding:8px 12px;border-radius:10px;border:0.5px solid var(--border);background:var(--bg);color:var(--text);font-size:12px;font-family:inherit;box-sizing:border-box">
-      </div>
-
-      <div style="font-size:10px;color:var(--text4);margin:10px 0 6px;text-transform:uppercase;letter-spacing:0.5px">Sobras (planilha PRAZOS)</div>
-      <div style="margin-bottom:8px">
-        <div style="font-size:11px;color:var(--text4);margin-bottom:4px">ID da planilha PRAZOS</div>
-        <input id="sync-planilha-id-prazos" type="text" placeholder="cole aqui o ID da planilha PRAZOS" style="width:100%;padding:8px 12px;border-radius:10px;border:0.5px solid var(--border);background:var(--bg);color:var(--text);font-size:12px;font-family:inherit;box-sizing:border-box">
-      </div>
-      <div style="margin-bottom:12px">
-        <div style="font-size:11px;color:var(--text4);margin-bottom:4px">Aba — mês atual (muda todo mês)</div>
-        <input id="sync-aba-prazos" type="text" placeholder="ex: AGOSTO" style="width:100%;padding:8px 12px;border-radius:10px;border:0.5px solid var(--border);background:var(--bg);color:var(--text);font-size:12px;font-family:inherit;box-sizing:border-box">
-      </div>
-
-      <div style="display:flex;gap:8px;margin-bottom:8px">
-        <button onclick="salvarLinksSync()" style="flex:1;padding:10px;border-radius:10px;background:var(--red);border:none;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Salvar</button>
-        <button onclick="sincronizarAutomaticamente(true)" style="flex:1;padding:10px;border-radius:10px;background:#0f6b52;border:none;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Sincronizar agora</button>
-      </div>
-      <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text3);cursor:pointer">
-        <input type="checkbox" id="sync-auto-ativo" onchange="salvarLinksSync()">
-        Ativar verificação automática a cada 30 minutos
-      </label>
-      <div id="sync-status" style="font-size:11px;color:#b08070;margin-top:8px"></div>
-      <button onclick="testarEnvioHistoricoIA()" style="width:100%;margin-top:10px;padding:8px;border-radius:10px;background:var(--bg2);border:0.5px solid var(--border);color:var(--text3);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">🧪 Testar envio do histórico IA agora (ignora horário)</button>
-    </div>
 
     <div class="upload-card" style="margin-top:12px">
       <div class="upload-title">📋 Histórico de importações</div>
