@@ -419,12 +419,13 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
 
       <div style="display:flex;gap:8px;margin-bottom:8px">
         <button onclick="salvarLinksSync()" style="flex:1;padding:10px;border-radius:10px;background:var(--red);border:none;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Salvar</button>
-        <button onclick="sincronizarAutomaticamente(true)" style="flex:1;padding:10px;border-radius:10px;background:#0f6b52;border:none;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Sincronizar agora</button>
+        <button id="btn-sync-manual" onclick="sincronizarAutomaticamente(true)" style="flex:1;padding:10px;border-radius:10px;background:#0f6b52;border:none;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Sincronizar agora</button>
       </div>
       <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text3);cursor:pointer">
         <input type="checkbox" id="sync-auto-ativo" onchange="salvarLinksSync()">
         Ativar verificação automática a cada 30 minutos
       </label>
+      <div id="sync-mobile-aviso" style="display:none;font-size:11px;color:#d97706;margin-top:6px">📱 Você está no celular — a sincronização (automática e manual) só funciona no computador.</div>
       <div id="sync-status" style="font-size:11px;color:#b08070;margin-top:8px"></div>
       <button onclick="testarEnvioHistoricoIA()" style="width:100%;margin-top:10px;padding:8px;border-radius:10px;background:var(--bg2);border:0.5px solid var(--border);color:var(--text3);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">🧪 Testar envio do histórico IA agora (ignora horário)</button>
     </div>
@@ -6038,6 +6039,11 @@ function processarCSVPrazos(input, mesRef) {
 
 async function sincronizarAutomaticamente(manual) {
   const statusEl = document.getElementById('sync-status');
+  // Sincronização (automática ou manual) só roda no computador — no celular, nem o botão "Sincronizar agora" funciona.
+  if (ehDispositivoMovel()) {
+    if (manual && statusEl) statusEl.textContent = '📱 Sincronização só funciona no computador.';
+    return;
+  }
   // Proteção: não reimportar produtos enquanto alguém está com um produto aberto
   // ou digitando nesse navegador — evita perder um comentário/ação no meio do caminho.
   const active = document.activeElement;
@@ -6110,11 +6116,17 @@ async function sincronizarAutomaticamente(manual) {
   if (statusEl) statusEl.textContent = (algumErro ? '⚠️ Erro em: ' + errosDetalhados.join(' · ') : '✅ Sincronizado') + ' às ' + agora + '.';
 }
 
+// Detecta se é celular/tablet — a sincronização automática só deve rodar no computador,
+// pra evitar disparos incompletos quando o navegador do celular vai pra segundo plano.
+function ehDispositivoMovel() {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
+
 let _syncTimerId = null;
 function reiniciarTimerSync() {
   if (_syncTimerId) clearInterval(_syncTimerId);
   const ativo = localStorage.getItem('syncAutoAtivo') === '1';
-  if (ativo) {
+  if (ativo && !ehDispositivoMovel()) {
     _syncTimerId = setInterval(() => sincronizarAutomaticamente(false), 30 * 60 * 1000);
   }
 }
@@ -7074,6 +7086,20 @@ function handleFotos(input, origem) {
       }
     });
     const memKey = origem === 'br' ? '_fotoMapBr' : '_fotoMap';
+
+    // Proteção: se por algum motivo passageiro (rede, timeout do Google, erro na planilha)
+    // essa leitura veio vazia ou quase vazia, NÃO substitui o mapa bom que já estava
+    // funcionando — senão as fotos de todos os produtos "somem" de uma vez até a próxima sincronização.
+    const mapaAnterior = window[memKey] || {};
+    const qtdAnterior = Object.keys(mapaAnterior).length;
+    const qtdNova = Object.keys(map).length;
+    if (qtdAnterior > 20 && qtdNova < qtdAnterior * 0.3) {
+      console.warn(`[${origem}] Leitura de fotos suspeita: veio com ${qtdNova} (antes tinha ${qtdAnterior}). Mantendo o mapa anterior por segurança.`);
+      const el = document.getElementById(statusId);
+      if (el) el.textContent = `⚠️ Leitura suspeita (${qtdNova} de ${qtdAnterior} fotos) — mantido o mapa anterior por segurança. Tente sincronizar de novo.`;
+      return;
+    }
+
     window[memKey] = map;
     try { localStorage.setItem(lsKey, JSON.stringify(map)); } catch(e) { console.warn(lsKey + ' não coube no localStorage (usando só memória):', e.message); }
     if (window._db) {
@@ -7332,6 +7358,15 @@ function setVersionBadge(status) {
   }
 }
 let _swReloadPendente = false;
+// No celular, avisa e desabilita o checkbox de sincronização automática (ela só roda no PC)
+if (ehDispositivoMovel()) {
+  const chkMobile = document.getElementById('sync-auto-ativo');
+  const avisoMobile = document.getElementById('sync-mobile-aviso');
+  const btnManualMobile = document.getElementById('btn-sync-manual');
+  if (chkMobile) { chkMobile.disabled = true; chkMobile.parentElement.style.opacity = '0.5'; }
+  if (btnManualMobile) { btnManualMobile.disabled = true; btnManualMobile.style.opacity = '0.5'; btnManualMobile.style.cursor = 'not-allowed'; }
+  if (avisoMobile) avisoMobile.style.display = 'block';
+}
 reiniciarTimerSync();
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/ir-atras/sw.js').then(reg => {
