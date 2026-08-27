@@ -1915,7 +1915,7 @@ function enviarHistoricoIAParaPlanilha(produtos, quando) {
   if (jaEnviouHoje) { logLinha('Pulou: já enviou o histórico de hoje (' + hoje + ')'); return; }
   if (!dentroDaJanela) { logLinha('Pulou: só envia por volta das 13:40 (agora são ' + agora.getHours() + 'h' + String(agora.getMinutes()).padStart(2,'0') + ')'); return; }
 
-  const URL_APPS_SCRIPT_HIST_IA = 'COLE_AQUI_A_URL_DO_APPS_SCRIPT';
+  const URL_APPS_SCRIPT_HIST_IA = 'https://script.google.com/macros/s/AKfycby_n2xz3yV8h4eF3i5YjwVO4wRVUfhp9-Llbowcme5UlbQednC9eTHw7KUeallJBCLZ/exec';
   logLinha('Chamada iniciada: ' + (produtos||[]).length + ' produto(s)');
   if (!URL_APPS_SCRIPT_HIST_IA || URL_APPS_SCRIPT_HIST_IA.startsWith('COLE_AQUI')) { logLinha('ABORTOU: URL não configurada ainda'); return; }
   const itens = [];
