@@ -6444,7 +6444,7 @@ function processarCSVUSA(input, origemTag) {
         const vend = normalizarVendedora(row[iVend]);
         if (vend && !g.vs.includes(vend)) g.vs.push(vend);
         if (!g.f && row[iFoto]?.trim()) { g.f = resolverFoto(row[iFoto].trim()); g._fOriginal = row[iFoto].trim(); }
-        const tamKey = tam || 'Único';
+        const tamKey = conf === 'DAN' ? (tam || 'Único') + ' (danificado)' : (tam || 'Único');
         g.tams[tamKey] = (g.tams[tamKey]||0) + multFinal;
         if (vend) {
           if (!g.tams_por_vend[vend]) g.tams_por_vend[vend] = {};
@@ -6953,7 +6953,8 @@ function processarCSVBR(input) {
 
         // Extrair nome base e multiplicador (igual USA)
         const {base: itemBase, tam: itemTam, mult: itemMult} = extrairTamMult(item);
-        const tamKey = tamCol || itemTam || 'Único';
+        const tamKeyBase = tamCol || itemTam || 'Único';
+        const tamKey = conf === 'DAN' ? tamKeyBase + ' (danificado)' : tamKeyBase;
         const mult = itemMult;
 
         const key = itemBase.toLowerCase() + '||' + marca.toLowerCase();
