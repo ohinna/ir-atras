@@ -6416,7 +6416,7 @@ function processarCSVUSA(input, origemTag) {
         const isEstEua = conf === 'EST' || conf === 'EST EUA' || conf === 'EST USA';
         const isEstBr  = conf === 'EST BR';
         // EST USA/BR = já comprados, não são faltantes — só ignorar como os outros CONF preenchidos
-        if (conf !== '' && !confParcialMatch) return;
+        if (conf !== '' && conf !== 'DAN' && !confParcialMatch) return;
         const obs = (row[iItem+2]||'').trim().toUpperCase();
         const temDesconto = obs.includes('COM DESCONTO');
         const tamCol = iTam > -1 ? (row[iTam]||'').trim() : '';
@@ -6936,7 +6936,7 @@ function processarCSVBR(input) {
         if (!item || item.toUpperCase() === 'PARCIAL') return;
         if (cliente.toLowerCase().endsWith('total')) return;
         const conf = (row[iConf]||'').trim().toUpperCase();
-        if (conf !== 'IA') return; // só itens marcados como "Ir Atrás"
+        if (conf !== 'IA' && conf !== 'DAN') return; // "Ir Atrás" ou "Dan" — precisam comprar (na BR, em branco NÃO conta)
 
         const marca = row[iMarca]?.trim() || '';
         const cat = row[iCat]?.trim() || '';
