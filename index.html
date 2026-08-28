@@ -2362,8 +2362,15 @@ function openModal(id, focusComment=false) {
       if (qtyEl) { qtyEl.textContent = 'total: ' + totalQty + ' un'; qtyEl.style.cssText = 'font-size:10px;font-weight:400;color:rgba(122,11,30,0.45);margin-top:6px'; }
     } else {
       tamsInline.style.display = 'flex';
-      const semTamEl = document.getElementById('modal-qty-sem-tam');
-      if (semTamEl) { semTamEl.textContent = totalQty + ' un'; semTamEl.style.display = 'block'; }
+      // Sempre limpa e reconstrói do zero — nunca reaproveita a peça fixa antiga, que pode
+      // ter sido destruída pelo produto visto anteriormente (era essa a causa do bug de
+      // "tamanho errado grudado na tela" ao alternar entre produtos com e sem tamanho).
+      tamsInline.innerHTML = '';
+      const semTamEl = document.createElement('div');
+      semTamEl.id = 'modal-qty-sem-tam';
+      semTamEl.style.cssText = 'background:var(--bg2);border:1.5px solid var(--red);border-radius:10px;padding:6px 14px;font-size:13px;font-weight:700;color:var(--red);display:block';
+      semTamEl.textContent = totalQty + ' un';
+      tamsInline.appendChild(semTamEl);
       if (qtyEl) qtyEl.style.display = 'none';
     }
   }
