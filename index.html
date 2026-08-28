@@ -6525,9 +6525,13 @@ function toggleUsa2Ativo(ligado) {
       window._db.collection('catalogo').get({source:'server'}).then(snap => {
         const toDelete = snap.docs.filter(d => (d.data().origem||'') === 'usa2');
         if (!toDelete.length) return;
-        const batch = window._db.batch();
-        toDelete.forEach(d => batch.delete(d.ref));
-        return batch.commit();
+        const chunksUsa2 = [];
+        for (let i = 0; i < toDelete.length; i += 450) chunksUsa2.push(toDelete.slice(i, i+450));
+        return chunksUsa2.reduce((prom, chunk) => prom.then(() => {
+          const batch = window._db.batch();
+          chunk.forEach(d => batch.delete(d.ref));
+          return batch.commit();
+        }), Promise.resolve());
       }).then(() => {
         PRODUTOS = PRODUTOS.filter(p => p.origem !== 'usa2');
         renderGrid();
@@ -6563,9 +6567,18 @@ function salvarOrigemNoFirebase(newData, origem, onDone) {
       return o === origem;
     });
     if (!docsToDelete.length) return;
-    const batch = window._db.batch();
-    docsToDelete.forEach(doc => batch.delete(doc.ref));
-    return batch.commit();
+    // Divide em lotes de no máximo 450 (o Firestore trava/rejeita lotes com mais de 500
+    // operações — sem isso, uma vez que o catálogo passasse de 500 itens, a limpeza
+    // parava de funcionar silenciosamente pra sempre, e produtos antigos/errados
+    // nunca mais eram removidos, só se acumulando a cada sincronização).
+    const chunks = [];
+    for (let i = 0; i < docsToDelete.length; i += 450) chunks.push(docsToDelete.slice(i, i+450));
+    setStatus('🧹 Limpando ' + docsToDelete.length + ' produto(s) antigo(s) (' + origem.toUpperCase() + ') em ' + chunks.length + ' lote(s)...');
+    return chunks.reduce((prom, chunk) => prom.then(() => {
+      const batch = window._db.batch();
+      chunk.forEach(doc => batch.delete(doc.ref));
+      return batch.commit();
+    }), Promise.resolve());
   }).then(() => {
     // Salvar status antes de limpar faltantes para reaplicar depois
     return window._db.collection('faltantes').get().then(snap => {
@@ -6597,9 +6610,13 @@ function salvarOrigemNoFirebase(newData, origem, onDone) {
         return o === origem || (origem === 'usa' && !o);
       });
       if (!toDelete.length) return;
-      const batch = window._db.batch();
-      toDelete.forEach(doc => batch.delete(doc.ref));
-      return batch.commit();
+      const chunksFaltantes = [];
+      for (let i = 0; i < toDelete.length; i += 450) chunksFaltantes.push(toDelete.slice(i, i+450));
+      return chunksFaltantes.reduce((prom, chunk) => prom.then(() => {
+        const batch = window._db.batch();
+        chunk.forEach(doc => batch.delete(doc.ref));
+        return batch.commit();
+      }), Promise.resolve());
     });
   }).then(() => {
     // Gerar novos IDs únicos não conflitantes com a outra origem
