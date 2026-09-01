@@ -6216,9 +6216,11 @@ function processarCSVUSA(input, origemTag) {
   origemTag = origemTag || 'usa';
   const file = input.files[0];
   if (!file) return;
-  // Salvar label do mês se preenchido
+  // Salvar label do mês se preenchido — se a caixinha manual estiver vazia (como acontece
+  // na sincronização automática, que não passa por ali), usa o nome da aba configurada
+  // como rótulo, pra sempre ficar em dia com o mês certo.
   const inpLabelUsa = document.getElementById('input-label-' + origemTag);
-  const novoLabelUsa = inpLabelUsa ? inpLabelUsa.value.trim() : '';
+  const novoLabelUsa = (inpLabelUsa ? inpLabelUsa.value.trim() : '') || (localStorage.getItem('sync_aba' + origemTag.charAt(0).toUpperCase() + origemTag.slice(1)) || '').trim();
   if (novoLabelUsa) {
     localStorage.setItem('mes_label_' + origemTag, novoLabelUsa);
     const elUsa = document.getElementById('label-mes-' + origemTag);
@@ -6898,9 +6900,10 @@ function registrarImportacao(tipo, nome) {
 function processarCSVBR(input) {
   const file = input.files[0];
   if (!file) return;
-  // Salvar label do mês se preenchido
+  // Salvar label do mês se preenchido — se a caixinha manual estiver vazia (como acontece na
+  // sincronização automática), usa o nome da aba configurada como rótulo, pra ficar em dia.
   const inpLabelBr = document.getElementById('input-label-br');
-  const novoLabelBr = inpLabelBr ? inpLabelBr.value.trim() : '';
+  const novoLabelBr = (inpLabelBr ? inpLabelBr.value.trim() : '') || (localStorage.getItem('sync_abaBr') || '').trim();
   if (novoLabelBr) {
     localStorage.setItem('mes_label_br', novoLabelBr);
     const elBr = document.getElementById('label-mes-br');
