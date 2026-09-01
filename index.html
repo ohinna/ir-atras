@@ -7312,8 +7312,11 @@ if (typeof firebase !== 'undefined' && firebase.apps.length) {
         avatarImg.style.display = 'none';
         if (avatarInit) avatarInit.textContent = uName.charAt(0).toUpperCase();
       }
-      catHeader.style.top = '36px';
-      document.querySelector('.main-content').style.paddingTop = '210px';
+      // Mede a altura real da barra do usuário, em vez de usar um número fixo — evita
+      // sobrar uma fresta (ou o cabeçalho ficar atrás demais) se a altura dela mudar.
+      const alturaUserBar = userBar.offsetHeight || 36;
+      catHeader.style.top = alturaUserBar + 'px';
+      document.querySelector('.main-content').style.paddingTop = (alturaUserBar + 174) + 'px';
       localStorage.setItem('chat_nome', user.displayName || user.email);
       pedirPermissaoNotificacao();
       iniciarPresenca(user.displayName || user.email, user.photoURL || '');
