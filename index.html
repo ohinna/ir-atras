@@ -7376,19 +7376,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const inpLabelUsa = document.getElementById('input-label-usa');
   if (inpLabelUsa) inpLabelUsa.placeholder = savedUsa || 'ex: Julho USA';
 
-  // Header hide on scroll down, show on scroll up
-  let _lastScroll = 0;
-  window.addEventListener('scroll', () => {
-    const header = document.getElementById('cat-header');
-    if (!header) return;
-    const curr = window.scrollY;
-    if (curr > _lastScroll && curr > 80) {
-      header.classList.add('hidden');
-    } else {
-      header.classList.remove('hidden');
-    }
-    _lastScroll = curr;
-  }, { passive: true });
+  // (Removido: esconder o cabeçalho ao rolar pra baixo — o cabeçalho agora fica sempre fixo e visível)
 
   renderGrid();
   restaurarFiltros();
