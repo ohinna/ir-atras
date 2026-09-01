@@ -1931,17 +1931,46 @@ function enviarHistoricoIAParaPlanilha(produtos, quando, forcar, origemFlag) {
   const itens = [];
   (produtos||[]).forEach(p => {
     const vendedoras = (p.vs && p.vs.length) ? p.vs.map(v=>v.charAt(0)+v.slice(1).toLowerCase()) : ['Sem vendedora'];
+    // Separa os tamanhos normais dos marcados como "(danificado)" — cada um vira um
+    // item próprio, pra não misturar a quantidade boa com a danificada.
+    const tamsNormais = {};
+    const tamsDan = {};
+    Object.entries(p.tams || {}).forEach(([tam, qtd]) => {
+      if (tam.endsWith(' (danificado)')) tamsDan[tam.replace(' (danificado)', '')] = qtd;
+      else tamsNormais[tam] = qtd;
+    });
+    const montarStr = (obj) => Object.entries(obj).map(([t,q]) => q>1 ? t+'('+q+')' : t).join(' · ');
+    const somarQtd = (obj) => Object.values(obj).reduce((a,b)=>a+b, 0);
+    const strNormal = montarStr(tamsNormais);
+    const strDan = montarStr(tamsDan);
+    const qtdNormal = somarQtd(tamsNormais);
+    const qtdDan = somarQtd(tamsDan);
+
     vendedoras.forEach(vend => {
-      itens.push({
-        vendedora: vend,
-        origem: (p.origem || 'br').toUpperCase(),
-        produto: p.n || '',
-        marca: p.m || '',
-        categoria: p.c || '',
-        cor: p.cor || '',
-        quantidade: p.q || 0,
-        tamanhos: p.tams_str || '',
-      });
+      if (qtdNormal > 0) {
+        itens.push({
+          vendedora: vend,
+          origem: (p.origem || 'br').toUpperCase(),
+          produto: p.n || '',
+          marca: p.m || '',
+          categoria: p.c || '',
+          cor: p.cor || '',
+          quantidade: qtdNormal,
+          tamanhos: strNormal || p.tams_str || '',
+        });
+      }
+      if (qtdDan > 0) {
+        itens.push({
+          vendedora: vend,
+          origem: 'DAN',
+          produto: p.n || '',
+          marca: p.m || '',
+          categoria: p.c || '',
+          cor: p.cor || '',
+          quantidade: qtdDan,
+          tamanhos: strDan,
+        });
+      }
     });
   });
   // Marca como enviado hoje já na hora de disparar (modo no-cors nunca confirma sucesso mesmo)
