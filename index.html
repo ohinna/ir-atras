@@ -2072,7 +2072,7 @@ function goTab(tab) {
       const handle = await pegarHandlePasta();
       if (statusEl && handle) statusEl.textContent = '📁 Pasta escolhida: ' + handle.name;
     })();
-    carregarLinksSyncDoFirebase();
+    carregarLinksSyncNaTela();
     const ultimaSync = localStorage.getItem('syncUltimaVez');
     if (ultimaSync) { const el = document.getElementById('sync-status'); if (el) el.textContent = 'Última sincronização automática: ' + ultimaSync; }
     // Load version history
@@ -7432,7 +7432,7 @@ if (ehDispositivoMovel()) {
   if (btnManualMobile) { btnManualMobile.disabled = true; btnManualMobile.style.opacity = '0.5'; btnManualMobile.style.cursor = 'not-allowed'; }
   if (avisoMobile) avisoMobile.style.display = 'block';
 }
-reiniciarTimerSync();
+carregarLinksSyncDoFirebase(); // busca a configuração compartilhada UMA VEZ, ao abrir o app (não a cada troca de aba)
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/ir-atras/sw.js').then(reg => {
     reg.update();
