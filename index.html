@@ -2072,7 +2072,7 @@ function goTab(tab) {
       const handle = await pegarHandlePasta();
       if (statusEl && handle) statusEl.textContent = '📁 Pasta escolhida: ' + handle.name;
     })();
-    carregarLinksSyncNaTela();
+    carregarLinksSyncDoFirebase();
     const ultimaSync = localStorage.getItem('syncUltimaVez');
     if (ultimaSync) { const el = document.getElementById('sync-status'); if (el) el.textContent = 'Última sincronização automática: ' + ultimaSync; }
     // Load version history
@@ -5911,15 +5911,55 @@ const SYNC_CONFIG_KEYS = {
 };
 
 function salvarLinksSync() {
+  const dados = {};
   Object.entries(SYNC_CONFIG_KEYS).forEach(([k, elId]) => {
     const el = document.getElementById(elId);
-    if (el) localStorage.setItem('sync_' + k, el.value.trim());
+    if (el) { localStorage.setItem('sync_' + k, el.value.trim()); dados[k] = el.value.trim(); }
   });
   const ativo = (document.getElementById('sync-auto-ativo')||{}).checked;
   localStorage.setItem('syncAutoAtivo', ativo ? '1' : '0');
-  const el = document.getElementById('sync-status');
-  if (el) el.textContent = '✅ Configuração salva.' + (ativo ? ' Sincronização automática ativada.' : '');
+  dados.syncAutoAtivo = ativo;
+
+  // Salva também no banco compartilhado — assim, quando QUALQUER pessoa (em qualquer
+  // computador) abrir o app, ela recebe essa mesma configuração automaticamente, em vez
+  // de precisar preencher tudo de novo (ou correr o risco de ter algo digitado errado).
+  if (window._db) {
+    window._db.collection('config').doc('sync_settings').set(dados, { merge: true })
+      .then(() => {
+        const el = document.getElementById('sync-status');
+        if (el) el.textContent = '✅ Configuração salva e compartilhada com todos os computadores.' + (ativo ? ' Sincronização automática ativada.' : '');
+      })
+      .catch(err => {
+        const el = document.getElementById('sync-status');
+        if (el) el.textContent = '⚠️ Salvou localmente, mas não conseguiu compartilhar: ' + err.message;
+      });
+  } else {
+    const el = document.getElementById('sync-status');
+    if (el) el.textContent = '✅ Configuração salva.' + (ativo ? ' Sincronização automática ativada.' : '');
+  }
   reiniciarTimerSync();
+}
+
+// Busca a configuração compartilhada do Firebase (a que foi salva por qualquer pessoa
+// através do botão "Salvar") e sobrescreve a configuração local com ela — garante que
+// todo mundo sempre sincroniza usando os MESMOS dados, não uma cópia desatualizada
+// ou digitada errado em cada computador.
+function carregarLinksSyncDoFirebase() {
+  if (!window._db) { carregarLinksSyncNaTela(); return; }
+  window._db.collection('config').doc('sync_settings').get({source: 'server'}).then(doc => {
+    if (doc.exists) {
+      const dados = doc.data();
+      Object.keys(SYNC_CONFIG_KEYS).forEach(k => {
+        if (dados[k] !== undefined) localStorage.setItem('sync_' + k, dados[k]);
+      });
+      if (dados.syncAutoAtivo !== undefined) localStorage.setItem('syncAutoAtivo', dados.syncAutoAtivo ? '1' : '0');
+    }
+  }).catch(err => {
+    console.warn('Não foi possível buscar a configuração compartilhada de sincronização:', err.message);
+  }).finally(() => {
+    carregarLinksSyncNaTela();
+    reiniciarTimerSync();
+  });
 }
 
 function carregarLinksSyncNaTela() {
