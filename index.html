@@ -903,7 +903,10 @@ function restaurarFiltros() {
   try {
     const saved = JSON.parse(localStorage.getItem('filtros'));
     if (!saved) return;
-    if (saved.vends) fVends = new Set(saved.vends.map(v => v === 'TODAS' ? v : semAcento(v)));
+    // Vendedora: propositalmente NÃO restaura de sessões anteriores — sempre começa em "Todas"
+    // ao abrir o app. Antes, uma seleção antiga (ex: "Fabiana" de dias atrás) ficava "grudada"
+    // silenciosamente e se somava com o próximo clique, fazendo parecer que produtos de outra
+    // vendedora vazavam pro filtro atual.
     if (saved.marcas) fMarcas = new Set(saved.marcas);
     if (saved.cat) fCat = saved.cat;
     if (saved.sortMode) _sortMode = saved.sortMode;
