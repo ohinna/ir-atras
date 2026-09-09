@@ -5892,9 +5892,9 @@ async function gerarPdfOksSemBox(input) {
 
     if (statusEl) statusEl.textContent = '🔄 Montando PDF (' + itensFiltrados.length + ' item(ns))...';
 
-    const cardsHtml = itensFiltrados.map(it => `
+    const cardsHtml = itensFiltrados.map((it, idx) => `
       <div style="display:flex;gap:12px;align-items:center;padding:10px;border-bottom:1px solid #e5ded8">
-        ${it.foto ? `<img src="${it.foto}" crossorigin="anonymous" style="width:56px;height:56px;object-fit:cover;border-radius:8px;flex-shrink:0">` : `<div style="width:56px;height:56px;background:#eee;border-radius:8px;flex-shrink:0"></div>`}
+        ${it.foto ? `<img data-foto-idx="${idx}" src="${it.foto}" crossorigin="anonymous" style="width:56px;height:56px;object-fit:cover;border-radius:8px;flex-shrink:0;background:#eee" onerror="this.style.background='#eee';this.removeAttribute('src')">` : `<div style="width:56px;height:56px;background:#eee;border-radius:8px;flex-shrink:0"></div>`}
         <div style="flex:1">
           <div style="font-size:13px;font-weight:700;color:#222">${it.item}</div>
           <div style="font-size:11px;color:#888">${[it.marca, it.cor, it.tam].filter(Boolean).join(' · ')}</div>
@@ -5911,7 +5911,45 @@ async function gerarPdfOksSemBox(input) {
       ${cardsHtml}
     </body></html>`;
 
-    const blob = await gerarPDFBlobReal(html);
+    // Monta a página escondida (fora da tela), espera TODAS as fotos carregarem (ou darem
+    // erro, com prazo máximo de 10s) antes de tirar o "print" — diferente do padrão usado em
+    // outros PDFs do app, que tem uma pausa fixa curta demais pra muitas fotos do Google.
+    const container = document.createElement('div');
+    container.style.cssText = 'position:fixed;left:-9999px;top:0;width:680px;background:#faf7f5;z-index:-1';
+    document.body.appendChild(container);
+    const iframe = document.createElement('iframe');
+    iframe.style.cssText = 'width:680px;height:1px;border:none';
+    container.appendChild(iframe);
+    iframe.srcdoc = html;
+    await new Promise(res => { iframe.onload = res; });
+
+    const doc = iframe.contentDocument;
+    const imgs = Array.from(doc.querySelectorAll('img[data-foto-idx]'));
+    if (statusEl) statusEl.textContent = '🔄 Carregando ' + imgs.length + ' foto(s)...';
+    await Promise.race([
+      Promise.all(imgs.map(img => new Promise(res => {
+        if (img.complete) { res(); return; }
+        img.addEventListener('load', res, { once: true });
+        img.addEventListener('error', res, { once: true }); // segue em frente mesmo se uma foto falhar
+      }))),
+      new Promise(res => setTimeout(res, 10000)) // trava de segurança: no máx 10s de espera total
+    ]);
+    await new Promise(res => setTimeout(res, 300)); // respiro final pro navegador desenhar tudo
+
+    const alturaTotal = doc.body.scrollHeight;
+    iframe.style.height = alturaTotal + 'px';
+    await new Promise(res => setTimeout(res, 200));
+
+    if (statusEl) statusEl.textContent = '🔄 Gerando PDF...';
+    const canvas = await html2canvas(doc.body, { width: 680, windowWidth: 680, scale: 2, useCORS: true, backgroundColor: '#faf7f5' });
+    document.body.removeChild(container);
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ unit: 'px', format: [680, canvas.height / 2] });
+    const imgData = canvas.toDataURL('image/jpeg', 0.92);
+    pdf.addImage(imgData, 'JPEG', 0, 0, 680, canvas.height / 2);
+    const blob = pdf.output('blob');
+
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
