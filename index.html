@@ -183,6 +183,7 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -533,6 +534,15 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
     </div>
     <div id="ultima-atualizacao" style="font-size:11px;color:#c4a898;text-align:center;margin-top:8px"></div>
 
+    <div class="upload-card" style="margin-top:12px">
+      <div class="upload-title">📄 PDF de OKs sem BOX</div>
+      <div class="upload-sub">Solta o CSV ou XLSX da planilha (USA ou BR) — ele filtra os itens com CONF "ok" que estão sem BOX (vazia ou com "R$" escrito nela por engano), busca a foto de cada um, e gera um PDF pronto pra enviar.</div>
+      <label style="display:block;margin-top:8px">
+        <input type="file" accept=".csv,.xlsx,.xls" style="display:none" onchange="gerarPdfOksSemBox(this)">
+        <div style="padding:10px;border-radius:12px;background:#7a0b1e;border:none;color:#fff;font-size:12px;font-weight:600;cursor:pointer;text-align:center">⬆ Selecionar CSV ou XLSX</div>
+      </label>
+      <div id="oks-sem-box-status" style="font-size:11px;color:#b08070;margin-top:8px"></div>
+    </div>
 
     <div class="upload-card" style="margin-top:12px">
       <div class="upload-title">📋 Histórico de importações</div>
@@ -5808,6 +5818,114 @@ async function escolherPastaPDF() {
   } catch(e) {
     if (statusEl && e.name !== 'AbortError') statusEl.textContent = '⚠️ Erro: ' + e.message;
   }
+}
+
+// Lê o CSV ou XLSX da planilha, filtra itens OK sem BOX de verdade (vazia ou com "R$" escrito
+// nela por engano), resolve a foto de cada um (mesma lógica do resto do app) e monta um PDF.
+async function gerarPdfOksSemBox(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const statusEl = document.getElementById('oks-sem-box-status');
+  if (statusEl) statusEl.textContent = '🔄 Lendo arquivo...';
+
+  try {
+    const ext = file.name.split('.').pop().toLowerCase();
+    let linhas; // array de arrays (linhas x colunas), como se fosse o CSV cru
+
+    if (ext === 'csv') {
+      const texto = await file.text();
+      linhas = texto.split('\n').map(l => l.split(',').map(c => c.replace(/^"|"$/g, '').trim()));
+    } else {
+      const buf = await file.arrayBuffer();
+      const wb = XLSX.read(buf, { type: 'array' });
+      // Procura a primeira aba cujo nome contenha "EUA" ou "USA" ou "BR" — senão usa a primeira aba
+      const nomeAba = wb.SheetNames.find(n => /EUA|USA|BR/i.test(n)) || wb.SheetNames[0];
+      const ws = wb.Sheets[nomeAba];
+      linhas = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false, defval: '' });
+    }
+
+    // Acha a linha de cabeçalho (a que tem "ITEM" e "CONF" juntos)
+    let headerRow = -1;
+    for (let i = 0; i < linhas.length; i++) {
+      const upper = linhas[i].map(c => String(c || '').trim().toUpperCase());
+      if (upper.includes('ITEM') && upper.includes('CONF')) { headerRow = i; break; }
+    }
+    if (headerRow === -1) throw new Error('Não achei as colunas ITEM/CONF nesse arquivo.');
+
+    const header = linhas[headerRow].map(c => String(c || '').trim().toUpperCase());
+    const iItem = header.indexOf('ITEM');
+    const iConf = header.indexOf('CONF');
+    const iBox = header.indexOf('BOX');
+    const iFoto = header.indexOf('FOTO');
+    const iMarca = header.indexOf('MARCA');
+    const iCor = header.indexOf('COR');
+    const iTam = header.indexOf('TAM');
+    const iCat = header.indexOf('CATEGORIA');
+
+    const itensFiltrados = [];
+    for (let i = headerRow + 1; i < linhas.length; i++) {
+      const row = linhas[i];
+      if (!row || !row[iItem]) continue;
+      const item = String(row[iItem] || '').trim();
+      if (!item) continue;
+      const conf = String(row[iConf] || '').trim().toLowerCase();
+      if (conf !== 'ok') continue;
+      const box = String(iBox > -1 ? (row[iBox] || '') : '').trim();
+      const boxSemInfo = box === '' || box.toUpperCase().includes('R$');
+      if (!boxSemInfo) continue;
+
+      const fotoRaw = iFoto > -1 ? String(row[iFoto] || '').trim() : '';
+      itensFiltrados.push({
+        item,
+        marca: iMarca > -1 ? String(row[iMarca] || '').trim() : '',
+        cor: iCor > -1 ? String(row[iCor] || '').trim() : '',
+        tam: iTam > -1 ? String(row[iTam] || '').trim() : '',
+        cat: iCat > -1 ? String(row[iCat] || '').trim() : '',
+        foto: resolverFoto(fotoRaw),
+      });
+    }
+
+    if (!itensFiltrados.length) {
+      if (statusEl) statusEl.textContent = '⚠️ Nenhum item OK sem BOX encontrado nesse arquivo.';
+      return;
+    }
+
+    if (statusEl) statusEl.textContent = '🔄 Montando PDF (' + itensFiltrados.length + ' item(ns))...';
+
+    const cardsHtml = itensFiltrados.map(it => `
+      <div style="display:flex;gap:12px;align-items:center;padding:10px;border-bottom:1px solid #e5ded8">
+        ${it.foto ? `<img src="${it.foto}" crossorigin="anonymous" style="width:56px;height:56px;object-fit:cover;border-radius:8px;flex-shrink:0">` : `<div style="width:56px;height:56px;background:#eee;border-radius:8px;flex-shrink:0"></div>`}
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:700;color:#222">${it.item}</div>
+          <div style="font-size:11px;color:#888">${[it.marca, it.cor, it.tam].filter(Boolean).join(' · ')}</div>
+        </div>
+      </div>`).join('');
+
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+      body{font-family:Arial,sans-serif;margin:0;padding:16px;background:#faf7f5}
+      h1{font-size:16px;color:#7a0b1e;margin:0 0 4px}
+      p{font-size:11px;color:#888;margin:0 0 12px}
+    </style></head><body>
+      <h1>OKs sem BOX</h1>
+      <p>${itensFiltrados.length} item(ns) · gerado em ${new Date().toLocaleString('pt-BR')}</p>
+      ${cardsHtml}
+    </body></html>`;
+
+    const blob = await gerarPDFBlobReal(html);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'oks-sem-box-' + new Date().toISOString().slice(0,10) + '.pdf';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    if (statusEl) statusEl.textContent = '✅ PDF gerado com ' + itensFiltrados.length + ' item(ns)!';
+  } catch (err) {
+    if (statusEl) statusEl.textContent = '❌ Erro: ' + err.message;
+  }
+  input.value = '';
 }
 
 // Renderiza o HTML do relatório fora da tela e converte pra um PDF de verdade (bytes reais),
