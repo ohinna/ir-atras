@@ -7104,9 +7104,20 @@ function processarCSVBR(input) {
         else if (s.includes(',') && !s.includes('.')) { const p=s.split(','); s = (p[1]&&p[1].length===3) ? s.replace(',','') : s.replace(',','.'); }
         const n = parseFloat(s); return isNaN(n) ? 0 : n;
       };
+
+      // Acha um "R$X,XX" em qualquer lugar dentro do texto (ex: "DD1 / R$299,00"), não só
+      // quando a célula tem SÓ o número — antes disso falhar, caía no COD errado (código do
+      // produto sendo lido como se fosse valor, tipo R$107.924,00 em vez de R$299,00).
+      const pvEmbutido = (v) => {
+        const m = String(v||'').match(/R\$\s*([\d.,]+)/);
+        return m ? pv(m[1]) : 0;
+      };
       
-      // Pega o valor do item: prefere BOX, depois COD (segunda coluna), cai para VALOR se vazio
+      // Pega o valor do item: prefere um "R$..." embutido na BOX, depois BOX inteira como número,
+      // depois COD (segunda coluna), cai para VALOR se vazio
       const pvBR = (row) => {
+        const vBoxEmbutido = iBox > -1 ? pvEmbutido(row[iBox]) : 0;
+        if (vBoxEmbutido > 0) return vBoxEmbutido;
         const vBox = iBox > -1 ? pv(row[iBox]) : 0;
         if (vBox > 0) return vBox;
         const vCod = iCodVal > -1 ? pv(row[iCodVal]) : 0;
