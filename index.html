@@ -1613,20 +1613,31 @@ function getFiltradosOrdenados() {
 
 // Mede a altura real da barra do usuário + cabeçalho (título, busca, abas e todos os chips
 // de filtro) e ajusta a posição do cabeçalho fixo e o espaço reservado pros produtos —
-// evita tanto sobra de espaço vazio quanto produtos escondidos atrás do cabeçalho, já que
-// essa altura muda conforme quantos chips de categoria/vendedora aparecem (e quantas linhas
-// eles ocupam, que varia com a largura da tela).
+// evita tanto sobra de espaço vazio quanto produtos escondidos atrás do cabeçalho. Usa
+// ResizeObserver pra recalcular sozinho sempre que a altura real mudar (chips quebrando em
+// mais/menos linhas, etc), em vez de confiar em medir só em pontos específicos do código
+// (que corria o risco de pegar um instante errado e "travar" um valor incorreto).
+let _resizeObsCabecalho = null;
 function ajustarPaddingCabecalho() {
   const userBar = document.getElementById('user-bar');
   const catHeader = document.getElementById('cat-header');
   const mainContent = document.querySelector('.main-content');
   if (!catHeader || !mainContent) return;
-  const alturaUserBar = (userBar && userBar.style.display !== 'none') ? userBar.offsetHeight : 0;
-  catHeader.style.top = alturaUserBar + 'px';
-  const alturaCabecalho = catHeader.offsetHeight;
-  mainContent.style.paddingTop = (alturaUserBar + alturaCabecalho) + 'px';
-  const countBar = document.getElementById('count-bar');
-  if (countBar) countBar.style.paddingTop = (alturaUserBar + alturaCabecalho) + 'px';
+
+  const aplicar = () => {
+    const alturaUserBar = (userBar && userBar.style.display !== 'none') ? userBar.offsetHeight : 0;
+    catHeader.style.top = alturaUserBar + 'px';
+    const alturaCabecalho = catHeader.offsetHeight;
+    mainContent.style.paddingTop = (alturaUserBar + alturaCabecalho) + 'px';
+  };
+
+  aplicar();
+
+  if (!_resizeObsCabecalho && window.ResizeObserver) {
+    _resizeObsCabecalho = new ResizeObserver(() => aplicar());
+    _resizeObsCabecalho.observe(catHeader);
+    if (userBar) _resizeObsCabecalho.observe(userBar);
+  }
 }
 
 function renderGrid() {
@@ -7521,8 +7532,7 @@ if (typeof firebase !== 'undefined' && firebase.apps.length) {
       // em vez de números fixos, que ficavam errados conforme o cabeçalho crescia (mais chips
       // de categoria/vendedora quebrando em mais linhas), fazendo os produtos ficarem
       // escondidos atrás dele em telas mais largas (PC).
-      ajustarPaddingCabecalho();
-      window.addEventListener('resize', ajustarPaddingCabecalho);
+      ajustarPaddingCabecalho(); // o ResizeObserver dentro dela já cuida de reagir a mudanças de tamanho sozinho
       localStorage.setItem('chat_nome', user.displayName || user.email);
       pedirPermissaoNotificacao();
       iniciarPresenca(user.displayName || user.email, user.photoURL || '');
