@@ -1611,6 +1611,24 @@ function getFiltradosOrdenados() {
   return prods;
 }
 
+// Mede a altura real da barra do usuário + cabeçalho (título, busca, abas e todos os chips
+// de filtro) e ajusta a posição do cabeçalho fixo e o espaço reservado pros produtos —
+// evita tanto sobra de espaço vazio quanto produtos escondidos atrás do cabeçalho, já que
+// essa altura muda conforme quantos chips de categoria/vendedora aparecem (e quantas linhas
+// eles ocupam, que varia com a largura da tela).
+function ajustarPaddingCabecalho() {
+  const userBar = document.getElementById('user-bar');
+  const catHeader = document.getElementById('cat-header');
+  const mainContent = document.querySelector('.main-content');
+  if (!catHeader || !mainContent) return;
+  const alturaUserBar = (userBar && userBar.style.display !== 'none') ? userBar.offsetHeight : 0;
+  catHeader.style.top = alturaUserBar + 'px';
+  const alturaCabecalho = catHeader.offsetHeight;
+  mainContent.style.paddingTop = (alturaUserBar + alturaCabecalho) + 'px';
+  const countBar = document.getElementById('count-bar');
+  if (countBar) countBar.style.paddingTop = (alturaUserBar + alturaCabecalho) + 'px';
+}
+
 function renderGrid() {
   try {
   if (fStatus === 'online') { renderOrdensOnline(); return; }
@@ -1784,6 +1802,9 @@ function renderGrid() {
     const count = PRODUTOS.filter(p => !p.nok && (!fOrigem || p.origem === fOrigem) && (p.vs||[]).some(v => semAcento(v) === vName)).length;
     btn.textContent = btn.textContent.replace(/\s*\(\d+\)/, '') + ' (' + count + ')';
   });
+  // Recalcula o espaço reservado pro cabeçalho — os chips acima podem ter mudado de altura
+  // (quebrado em mais ou menos linhas), então a altura do cabeçalho pode ter mudado também.
+  ajustarPaddingCabecalho();
   } catch(e) {
     console.error('renderGrid error:', e.message, e.stack);
   }
@@ -5901,30 +5922,19 @@ async function gerarPdfOksSemBox(input) {
         </div>
       </div>`).join('');
 
-    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
-      body{font-family:Arial,sans-serif;margin:0;padding:16px;background:#faf7f5}
-      h1{font-size:16px;color:#7a0b1e;margin:0 0 4px}
-      p{font-size:11px;color:#888;margin:0 0 12px}
-    </style></head><body>
-      <h1>OKs sem BOX</h1>
-      <p>${itensFiltrados.length} item(ns) · gerado em ${new Date().toLocaleString('pt-BR')}</p>
-      ${cardsHtml}
-    </body></html>`;
-
-    // Monta a página escondida (fora da tela), espera TODAS as fotos carregarem (ou darem
-    // erro, com prazo máximo de 10s) antes de tirar o "print" — diferente do padrão usado em
-    // outros PDFs do app, que tem uma pausa fixa curta demais pra muitas fotos do Google.
+    // Monta a página escondida direto na própria página (não num iframe separado — mais
+    // simples e confiável), espera TODAS as fotos carregarem (ou darem erro, com prazo
+    // máximo de 10s) antes de tirar o "print".
     const container = document.createElement('div');
-    container.style.cssText = 'position:fixed;left:-9999px;top:0;width:680px;background:#faf7f5;z-index:-1';
+    container.style.cssText = 'position:fixed;left:-9999px;top:0;width:680px;background:#faf7f5;z-index:-1;font-family:Arial,sans-serif;padding:16px;box-sizing:border-box';
+    container.innerHTML = `
+      <div style="font-size:16px;font-weight:bold;color:#7a0b1e;margin:0 0 4px">OKs sem BOX</div>
+      <div style="font-size:11px;color:#888;margin:0 0 12px">${itensFiltrados.length} item(ns) · gerado em ${new Date().toLocaleString('pt-BR')}</div>
+      ${cardsHtml}
+    `;
     document.body.appendChild(container);
-    const iframe = document.createElement('iframe');
-    iframe.style.cssText = 'width:680px;height:1px;border:none';
-    container.appendChild(iframe);
-    iframe.srcdoc = html;
-    await new Promise(res => { iframe.onload = res; });
 
-    const doc = iframe.contentDocument;
-    const imgs = Array.from(doc.querySelectorAll('img[data-foto-idx]'));
+    const imgs = Array.from(container.querySelectorAll('img[data-foto-idx]'));
     if (statusEl) statusEl.textContent = '🔄 Carregando ' + imgs.length + ' foto(s)...';
     await Promise.race([
       Promise.all(imgs.map(img => new Promise(res => {
@@ -5936,12 +5946,8 @@ async function gerarPdfOksSemBox(input) {
     ]);
     await new Promise(res => setTimeout(res, 300)); // respiro final pro navegador desenhar tudo
 
-    const alturaTotal = doc.body.scrollHeight;
-    iframe.style.height = alturaTotal + 'px';
-    await new Promise(res => setTimeout(res, 200));
-
     if (statusEl) statusEl.textContent = '🔄 Gerando PDF...';
-    const canvas = await html2canvas(doc.body, { width: 680, windowWidth: 680, scale: 2, useCORS: true, backgroundColor: '#faf7f5' });
+    const canvas = await html2canvas(container, { width: 680, windowWidth: 680, scale: 2, useCORS: true, backgroundColor: '#faf7f5' });
     document.body.removeChild(container);
 
     const { jsPDF } = window.jspdf;
@@ -7511,11 +7517,12 @@ if (typeof firebase !== 'undefined' && firebase.apps.length) {
         avatarImg.style.display = 'none';
         if (avatarInit) avatarInit.textContent = uName.charAt(0).toUpperCase();
       }
-      // Mede a altura real da barra do usuário, em vez de usar um número fixo — evita
-      // sobrar uma fresta (ou o cabeçalho ficar atrás demais) se a altura dela mudar.
-      const alturaUserBar = userBar.offsetHeight || 36;
-      catHeader.style.top = alturaUserBar + 'px';
-      document.querySelector('.main-content').style.paddingTop = (alturaUserBar + 174) + 'px';
+      // Mede a altura real da barra do usuário e do cabeçalho (título+busca+abas+chips) —
+      // em vez de números fixos, que ficavam errados conforme o cabeçalho crescia (mais chips
+      // de categoria/vendedora quebrando em mais linhas), fazendo os produtos ficarem
+      // escondidos atrás dele em telas mais largas (PC).
+      ajustarPaddingCabecalho();
+      window.addEventListener('resize', ajustarPaddingCabecalho);
       localStorage.setItem('chat_nome', user.displayName || user.email);
       pedirPermissaoNotificacao();
       iniciarPresenca(user.displayName || user.email, user.photoURL || '');
