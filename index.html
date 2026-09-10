@@ -30,7 +30,7 @@ body.dark{
 }
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overscroll-behavior:none;transition:background 0.3s,color 0.3s}
 /* Header */
-.header{position:fixed;top:0;left:0;right:0;z-index:100;background:var(--bg);border-bottom:0.5px solid var(--border);transition:transform 0.25s ease}
+.header{position:static;background:var(--bg);border-bottom:0.5px solid var(--border)}
 .header.hidden{transform:translateY(-100%)}
 .header-top{padding:8px 10px 10px;display:flex;align-items:flex-start;justify-content:space-between}
 .logo{font-size:15px;font-weight:600;color:var(--red);letter-spacing:2px}
@@ -1611,32 +1611,26 @@ function getFiltradosOrdenados() {
   return prods;
 }
 
-// Mede a altura real da barra do usuário + cabeçalho (título, busca, abas e todos os chips
-// de filtro) e ajusta a posição do cabeçalho fixo e o espaço reservado pros produtos —
-// evita tanto sobra de espaço vazio quanto produtos escondidos atrás do cabeçalho. Usa
-// ResizeObserver pra recalcular sozinho sempre que a altura real mudar (chips quebrando em
-// mais/menos linhas, etc), em vez de confiar em medir só em pontos específicos do código
-// (que corria o risco de pegar um instante errado e "travar" um valor incorreto).
-let _resizeObsCabecalho = null;
+// Mede a altura real da barra do usuário (a única coisa que continua fixa no topo) e reserva
+// esse espaço — o cabeçalho de filtros agora rola normal junto com a página (não é mais
+// fixo), então não precisa mais calcular a altura dele: ele sobe e sai da tela sozinho ao
+// rolar, sem precisar de nenhuma trava de espaço reservado pra ele.
+let _resizeObsUserBar = null;
 function ajustarPaddingCabecalho() {
   const userBar = document.getElementById('user-bar');
-  const catHeader = document.getElementById('cat-header');
   const mainContent = document.querySelector('.main-content');
-  if (!catHeader || !mainContent) return;
+  if (!mainContent) return;
 
   const aplicar = () => {
     const alturaUserBar = (userBar && userBar.style.display !== 'none') ? userBar.offsetHeight : 0;
-    catHeader.style.top = alturaUserBar + 'px';
-    const alturaCabecalho = catHeader.offsetHeight;
-    mainContent.style.paddingTop = (alturaUserBar + alturaCabecalho) + 'px';
+    mainContent.style.paddingTop = alturaUserBar + 'px';
   };
 
   aplicar();
 
-  if (!_resizeObsCabecalho && window.ResizeObserver) {
-    _resizeObsCabecalho = new ResizeObserver(() => aplicar());
-    _resizeObsCabecalho.observe(catHeader);
-    if (userBar) _resizeObsCabecalho.observe(userBar);
+  if (!_resizeObsUserBar && window.ResizeObserver && userBar) {
+    _resizeObsUserBar = new ResizeObserver(() => aplicar());
+    _resizeObsUserBar.observe(userBar);
   }
 }
 
