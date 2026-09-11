@@ -3697,13 +3697,20 @@ function confirmarStatusSelecao() {
   } else if (_statusAtivo === 'est_eua') {
     p.est_eua = todosAtivos;
     p.estEuaTams = novoQty;
+    Object.entries(qty).forEach(([t, q]) => {
+      if (q > 0) enviarEstoqueParaPlanilha(p, 'USA', 'marcou', getNomeUsuario());
+    });
   } else if (_statusAtivo === 'est_br') {
     p.est_br = todosAtivos;
     p.estBrTams = novoQty;
+    Object.entries(qty).forEach(([t, q]) => {
+      if (q > 0) enviarEstoqueParaPlanilha(p, 'BR', 'marcou', getNomeUsuario());
+    });
   }
   fecharStatusSelecao();
   fbSave(modalId);
   renderGrid();
+  if (document.getElementById('page-eua')?.classList.contains('active')) renderEua();
   // Atualizar botões do modal
   atualizarBotoesModal(p);
   const quem = getNomeUsuario();
