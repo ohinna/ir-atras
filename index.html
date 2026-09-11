@@ -3695,13 +3695,13 @@ function confirmarStatusSelecao() {
       if (q > 0) enviarNokParaPlanilha(p, t, 'marcou', getNomeUsuario());
     });
   } else if (_statusAtivo === 'est_eua') {
-    p.est_eua = todosAtivos;
+    p.est_eua = temAlgo;
     p.estEuaTams = novoQty;
     Object.entries(qty).forEach(([t, q]) => {
       if (q > 0) enviarEstoqueParaPlanilha(p, 'USA', 'marcou', getNomeUsuario());
     });
   } else if (_statusAtivo === 'est_br') {
-    p.est_br = todosAtivos;
+    p.est_br = temAlgo;
     p.estBrTams = novoQty;
     Object.entries(qty).forEach(([t, q]) => {
       if (q > 0) enviarEstoqueParaPlanilha(p, 'BR', 'marcou', getNomeUsuario());
