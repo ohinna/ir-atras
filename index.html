@@ -5335,11 +5335,10 @@ function fbListen() {
             const fResolved = resolverFoto(fOriginal) || converterLinkDrive(fOriginal);
             return {...p, f: fResolved, _fOriginal: fOriginal, origem: p.origem||'usa', nok:false, em_compra:false, est_eua:false, est_br:false, comments:[], qty:p.q};
           });
-          renderGrid();
-          reconstruirCatChips();
-          updateNokBadge();
-          updateEmCompraBadge();
-          abrirProdutoPorHash();
+          // Cada passo isolado: um erro de tela não pode travar o carregamento
+          [renderGrid, updateNokBadge, updateEmCompraBadge, abrirProdutoPorHash].forEach(fn => {
+            try { fn(); } catch (e) { console.error('Erro em ' + fn.name + ':', e); (window._errosCapturados = window._errosCapturados || []).push('⚠️ ' + fn.name + ': ' + e.message); }
+          });
         } else {
           // Catálogo vazio mas carregou
         }
