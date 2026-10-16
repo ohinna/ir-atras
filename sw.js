@@ -1,11 +1,11 @@
-// Bazaar — Service Worker v0dfc9df5
-const CACHE_NAME = 'bazaar-0dfc9df5';
+// Bazaar — Service Worker v1a2b3c4d
+const CACHE_NAME = 'bazaar-1a2b3c4d';
 const FILES = ['/ir-atras/', '/ir-atras/index.html'];
 
 self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(FILES))
+      .then(cache => cache.addAll(FILES).catch(() => {}))
       .then(() => self.skipWaiting())
   );
 });
@@ -20,8 +20,8 @@ self.addEventListener('activate', e => {
 
 // Network-first: sempre tenta buscar da rede, só usa cache se offline
 self.addEventListener('fetch', e => {
-  // Só interceptar requests do próprio site
-  if (!e.request.url.includes('ohinna.github.io') && !e.request.url.includes('localhost')) return;
+  // Só interceptar GETs do próprio site (qualquer domínio onde o app esteja publicado)
+  if (e.request.method !== 'GET' || new URL(e.request.url).origin !== self.location.origin) return;
   
   e.respondWith(
     fetch(e.request)
@@ -33,7 +33,7 @@ self.addEventListener('fetch', e => {
         }
         return res;
       })
-      .catch(() => caches.match(e.request)) // offline: usa cache
+      .catch(() => caches.match(e.request).then(r => r || Response.error())) // offline: usa cache
   );
 });
 

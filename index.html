@@ -179,9 +179,9 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
 .reaction-btn{background:#fdf8f4;border:0.5px solid #ede0d4;border-radius:20px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:inherit}
 .reaction-btn.active{background:#fdf2f3;border-color:#f5c4c4}
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -6370,16 +6370,28 @@ async function sincronizarAutomaticamente(manual) {
   let algumErro = false;
   const errosDetalhados = [];
 
-  async function baixarAba(idPlanilha, nomeAba, nomeArquivo, callback) {
+  async function baixarAba(idPlanilha, nomeAba, nomeArquivo, callback, esperarSalvar) {
     if (!nomeAba || !idPlanilha) return;
     try {
       const url = baseUrl + '?senha=' + encodeURIComponent(SYNC_SENHA) + '&planilhaId=' + encodeURIComponent(idPlanilha) + '&aba=' + encodeURIComponent(nomeAba);
-      const resp = await fetch(url, { cache: 'no-store' });
+      const ctrl = new AbortController();
+      const tmoFetch = setTimeout(() => ctrl.abort(), 90000);
+      let resp;
+      try { resp = await fetch(url, { cache: 'no-store', signal: ctrl.signal }); }
+      catch (e) { throw new Error(e.name === 'AbortError' ? 'demorou demais (90s)' : e.message); }
+      finally { clearTimeout(tmoFetch); }
       if (!resp.ok) throw new Error('HTTP ' + resp.status);
       const texto = await resp.text();
       if (texto.startsWith('Erro:') || texto === 'Acesso negado' || texto.startsWith('Aba não encontrada') || texto.startsWith('Parâmetro')) throw new Error(texto);
       const inputFalso = _inputFalsoComTexto(texto, nomeArquivo);
+      const filaAntes = _filaSalvar;
       callback(inputFalso);
+      // Abas de produtos (USA/BR): espera a importação entrar na fila e terminar de salvar
+      // antes de baixar a próxima (máx. ~30s só esperando a leitura do arquivo começar a salvar)
+      if (esperarSalvar) {
+        for (let i = 0; i < 150 && _filaSalvar === filaAntes; i++) await new Promise(r => setTimeout(r, 200));
+        await _filaSalvar;
+      }
     } catch (err) {
       algumErro = true;
       errosDetalhados.push(nomeArquivo + ': ' + err.message);
@@ -6387,16 +6399,17 @@ async function sincronizarAutomaticamente(manual) {
     }
   }
 
-  await baixarAba(planilhaId, abas.usa, 'usa.csv', processarCSVUSA);
+  await baixarAba(planilhaId, abas.usa, 'usa.csv', processarCSVUSA, true);
   if (localStorage.getItem('sync_usa2Ativo') === '1') {
-    await baixarAba(planilhaIdUsa2, abas.usa2, 'usa2.csv', (inp) => processarCSVUSA(inp, 'usa2'));
+    await baixarAba(planilhaIdUsa2, abas.usa2, 'usa2.csv', (inp) => processarCSVUSA(inp, 'usa2'), true);
   }
-  await baixarAba(planilhaIdBr || planilhaId, abas.br, 'br.csv', processarCSVBR);
+  await baixarAba(planilhaIdBr || planilhaId, abas.br, 'br.csv', processarCSVBR, true);
   await baixarAba(planilhaId, abas.fotosUsa, 'fotos-usa.csv', (inp) => handleFotos(inp, 'usa'));
   await baixarAba(planilhaIdBr || planilhaId, abas.fotosBr, 'fotos-br.csv', (inp) => handleFotos(inp, 'br'));
   await baixarAba(planilhaId, abas.relatorio, 'relatorio.csv', processarCSVRelatorio);
   await baixarAba(planilhaIdPrazos, abas.prazos, 'prazos.csv', (inp) => processarCSVPrazos(inp, abas.prazos));
 
+  await _filaSalvar;
   const agora = new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
   localStorage.setItem('syncUltimaVez', agora);
   window._ultimoErroSync = errosDetalhados;
@@ -6832,8 +6845,24 @@ function toggleUsa2Ativo(ligado) {
   }
 }
 
-// Apaga só os produtos da origem informada e salva os novos, sem mexer na outra origem
+// Fila: USA e BR nunca salvam ao mesmo tempo (antes se atropelavam: IDs repetidos,
+// backup de status misturado e um lado sobrescrevendo o outro).
+let _filaSalvar = Promise.resolve();
 function salvarOrigemNoFirebase(newData, origem, onDone) {
+  _filaSalvar = _filaSalvar.then(() => new Promise(resolve => {
+    let liberado = false;
+    const liberar = () => { if (!liberado) { liberado = true; clearTimeout(tmo); resolve(); } };
+    const tmo = setTimeout(liberar, 180000); // trava de segurança: nunca prende a fila pra sempre
+    try { _salvarOrigemImpl(newData, origem, onDone, liberar); }
+    catch (e) { console.error('Erro ao salvar ' + origem, e); liberar(); }
+  }));
+  return _filaSalvar;
+}
+
+// Apaga só os produtos da origem informada e salva os novos, sem mexer na outra origem
+function _salvarOrigemImpl(newData, origem, onDone, liberar) {
+  liberar = liberar || (() => {});
+  let statusBackup = {};
   const statusId = origem === 'br' ? 'csv-status-br' : 'csv-status';
   const setStatus = (msg) => { const el = document.getElementById(statusId); if (el) el.textContent = msg; };
   if (!window._db) {
@@ -6845,6 +6874,7 @@ function salvarOrigemNoFirebase(newData, origem, onDone) {
     renderGrid();
     setStatus('✅ ' + newData.length + ' produtos importados (' + origem.toUpperCase() + ')');
     if (onDone) onDone();
+    liberar();
     return;
   }
   if (fbUnsub) { fbUnsub(); fbUnsub = null; }
@@ -6872,7 +6902,7 @@ function salvarOrigemNoFirebase(newData, origem, onDone) {
     // Salvar status antes de limpar faltantes para reaplicar depois
     return window._db.collection('faltantes').get().then(snap => {
       // Guardar status ativos (em_compra, nok, est_eua, est_br) por nome de produto
-      window._statusBackup = {};
+      statusBackup = {};
       snap.docs.forEach(doc => {
         const d = doc.data();
         const o = doc.data().origem;
@@ -6881,7 +6911,7 @@ function salvarOrigemNoFirebase(newData, origem, onDone) {
         const p = PRODUTOS.find(x => x._id === docIdNum);
         if (pertenceOrigem && p) {
           const key = (p.n||'').toLowerCase().trim() + '||' + (p.m||'').toLowerCase().trim();
-          window._statusBackup[key] = {
+          statusBackup[key] = {
             em_compra: d.em_compra || false,
             compraHistory: d.compraHistory || [],
             nok: d.nok || false,
@@ -6929,9 +6959,10 @@ function salvarOrigemNoFirebase(newData, origem, onDone) {
   }).then(() => {
     setStatus('✅ ' + newData.length + ' produtos salvos (' + origem.toUpperCase() + ')');
     fbListen();
+    statusBackup = statusBackup || {};
     // Reaplicar status salvos nos novos produtos pelo nome+marca
-    if (window._statusBackup && Object.keys(window._statusBackup).length > 0) {
-      const backupSnapshot = window._statusBackup;
+    if (Object.keys(statusBackup).length > 0) {
+      const backupSnapshot = statusBackup;
       const totalBackup = Object.keys(backupSnapshot).length;
       let tentativas = 0;
       const tentarRestaurar = () => {
@@ -6980,19 +7011,22 @@ function salvarOrigemNoFirebase(newData, origem, onDone) {
           batch2.commit().then(() => {
             setStatus('✅ ' + newData.length + ' produtos · ' + restored + ' status restaurados' + (chavesNaoEncontradas.length ? ' · ' + chavesNaoEncontradas.length + ' não encontrados (ver aba Dados)' : ''));
             renderGrid();
-          });
-        } else if (chavesComStatus.length > 0) {
-          setStatus('⚠️ ' + newData.length + ' produtos salvos, mas 0 de ' + chavesComStatus.length + ' status foram restaurados (ver Diagnóstico na aba Dados)');
+          }).catch(e => setStatus('❌ Erro ao restaurar status: ' + e.message)).then(liberar);
+        } else {
+          if (chavesComStatus.length > 0) setStatus('⚠️ ' + newData.length + ' produtos salvos, mas 0 de ' + chavesComStatus.length + ' status foram restaurados (ver Diagnóstico na aba Dados)');
+          liberar();
         }
-        window._statusBackup = {};
       };
       setTimeout(tentarRestaurar, 500);
+    } else {
+      liberar();
     }
     if (onDone) onDone();
   }).catch(e => {
     setStatus('❌ Erro ao salvar: ' + e.message);
     fbListen();
     if (onDone) onDone();
+    liberar();
   });
 }
 
@@ -7523,10 +7557,31 @@ function handleFotos(input, origem) {
 
 // Init
 // Google Auth
+// Navegador embutido (WhatsApp, Instagram, Facebook...) — o Google bloqueia o login ali.
+function ehNavegadorEmbutido() {
+  return /FBAN|FBAV|FB_IAB|Instagram|WhatsApp|Line\/|MicroMessenger|Snapchat|TikTok|; wv\)/i.test(navigator.userAgent);
+}
 function loginGoogle() {
+  const erroEl = document.getElementById('login-error');
+  if (ehNavegadorEmbutido()) {
+    if (erroEl) erroEl.textContent = 'Este link abriu dentro de outro app (WhatsApp/Instagram). Toque nos 3 pontinhos e escolha "Abrir no Chrome" (ou "Abrir no Safari") para entrar.';
+    return;
+  }
   const provider = new firebase.auth.GoogleAuthProvider();
   firebase.auth().signInWithPopup(provider).catch(err => {
-    (document.getElementById('login-error')||{}).textContent = 'Erro ao entrar: ' + err.message;
+    // Celular que bloqueia popup: tenta o login por redirecionamento
+    if (['auth/popup-blocked', 'auth/operation-not-supported-in-this-environment', 'auth/cancelled-popup-request'].includes(err.code)) {
+      firebase.auth().signInWithRedirect(provider).catch(e2 => { if (erroEl) erroEl.textContent = 'Erro ao entrar: ' + e2.message; });
+      return;
+    }
+    if (err.code === 'auth/popup-closed-by-user') return;
+    if (erroEl) erroEl.textContent = 'Erro ao entrar: ' + err.message;
+  });
+}
+if (typeof firebase !== 'undefined' && firebase.apps.length) {
+  firebase.auth().getRedirectResult().catch(err => {
+    const el = document.getElementById('login-error');
+    if (el && err && err.code !== 'auth/no-auth-event') el.textContent = 'Erro ao entrar: ' + err.message;
   });
 }
 
@@ -7639,6 +7694,18 @@ document.addEventListener('DOMContentLoaded', () => {
   renderMeta();
   fbListen();
   resetIdleTimer();
+  // Se a internet do celular estiver ruim e nada carregar, não deixa a tela "Carregando" presa pra sempre
+  setTimeout(() => {
+    const ls = document.getElementById('loading-screen');
+    if (ls && ls.style.display !== 'none') {
+      const m = document.getElementById('loading-msg');
+      if (m) m.innerHTML = 'Está demorando... confira a internet.<br><span style="text-decoration:underline;cursor:pointer" onclick="location.reload()">Toque aqui para tentar de novo</span>';
+    }
+  }, 15000);
+  if (typeof firebase === 'undefined') {
+    const m = document.getElementById('loading-msg');
+    if (m) m.innerHTML = 'Não foi possível carregar o app (internet bloqueando o Google).<br><span style="text-decoration:underline;cursor:pointer" onclick="location.reload()">Toque aqui para tentar de novo</span>';
+  }
 });
 </script>
 <!-- Install banner -->
