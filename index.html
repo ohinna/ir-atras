@@ -43,7 +43,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .filter-row::-webkit-scrollbar{display:none}
 .chip{background:var(--bg2);border:0.5px solid var(--border);border-radius:14px;padding:3px 10px;font-size:10px;color:var(--red);white-space:nowrap;cursor:pointer;transition:all 0.18s ease;font-family:inherit;font-weight:500}
 .chip.active{background:var(--red) !important;border-color:var(--red) !important;color:#fff !important;transform:scale(1.04)}
-@keyframes loadbar{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}
+
 /* Dark mode overrides */
 body.dark .upload-card{background:var(--bg2);border-color:var(--border)}
 body.dark .btn-secondary{background:var(--bg2);border-color:var(--border);color:var(--text)}
@@ -204,11 +204,58 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
 <!-- LOADING SCREEN -->
 <div id="loading-screen" style="position:fixed;inset:0;z-index:9998;background:#f9f2ee;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px">
   <div style="font-size:28px;font-weight:800;color:#7a0b1e;letter-spacing:-1px">bazaar</div>
-  <div id="loading-msg" style="font-size:13px;color:#c4a898">Conectando...</div>
-  <div style="width:120px;height:3px;background:#ede0d4;border-radius:4px;overflow:hidden">
-    <div style="height:100%;width:40%;background:#7a0b1e;border-radius:4px;animation:loadbar 1s ease-in-out infinite alternate"></div>
+  <div id="loading-pct" style="font-size:34px;font-weight:700;color:#7a0b1e;margin-top:-6px">0%</div>
+  <div id="loading-msg" style="font-size:13px;color:#c4a898;text-align:center;padding:0 24px">Abrindo o app...</div>
+  <div id="loading-erro" style="display:none;max-width:290px;text-align:center">
+    <div id="loading-erro-txt" style="font-size:12px;color:#c0392b;line-height:1.5;margin-bottom:12px"></div>
+    <button onclick="location.reload()" style="padding:12px 22px;border-radius:12px;background:#7a0b1e;border:none;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🔄 Recarregar página</button>
+  </div>
+  <div style="width:180px;height:6px;background:#ede0d4;border-radius:6px;overflow:hidden">
+    <div id="loading-fill" style="height:100%;width:0%;background:#7a0b1e;border-radius:6px;transition:width .4s ease"></div>
   </div>
 </div>
+<script>
+// Carregamento com porcentagem. Se ficar parado por muito tempo, mostra o motivo e o botão de recarregar.
+window._carga = { pct: 0, etapa: 'Abrindo o app', erro: '', ultimo: Date.now(), fim: false };
+function cargaRender() {
+  const c = window._carga;
+  const pct = document.getElementById('loading-pct'), msg = document.getElementById('loading-msg'), fill = document.getElementById('loading-fill');
+  if (pct) pct.textContent = Math.round(c.pct) + '%';
+  if (msg) msg.textContent = c.etapa + '...';
+  if (fill) fill.style.width = c.pct + '%';
+}
+function cargaPasso(pct, etapa) {
+  const c = window._carga;
+  if (c.fim) return;
+  if (pct > c.pct) c.pct = pct;
+  if (etapa) c.etapa = etapa;
+  c.ultimo = Date.now();
+  const box = document.getElementById('loading-erro');
+  if (box && box.style.display !== 'none') box.style.display = 'none'; // voltou a andar
+  cargaRender();
+}
+function cargaMostrarErro(msg) {
+  const c = window._carga;
+  if (c.fim) return;
+  if (msg) c.erro = msg;
+  const box = document.getElementById('loading-erro'), txt = document.getElementById('loading-erro-txt');
+  const extra = (window._errosCapturados && window._errosCapturados.length) ? ' (' + window._errosCapturados[window._errosCapturados.length - 1] + ')' : '';
+  if (txt) txt.textContent = 'Parou em ' + Math.round(c.pct) + '% (' + c.etapa + '). ' + (c.erro || 'Provavelmente a internet está ruim ou instável.') + extra;
+  if (box) box.style.display = 'block';
+}
+function cargaFim() {
+  const c = window._carga;
+  if (c.fim) return;
+  c.pct = 100; c.etapa = 'Pronto'; cargaRender();
+  c.fim = true;
+  setTimeout(() => { const ls = document.getElementById('loading-screen'); if (ls) ls.style.display = 'none'; }, 250);
+}
+setInterval(() => {
+  const c = window._carga;
+  if (!c.fim && Date.now() - c.ultimo > 12000) cargaMostrarErro();
+}, 2000);
+cargaPasso(5, 'Abrindo o app');
+</script>
 
 <!-- OFFLINE BANNER -->
 <div id="offline-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9997;background:#1a1a1a;color:#fff;font-size:12px;font-weight:600;text-align:center;padding:8px;letter-spacing:0.3px">
@@ -5276,10 +5323,9 @@ function fbListen() {
   const carregarCatalogo = () => {
     // Sempre recarregar do Firebase para garantir BR e USA atualizados
     {
+      cargaPasso(75, 'Carregando os produtos');
       window._db.collection('catalogo').get({source: 'server'}).then(snap => {
-        // Esconder loading screen agora que os dados chegaram
-        const ls = document.getElementById('loading-screen');
-        if (ls) ls.style.display = 'none';
+        cargaPasso(90, 'Montando a lista');
         if (!snap.empty) {
           const raw = [];
           snap.forEach(doc => { raw.push({...doc.data(), _id: parseInt(doc.id)}); });
@@ -5295,15 +5341,18 @@ function fbListen() {
           updateEmCompraBadge();
           abrirProdutoPorHash();
         } else {
-          // Catálogo vazio mas carregou — esconde loading
-          const ls2 = document.getElementById('loading-screen');
-          if (ls2) ls2.style.display = 'none';
+          // Catálogo vazio mas carregou
         }
+        cargaFim();
         _fbListenCore();
-      }).catch(() => {
-        // Erro no Firebase — esconde loading e mostra catálogo vazio
-        const ls = document.getElementById('loading-screen');
-        if (ls) ls.style.display = 'none';
+      }).catch((err) => {
+        if (err && err.code === 'permission-denied') {
+          // Ainda sem login — a tela de login cuida do resto
+          cargaFim();
+        } else {
+          // Erro de verdade (internet ruim, servidor fora): mostra o motivo e o botão de recarregar
+          cargaMostrarErro('Não foi possível baixar os produtos' + (err && err.message ? ' — ' + err.message : '.'));
+        }
         _fbListenCore();
       });
     }
@@ -5337,6 +5386,7 @@ function fbListen() {
       }
     }).catch(()=>{});
   };
+  cargaPasso(35, 'Carregando as configurações');
   const p1 = carregarMapaFotos('fotos', '_fotoMap', 'foto_map');
   const p2 = carregarMapaFotos('fotos_br', '_fotoMapBr', 'foto_map_br');
   const p3 = window._db.collection('config').doc('relatorio').get().then(doc => {
@@ -5357,6 +5407,7 @@ function fbListen() {
   const p7 = window._db.collection('config').doc('sobras_online_usa').get().then(doc => {
     window._sobrasOnlineUSA = (doc.exists && doc.data().dados) ? JSON.parse(doc.data().dados) : [];
   }).catch(()=>{ window._sobrasOnlineUSA = []; });
+  [p1,p2,p3,p4,p5,p6,p7].forEach(pp => pp.then(() => cargaPasso(Math.min(70, window._carga.pct + 5), 'Carregando as configurações')));
   Promise.all([p1,p2,p3,p4,p5,p6,p7]).finally(() => { carregarCatalogo(); setTimeout(atualizarVersaoHeader, 500); });
 }
 
@@ -7594,9 +7645,7 @@ if (typeof firebase !== 'undefined' && firebase.apps.length) {
 
   firebase.auth().onAuthStateChanged(user => {
     // Loading screen só some quando dados carregarem (ver fbListen)
-    const loadMsg = document.getElementById('loading-msg');
-    if (loadMsg && user) loadMsg.textContent = 'Carregando produtos...';
-    if (loadMsg && !user) loadMsg.textContent = 'Faça login para continuar';
+    cargaPasso(30, user ? 'Entrando' : 'Verificando o login');
 
     const overlay = document.getElementById('login-overlay');
     const userBar = document.getElementById('user-bar');
@@ -7629,7 +7678,7 @@ if (typeof firebase !== 'undefined' && firebase.apps.length) {
     } else {
       // Não logado — esconde loading e mostra tela de login
       const lsOut = document.getElementById('loading-screen');
-      if (lsOut) lsOut.style.display = 'none';
+      cargaFim();
       overlay.style.display = 'flex';
       userBar.style.display = 'none';
       document.body.classList.remove('user-bar-visible');
@@ -7694,17 +7743,9 @@ document.addEventListener('DOMContentLoaded', () => {
   renderMeta();
   fbListen();
   resetIdleTimer();
-  // Se a internet do celular estiver ruim e nada carregar, não deixa a tela "Carregando" presa pra sempre
-  setTimeout(() => {
-    const ls = document.getElementById('loading-screen');
-    if (ls && ls.style.display !== 'none') {
-      const m = document.getElementById('loading-msg');
-      if (m) m.innerHTML = 'Está demorando... confira a internet.<br><span style="text-decoration:underline;cursor:pointer" onclick="location.reload()">Toque aqui para tentar de novo</span>';
-    }
-  }, 15000);
+  cargaPasso(15, 'Conectando ao servidor');
   if (typeof firebase === 'undefined') {
-    const m = document.getElementById('loading-msg');
-    if (m) m.innerHTML = 'Não foi possível carregar o app (internet bloqueando o Google).<br><span style="text-decoration:underline;cursor:pointer" onclick="location.reload()">Toque aqui para tentar de novo</span>';
+    cargaMostrarErro('Não foi possível carregar os serviços do Google (internet muito lenta ou bloqueada).');
   }
 });
 </script>
