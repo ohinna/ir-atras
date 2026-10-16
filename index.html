@@ -179,6 +179,9 @@ body.dark #loading-screen > div:last-child > div{background:#e05555}
 .reaction-btn{background:#fdf8f4;border:0.5px solid #ede0d4;border-radius:20px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:inherit}
 .reaction-btn.active{background:#fdf2f3;border-color:#f5c4c4}
 </style>
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://lh3.googleusercontent.com" crossorigin>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -1276,13 +1279,26 @@ function toggleGrid() {
   document.getElementById('grid').style.gridTemplateColumns = `repeat(${_gridCols}, 1fr)`;
 }
 
+const _mapaMemo = {};
 function resolverFoto(raw) {
   if (!raw) return '';
   const s = raw.trim();
   if (!s) return '';
+  // Memoriza o mapa de fotos: antes, a cada produto o app recontava/relia o mapa inteiro
+  // (milhares de vezes na abertura) — era a maior causa de lentidão.
   const getMapa = (memKey, lsKey) => {
-    if (window[memKey] && Object.keys(window[memKey]).length) return window[memKey];
-    try { return JSON.parse(localStorage.getItem(lsKey)||'{}'); } catch(e) { return {}; }
+    const memo = _mapaMemo[memKey] || (_mapaMemo[memKey] = {});
+    const mem = window[memKey];
+    if (mem) {
+      if (memo.memRef !== mem) { memo.memRef = mem; memo.memTem = Object.keys(mem).length > 0; }
+      if (memo.memTem) return mem;
+    }
+    const agora = Date.now();
+    if (!memo.ls || agora - memo.lsT > 3000) {
+      try { memo.ls = JSON.parse(localStorage.getItem(lsKey)||'{}'); } catch(e) { memo.ls = {}; }
+      memo.lsT = agora;
+    }
+    return memo.ls;
   };
   const maps = [getMapa('_fotoMap','foto_map'), getMapa('_fotoMapBr','foto_map_br')];
   const buscarNoMapa = (nome) => {
@@ -1780,7 +1796,7 @@ function renderGrid() {
     const ab = abbrev(p.n, p.m);
     const driveId = (p.f||'').match(/(?:lh3\.googleusercontent\.com\/d\/|drive\.google\.com\/thumbnail\?id=)([a-zA-Z0-9_-]+)/)?.[1];
     const fallbackSrc = driveId ? `https://drive.google.com/thumbnail?id=${driveId}&sz=w200` : '';
-    const img = p.f ? `<img src="${fotoThumb(p.f,200)}" style="width:100%;height:100%;object-fit:cover;cursor:pointer" onerror="${fallbackSrc ? `if(!this.dataset.fb){this.dataset.fb=1;this.src='${fallbackSrc}';}else{` : ''}this.style.display='none';this.nextElementSibling.style.display='flex';${fallbackSrc ? '}' : ''}">
+    const img = p.f ? `<img loading="lazy" decoding="async" src="${fotoThumb(p.f,200)}" style="width:100%;height:100%;object-fit:cover;cursor:pointer" onerror="${fallbackSrc ? `if(!this.dataset.fb){this.dataset.fb=1;this.src='${fallbackSrc}';}else{` : ''}this.style.display='none';this.nextElementSibling.style.display='flex';${fallbackSrc ? '}' : ''}">
       <span class="card-abbrev" style="display:none">${ab}</span>` 
       : `<span class="card-abbrev">${ab}</span>`;
     const cmts = Array.isArray(p.comments) ? p.comments : [];
@@ -5324,7 +5340,8 @@ function fbListen() {
     // Sempre recarregar do Firebase para garantir BR e USA atualizados
     {
       cargaPasso(75, 'Carregando os produtos');
-      window._db.collection('catalogo').get({source: 'server'}).then(snap => {
+      const _prefetch = window._catalogoPrefetch; window._catalogoPrefetch = null;
+      (_prefetch || window._db.collection('catalogo').get({source: 'server'})).then(snap => {
         cargaPasso(90, 'Montando a lista');
         if (!snap.empty) {
           const raw = [];
@@ -5386,6 +5403,9 @@ function fbListen() {
     }).catch(()=>{});
   };
   cargaPasso(35, 'Carregando as configurações');
+  // Começa a baixar os produtos JÁ, em paralelo com o resto (antes esperava tudo terminar primeiro)
+  window._catalogoPrefetch = window._db.collection('catalogo').get({source: 'server'});
+  window._catalogoPrefetch.catch(() => {});
   const p1 = carregarMapaFotos('fotos', '_fotoMap', 'foto_map');
   const p2 = carregarMapaFotos('fotos_br', '_fotoMapBr', 'foto_map_br');
   const p3 = window._db.collection('config').doc('relatorio').get().then(doc => {
@@ -5407,7 +5427,18 @@ function fbListen() {
     window._sobrasOnlineUSA = (doc.exists && doc.data().dados) ? JSON.parse(doc.data().dados) : [];
   }).catch(()=>{ window._sobrasOnlineUSA = []; });
   [p1,p2,p3,p4,p5,p6,p7].forEach(pp => pp.then(() => cargaPasso(Math.min(70, window._carga.pct + 5), 'Carregando as configurações')));
-  Promise.all([p1,p2,p3,p4,p5,p6,p7]).finally(() => { carregarCatalogo(); setTimeout(atualizarVersaoHeader, 500); });
+  // Só espera o mapa de fotos se o aparelho ainda não tiver uma cópia guardada; as demais
+  // configurações (ordens, sobras, relatório) carregam em segundo plano, sem travar a abertura.
+  const temCacheFotos = !!(localStorage.getItem('foto_map') || localStorage.getItem('foto_map_br'));
+  Promise.all(temCacheFotos ? [] : [p1, p2]).finally(() => { carregarCatalogo(); setTimeout(atualizarVersaoHeader, 500); });
+  if (temCacheFotos) {
+    // Quando o mapa novo chegar, atualiza as fotos que mudaram
+    Promise.all([p1, p2]).then(() => {
+      let mudou = false;
+      PRODUTOS.forEach(pr => { const r = resolverFoto(pr._fOriginal || pr.f); if (r && r !== pr.f) { pr.f = r; mudou = true; } });
+      if (mudou) renderGrid();
+    });
+  }
 }
 
 function _fbListenCore() {
