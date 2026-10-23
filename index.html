@@ -230,7 +230,8 @@ function cargaRender() {
 function cargaPasso(pct, etapa) {
   const c = window._carga;
   if (c.fim) return;
-  if (pct > c.pct) c.pct = pct;
+  if (pct < c.pct) return; // passo atrasado de uma etapa que já passou: ignora
+  c.pct = pct;
   if (etapa) c.etapa = etapa;
   c.ultimo = Date.now();
   const box = document.getElementById('loading-erro');
@@ -5030,7 +5031,7 @@ function mostrarMarcasTurno(vendKey, turno, btn) {
     // Restaurar conteúdo original
     let vr = {};
     try { vr = JSON.parse(bloco.dataset.vr.replace(/&quot;/g,'"')); } catch(e) {}
-    const vendNomeRest = bloco.dataset.vend || (vend ? vend.charAt(0)+vend.slice(1).toLowerCase() : '');
+    const vendNomeRest = bloco.dataset.vend || (vendKey ? vendKey.charAt(0)+vendKey.slice(1).toLowerCase() : '');
     renderMarcasBloco(bloco, titulo, vr.top3marcas||[], null, vendNomeRest);
     return;
   }
@@ -5042,7 +5043,7 @@ function mostrarMarcasTurno(vendKey, turno, btn) {
   let vr = {};
   try { vr = JSON.parse(bloco.dataset.vr.replace(/&quot;/g,'"')); } catch(e) {}
   const marcas = vr.marcasPorTurno?.[turno] || [];
-  const vendNomeTurno = bloco.dataset.vend || (vend ? vend.charAt(0)+vend.slice(1).toLowerCase() : vendKey);
+  const vendNomeTurno = bloco.dataset.vend || vendKey;
   renderMarcasBloco(bloco, titulo, marcas, turnoLabels[turno], vendNomeTurno);
 }
 
@@ -5357,7 +5358,14 @@ function fbListen() {
             try { fn(); } catch (e) { console.error('Erro em ' + fn.name + ':', e); (window._errosCapturados = window._errosCapturados || []).push('⚠️ ' + fn.name + ': ' + e.message); }
           });
         } else {
-          // Catálogo vazio mas carregou
+          // Catálogo vazio: pode ser uma sincronização acontecendo agora (apagando/regravando).
+          // Tenta de novo algumas vezes antes de mostrar "Nenhum produto".
+          window._tentativasVazio = (window._tentativasVazio || 0) + 1;
+          if (window._tentativasVazio <= 4) {
+            cargaPasso(90, 'Os dados estão sendo atualizados, aguarde');
+            setTimeout(carregarCatalogo, 5000);
+            return;
+          }
         }
         cargaFim();
         _fbListenCore();
@@ -6448,9 +6456,13 @@ async function sincronizarAutomaticamente(manual) {
     return;
   }
   if (statusEl) statusEl.textContent = '🔄 Sincronizando...';
+  window._errosSalvar = [];
   let algumErro = false;
   const errosDetalhados = [];
 
+  const _hashTexto = (t) => { let h = 5381; for (let i = 0; i < t.length; i++) h = ((h << 5) + h + t.charCodeAt(i)) | 0; return t.length + ':' + h; };
+  const puladas = [];
+  // esperarSalvar = origem ('usa' | 'usa2' | 'br') quando a aba é de produtos
   async function baixarAba(idPlanilha, nomeAba, nomeArquivo, callback, esperarSalvar) {
     if (!nomeAba || !idPlanilha) return;
     try {
@@ -6465,13 +6477,28 @@ async function sincronizarAutomaticamente(manual) {
       const texto = await resp.text();
       if (texto.startsWith('Erro:') || texto === 'Acesso negado' || texto.startsWith('Aba não encontrada') || texto.startsWith('Parâmetro')) throw new Error(texto);
       const inputFalso = _inputFalsoComTexto(texto, nomeArquivo);
+      // Sincronização automática: se a tabela não mudou desde a última importação bem-sucedida
+      // (e o catálogo deste aparelho está preenchido), não apaga/regrava tudo à toa.
+      // Isso evita milhares de gravações no Firebase a cada 30 min e reduz o risco de erro no meio.
+      let hashAtual = null;
+      if (esperarSalvar) {
+        hashAtual = _hashTexto(texto);
+        const igual = localStorage.getItem('sync_hash_' + nomeArquivo) === hashAtual;
+        const temProdutos = PRODUTOS.some(p => (p.origem || 'usa') === esperarSalvar);
+        if (!manual && igual && temProdutos) { puladas.push(nomeArquivo); return; }
+      }
       const filaAntes = _filaSalvar;
+      const errosAntes = (window._errosSalvar || []).length;
       callback(inputFalso);
       // Abas de produtos (USA/BR): espera a importação entrar na fila e terminar de salvar
       // antes de baixar a próxima (máx. ~30s só esperando a leitura do arquivo começar a salvar)
       if (esperarSalvar) {
         for (let i = 0; i < 150 && _filaSalvar === filaAntes; i++) await new Promise(r => setTimeout(r, 200));
+        const entrouNaFila = _filaSalvar !== filaAntes;
         await _filaSalvar;
+        // Só lembra "esta versão já foi importada" se salvou de verdade, sem erro
+        if (entrouNaFila && (window._errosSalvar || []).length === errosAntes) localStorage.setItem('sync_hash_' + nomeArquivo, hashAtual);
+        else localStorage.removeItem('sync_hash_' + nomeArquivo);
       }
     } catch (err) {
       algumErro = true;
@@ -6480,21 +6507,22 @@ async function sincronizarAutomaticamente(manual) {
     }
   }
 
-  await baixarAba(planilhaId, abas.usa, 'usa.csv', processarCSVUSA, true);
+  await baixarAba(planilhaId, abas.usa, 'usa.csv', processarCSVUSA, 'usa');
   if (localStorage.getItem('sync_usa2Ativo') === '1') {
-    await baixarAba(planilhaIdUsa2, abas.usa2, 'usa2.csv', (inp) => processarCSVUSA(inp, 'usa2'), true);
+    await baixarAba(planilhaIdUsa2, abas.usa2, 'usa2.csv', (inp) => processarCSVUSA(inp, 'usa2'), 'usa2');
   }
-  await baixarAba(planilhaIdBr || planilhaId, abas.br, 'br.csv', processarCSVBR, true);
+  await baixarAba(planilhaIdBr || planilhaId, abas.br, 'br.csv', processarCSVBR, 'br');
   await baixarAba(planilhaId, abas.fotosUsa, 'fotos-usa.csv', (inp) => handleFotos(inp, 'usa'));
   await baixarAba(planilhaIdBr || planilhaId, abas.fotosBr, 'fotos-br.csv', (inp) => handleFotos(inp, 'br'));
   await baixarAba(planilhaId, abas.relatorio, 'relatorio.csv', processarCSVRelatorio);
   await baixarAba(planilhaIdPrazos, abas.prazos, 'prazos.csv', (inp) => processarCSVPrazos(inp, abas.prazos));
 
   await _filaSalvar;
+  (window._errosSalvar || []).forEach(m => { algumErro = true; errosDetalhados.push('salvar ' + m); });
   const agora = new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
   localStorage.setItem('syncUltimaVez', agora);
   window._ultimoErroSync = errosDetalhados;
-  if (statusEl) statusEl.textContent = (algumErro ? '⚠️ Erro em: ' + errosDetalhados.join(' · ') : '✅ Sincronizado') + ' às ' + agora + '.';
+  if (statusEl) statusEl.textContent = (algumErro ? '⚠️ Erro em: ' + errosDetalhados.join(' · ') : '✅ Sincronizado' + (puladas.length ? ' (sem mudanças em ' + puladas.join(', ') + ')' : '')) + ' às ' + agora + '.';
 }
 
 // Detecta se é celular/tablet — a sincronização automática só deve rodar no computador,
@@ -6761,6 +6789,7 @@ function processarCSVUSA(input, origemTag) {
         else return;
         const ordemNum = (iOrdem>-1 ? row[iOrdem]?.trim() : '') || '';
         if (!ordemNum) return; // sem número de ordem, não entra
+        if (iStatusOrdem>-1 && (row[iStatusOrdem]||'').trim().toUpperCase() === 'NOK') return; // STATUS = NOK: some das ordens
         if (!ordensOnline[ordemNum]) ordensOnline[ordemNum] = { ordem: ordemNum, vendedora: normalizarVendedora(row[iVend]), itens: [] };
         ordensOnline[ordemNum].itens.push({
           item: (row[iItem]||'').trim(),
@@ -6869,7 +6898,8 @@ function processarCSVUSA(input, origemTag) {
         if (statusEl) statusEl.innerHTML += '<br><span style="color:#d97706">⚠️ ' + duplicatas.length + ' possíveis duplicatas: ' + dupMsg + (duplicatas.length>3?'...':'') + '</span>';
       }
 
-      salvarOrigemNoFirebase(newData, origemTag, () => {
+      salvarOrigemNoFirebase(newData, origemTag, (res) => {
+        if (res && res.erro) { setTimeout(() => { document.getElementById('csv-progress').style.display='none'; }, 3000); return; } // falhou: não registra como "enviada"
         const now = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
         enviarHistoricoIAParaPlanilha(newData, now, false, origemTag);
         localStorage.setItem('ultima_atualizacao', now);
@@ -6959,84 +6989,72 @@ function _salvarOrigemImpl(newData, origem, onDone, liberar) {
     return;
   }
   if (fbUnsub) { fbUnsub(); fbUnsub = null; }
-  setStatus('🧹 Limpando produtos antigos (' + origem.toUpperCase() + ')...');
-  window._db.collection('catalogo').get({source: 'server'}).then(snap => {
-    // Cada origem só apaga os seus próprios produtos
-    const docsToDelete = snap.docs.filter(doc => {
-      const o = doc.data().origem || 'usa';
-      return o === origem;
-    });
-    if (!docsToDelete.length) return;
-    // Divide em lotes de no máximo 450 (o Firestore trava/rejeita lotes com mais de 500
-    // operações — sem isso, uma vez que o catálogo passasse de 500 itens, a limpeza
-    // parava de funcionar silenciosamente pra sempre, e produtos antigos/errados
-    // nunca mais eram removidos, só se acumulando a cada sincronização).
-    const chunks = [];
-    for (let i = 0; i < docsToDelete.length; i += 450) chunks.push(docsToDelete.slice(i, i+450));
-    setStatus('🧹 Limpando ' + docsToDelete.length + ' produto(s) antigo(s) (' + origem.toUpperCase() + ') em ' + chunks.length + ' lote(s)...');
-    return chunks.reduce((prom, chunk) => prom.then(() => {
+  // ORDEM SEGURA: primeiro GRAVA os produtos novos, e só DEPOIS apaga os antigos.
+  // (Antes apagava tudo primeiro — se a internet/computador caía ou o Firebase recusava
+  // no meio, o catálogo ficava VAZIO pra todo mundo até alguém sincronizar na mão.)
+  const apagarEmLotes = (docs) => {
+    const lotes = [];
+    for (let i = 0; i < docs.length; i += 450) lotes.push(docs.slice(i, i+450));
+    return lotes.reduce((prom, lote) => prom.then(() => {
       const batch = window._db.batch();
-      chunk.forEach(doc => batch.delete(doc.ref));
+      lote.forEach(d => batch.delete(d.ref));
+      return batch.commit();
+    }), Promise.resolve());
+  };
+  let docsAntigos = [], docsFaltantesAntigos = [], maxIdGlobal = -1;
+  setStatus('📥 Lendo o catálogo atual (' + origem.toUpperCase() + ')...');
+  window._db.collection('catalogo').get({source: 'server'}).then(snap => {
+    docsAntigos = snap.docs.filter(doc => (doc.data().origem || 'usa') === origem);
+    snap.forEach(doc => { const n = parseInt(doc.id); if (!isNaN(n) && n > maxIdGlobal) maxIdGlobal = n; });
+    // Proteção: planilha vazia (aba errada, planilha carregando...) NUNCA pode apagar o catálogo
+    if (!newData.length) {
+      throw new Error('a planilha veio com 0 produtos — mantive os produtos antigos (' + docsAntigos.length + ') sem apagar nada');
+    }
+    return window._db.collection('faltantes').get();
+  }).then(snap => {
+    // Guarda os status ativos (em_compra, nok, est_eua, est_br, comentários) por nome+marca
+    statusBackup = {};
+    snap.docs.forEach(doc => {
+      const d = doc.data();
+      const o = d.origem;
+      const pertenceOrigem = o === origem || (origem === 'usa' && !o);
+      if (!pertenceOrigem) return;
+      docsFaltantesAntigos.push(doc);
+      const p = PRODUTOS.find(x => x._id === parseInt(doc.id));
+      if (p) {
+        const key = (p.n||'').toLowerCase().trim() + '||' + (p.m||'').toLowerCase().trim();
+        statusBackup[key] = {
+          em_compra: d.em_compra || false,
+          compraHistory: d.compraHistory || [],
+          nok: d.nok || false,
+          est_eua: d.est_eua || false,
+          est_br: d.est_br || false,
+          nokTams: d.nokTams || {},
+          nokWho: d.nokWho || '',
+          comments: d.comments || [],
+          _nome: (p.n||'').toLowerCase().trim(),
+        };
+      }
+    });
+    // Grava os produtos NOVOS (ids acima de qualquer id existente — nunca colidem com os antigos)
+    setStatus('💾 Gravando ' + newData.length + ' produto(s) novos (' + origem.toUpperCase() + ')...');
+    const novosComId = newData.map((p,i) => ({...p, _id: maxIdGlobal+1+i}));
+    const lotes = [];
+    for (let i = 0; i < novosComId.length; i += 400) lotes.push(novosComId.slice(i, i+400));
+    return lotes.reduce((promise, lote) => promise.then(() => {
+      const batch = window._db.batch();
+      lote.forEach(p => {
+        const ref = window._db.collection('catalogo').doc(String(p._id));
+        batch.set(ref, {n:p.n,m:p.m||'',c:p.c||'',cor:p.cor||'',vs:p.vs||[],v:p.v||0,q:p.q||0,vt:p.vt||0,vmin:p.vmin||0,vmax:p.vmax||0,f:p.f||'',_fOriginal:p._fOriginal||'',tams:p.tams||{},tams_str:p.tams_str||'',tams_por_vend:p.tams_por_vend||{},origem:p.origem||origem});
+      });
       return batch.commit();
     }), Promise.resolve());
   }).then(() => {
-    // Salvar status antes de limpar faltantes para reaplicar depois
-    return window._db.collection('faltantes').get().then(snap => {
-      // Guardar status ativos (em_compra, nok, est_eua, est_br) por nome de produto
-      statusBackup = {};
-      snap.docs.forEach(doc => {
-        const d = doc.data();
-        const o = doc.data().origem;
-        const pertenceOrigem = o === origem || (origem === 'usa' && !o);
-        const docIdNum = parseInt(doc.id);
-        const p = PRODUTOS.find(x => x._id === docIdNum);
-        if (pertenceOrigem && p) {
-          const key = (p.n||'').toLowerCase().trim() + '||' + (p.m||'').toLowerCase().trim();
-          statusBackup[key] = {
-            em_compra: d.em_compra || false,
-            compraHistory: d.compraHistory || [],
-            nok: d.nok || false,
-            est_eua: d.est_eua || false,
-            est_br: d.est_br || false,
-            nokTams: d.nokTams || {},
-            nokWho: d.nokWho || '',
-            comments: d.comments || [],
-            _nome: (p.n||'').toLowerCase().trim(),
-          };
-        }
-      });
-      const toDelete = snap.docs.filter(doc => {
-        const o = doc.data().origem;
-        return o === origem || (origem === 'usa' && !o);
-      });
-      if (!toDelete.length) return;
-      const chunksFaltantes = [];
-      for (let i = 0; i < toDelete.length; i += 450) chunksFaltantes.push(toDelete.slice(i, i+450));
-      return chunksFaltantes.reduce((prom, chunk) => prom.then(() => {
-        const batch = window._db.batch();
-        chunk.forEach(doc => batch.delete(doc.ref));
-        return batch.commit();
-      }), Promise.resolve());
-    });
+    // Só agora que os novos estão salvos é que os antigos saem
+    setStatus('🧹 Removendo ' + docsAntigos.length + ' produto(s) antigo(s) (' + origem.toUpperCase() + ')...');
+    return apagarEmLotes(docsAntigos);
   }).then(() => {
-    // Gerar novos IDs únicos não conflitantes com a outra origem
-    return window._db.collection('catalogo').get({source: 'server'});
-  }).then(snap => {
-    let maxId = -1;
-    snap.forEach(doc => { const n = parseInt(doc.id); if (!isNaN(n) && n > maxId) maxId = n; });
-    const novosComId = newData.map((p,i) => ({...p, _id: maxId+1+i}));
-    const chunks = [];
-    for (let i = 0; i < novosComId.length; i += 400) chunks.push(novosComId.slice(i, i+400));
-    return chunks.reduce((promise, chunk) => {
-      return promise.then(() => {
-        const batch = window._db.batch();
-        chunk.forEach(p => {
-          const ref = window._db.collection('catalogo').doc(String(p._id));
-          batch.set(ref, {n:p.n,m:p.m||'',c:p.c||'',cor:p.cor||'',vs:p.vs||[],v:p.v||0,q:p.q||0,vt:p.vt||0,vmin:p.vmin||0,vmax:p.vmax||0,f:p.f||'',_fOriginal:p._fOriginal||'',tams:p.tams||{},tams_str:p.tams_str||'',tams_por_vend:p.tams_por_vend||{},origem:p.origem||origem});
-        });
-        return batch.commit();
-      });
-    }, Promise.resolve());
+    return apagarEmLotes(docsFaltantesAntigos);
   }).then(() => {
     setStatus('✅ ' + newData.length + ' produtos salvos (' + origem.toUpperCase() + ')');
     fbListen();
@@ -7104,9 +7122,10 @@ function _salvarOrigemImpl(newData, origem, onDone, liberar) {
     }
     if (onDone) onDone();
   }).catch(e => {
-    setStatus('❌ Erro ao salvar: ' + e.message);
+    setStatus('❌ Erro ao salvar (' + origem.toUpperCase() + '): ' + e.message);
+    (window._errosSalvar = window._errosSalvar || []).push(origem.toUpperCase() + ': ' + e.message);
     fbListen();
-    if (onDone) onDone();
+    if (onDone) onDone({ erro: e.message });
     liberar();
   });
 }
@@ -7342,6 +7361,7 @@ function processarCSVBR(input) {
         else return;
         const ordemNumBR = (iOrdem>-1 ? row[iOrdem]?.trim() : '') || '';
         if (!ordemNumBR) return; // sem número de ordem, não entra
+        if (iStatusOrdem>-1 && (row[iStatusOrdem]||'').trim().toUpperCase() === 'NOK') return; // STATUS = NOK: some das ordens
         if (!ordensOnlineBR[ordemNumBR]) ordensOnlineBR[ordemNumBR] = { ordem: ordemNumBR, vendedora: normalizarVendedora(row[iVend]), itens: [] };
         ordensOnlineBR[ordemNumBR].itens.push({
           item: (row[iItem]||'').trim(),
@@ -7423,7 +7443,8 @@ function processarCSVBR(input) {
 
       enviarHistoricoIAParaPlanilha(newData, now, false, 'br');
 
-      salvarOrigemNoFirebase(newData, 'br', () => {
+      salvarOrigemNoFirebase(newData, 'br', (res) => {
+        if (res && res.erro) { setTimeout(() => { if (progEl) progEl.style.display='none'; }, 3000); return; } // falhou: não registra como "enviada"
         const tsBR = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
         localStorage.setItem('import_ts_br', tsBR);
         atualizarVersaoHeader();
